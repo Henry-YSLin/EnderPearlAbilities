@@ -1,0 +1,8 @@
+name: EnderPearlAbilities
+version: '${project.version}'
+main: io.github.henryyslin.enderpearlabilities.EnderPearlAbilities
+api-version: 1.17
+commands:
+  ability:
+    description: Get the description of a player's ability
+    usage: "Usage: /<command> [player name]"
