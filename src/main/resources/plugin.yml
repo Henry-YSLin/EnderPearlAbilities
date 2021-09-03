@@ -2,6 +2,7 @@ name: EnderPearlAbilities
 version: '${project.version}'
 main: io.github.henryyslin.enderpearlabilities.EnderPearlAbilities
 api-version: 1.17
+depend: [Citizens]
 commands:
   ability:
     description: Get the description of a player's ability

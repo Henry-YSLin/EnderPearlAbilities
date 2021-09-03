@@ -11,4 +11,7 @@ public interface Ability extends Listener {
     int getChargeUp();
     int getDuration();
     int getCooldown();
+
+    default void onEnable() {}
+    default void onDisable() {}
 }

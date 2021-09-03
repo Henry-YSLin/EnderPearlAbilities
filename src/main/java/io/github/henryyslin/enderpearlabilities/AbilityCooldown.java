@@ -23,13 +23,13 @@ public class AbilityCooldown {
         this.player = player;
     }
 
-    public void StartCooldown(int ticks) {
+    public void startCooldown(int ticks) {
         player.setCooldown(Material.ENDER_PEARL, ticks);
         runnable = new AbilityCooldownRunnable();
         runnable.runTaskRepeated(plugin, 0, 1, ticks);
     }
 
-    public void CancelCooldown() {
+    public void cancelCooldown() {
         if (runnable != null) {
             player.setCooldown(Material.ENDER_PEARL, 0);
             runnable.cancel();

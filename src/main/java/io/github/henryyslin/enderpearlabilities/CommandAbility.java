@@ -7,7 +7,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -22,7 +21,7 @@ public class CommandAbility implements CommandExecutor {
 
     private String friendlyNumber(int number) {
         if (number == Integer.MAX_VALUE) return "infinite";
-        return String.valueOf(number);
+        return String.valueOf(number / 20);
     }
 
     @Override
