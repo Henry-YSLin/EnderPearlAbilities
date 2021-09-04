@@ -3,10 +3,7 @@ package io.github.henryyslin.enderpearlabilities.mirage;
 import io.github.henryyslin.enderpearlabilities.Ability;
 import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
 import io.github.henryyslin.enderpearlabilities.ActivationHand;
-import io.github.henryyslin.enderpearlabilities.utils.AdvancedRunnable;
-import io.github.henryyslin.enderpearlabilities.utils.BlockUtils;
-import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henryyslin.enderpearlabilities.utils.ListUtils;
+import io.github.henryyslin.enderpearlabilities.utils.*;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.npc.NPCRegistry;
@@ -20,9 +17,9 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -124,10 +121,12 @@ public class AbilityMirage implements Ability {
     }
 
     @EventHandler
-    public void onEntityTarget(EntityTargetEvent event) {
+    public void onEntityTargetLivingEntity(EntityTargetLivingEntityEvent event) {
         Entity target = event.getTarget();
         Entity entity = event.getEntity();
         if (!(entity instanceof Mob mob)) return;
+        if (target == null) return;
+        if (target.hasMetadata("NPC")) return;
         if (!(target instanceof Player player)) return;
         if (!player.getName().equals(ownerName)) return;
         if (entity.hasMetadata("NPC")) return;
@@ -136,7 +135,6 @@ public class AbilityMirage implements Ability {
             if (npc.isSpawned()) candidates.add((LivingEntity) npc.getEntity());
         });
         if (candidates.isEmpty()) return;
-        candidates.add(player);
         mob.setTarget(ListUtils.getRandom(candidates));
     }
 
@@ -150,13 +148,8 @@ public class AbilityMirage implements Ability {
     @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        Action action = event.getAction();
-        ItemStack item = event.getItem();
 
-        if (!player.getName().equals(ownerName)) return;
-        if (player.getInventory().getItemInOffHand().getType() != Material.ENDER_PEARL) return;
-        if (item == null || item.getType() != Material.ENDER_PEARL) return;
-        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, getActivation())) return;
 
         event.setCancelled(true);
 
@@ -174,30 +167,7 @@ public class AbilityMirage implements Ability {
                     }
                     next.invoke();
                 },
-                next -> {
-                    new AdvancedRunnable() {
-                        BossBar bossbar;
-
-                        @Override
-                        protected synchronized void start() {
-                            player.setCooldown(Material.ENDER_PEARL, getChargeUp());
-                            bossbar = Bukkit.createBossBar("Charging up", BarColor.WHITE, BarStyle.SOLID);
-                            bossbar.addPlayer(player);
-                        }
-
-                        @Override
-                        protected synchronized void tick() {
-                            bossbar.setProgress(count / (double) getChargeUp());
-                            player.getWorld().spawnParticle(Particle.WHITE_ASH, player.getLocation(), 5, 0.5, 0.5, 0.5, 0.02);
-                        }
-
-                        @Override
-                        protected synchronized void end() {
-                            bossbar.removeAll();
-                            next.invoke();
-                        }
-                    }.runTaskRepeated(plugin, 0, 1, getChargeUp());
-                },
+                next -> AbilityUtils.chargeUpSequence(plugin, player, getChargeUp(), next),
                 next -> {
                     World world = player.getWorld();
                     world.playSound(player.getLocation(), Sound.ENTITY_ILLUSIONER_CAST_SPELL, 1, 0);
@@ -210,19 +180,18 @@ public class AbilityMirage implements Ability {
                         if (above.isOccluding() || above.isSolid()) return false;
                         Material ground = world.getBlockAt(block.getLocation().add(0, -1, 0)).getType();
                         if (!ground.isSolid()) return false;
-                        if (ground.isAir() || ground == Material.WATER || ground == Material.LAVA || ground == Material.FIRE || ground == Material.MAGMA_BLOCK)
-                            return false;
-                        return true;
+                        return !ground.isAir() && ground != Material.WATER && ground != Material.LAVA && ground != Material.FIRE && ground != Material.MAGMA_BLOCK;
                     }).toList();
 
                     if (spawnLocations.isEmpty()) {
                         abilityActive.set(false);
                         cooldown.cancelCooldown();
-                        plugin.getLogger().info("[" + getName() + "] No valid spawn locations. Cancelling.");
+                        player.sendMessage(ChatColor.RED + "No place to spawn clones!");
+                        plugin.getLogger().info("[" + getName() + "] No valid spawn locations at " + player.getLocation() + ". Cancelling.");
                         return;
                     }
 
-                    for (int i = 0; i < 4; i++) {
+                    for (int i = 0; i < 5; i++) {
                         Location spawn = ListUtils.getRandom(spawnLocations).getLocation();
                         spawn.add(0.5, 300.5, 0.5);
                         NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, player.getName());
@@ -234,75 +203,69 @@ public class AbilityMirage implements Ability {
 
                     next.invoke();
                 },
-                next -> {
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            for (NPC npc : npcs) {
-                                npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HELMET, player.getInventory().getHelmet());
-                                npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.CHESTPLATE, player.getInventory().getChestplate());
-                                npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.LEGGINGS, player.getInventory().getLeggings());
-                                npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.BOOTS, player.getInventory().getBoots());
-                                npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HAND, player.getInventory().getItemInMainHand());
-                            }
-                            next.invoke();
+                next -> new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        for (NPC npc : npcs) {
+                            npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HELMET, player.getInventory().getHelmet());
+                            npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.CHESTPLATE, player.getInventory().getChestplate());
+                            npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.LEGGINGS, player.getInventory().getLeggings());
+                            npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.BOOTS, player.getInventory().getBoots());
+                            npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HAND, player.getInventory().getItemInMainHand());
                         }
-                    }.runTaskLater(plugin, 10);
-                },
-                next -> {
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            for (NPC npc : npcs) {
-                                npc.teleport(npc.getEntity().getLocation().add(0, -300, 0), PlayerTeleportEvent.TeleportCause.PLUGIN);
-                                npc.getEntity().setGravity(true);
-                                CloneTrait trait = npc.getOrAddTrait(CloneTrait.class);
-                                trait.toggle(player, true);
-                            }
-                            next.invoke();
+                        next.invoke();
+                    }
+                }.runTaskLater(plugin, 10),
+                next -> new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        for (NPC npc : npcs) {
+                            npc.teleport(npc.getEntity().getLocation().add(0, -300, 0), PlayerTeleportEvent.TeleportCause.PLUGIN);
+                            npc.getEntity().setGravity(true);
+                            CloneTrait trait = npc.getOrAddTrait(CloneTrait.class);
+                            trait.toggle(player, true);
                         }
-                    }.runTaskLater(plugin, 5);
-                },
-                next -> {
-                    new AdvancedRunnable() {
-                        BossBar bossbar;
-                        Score score;
+                        next.invoke();
+                    }
+                }.runTaskLater(plugin, 5),
+                next -> new AdvancedRunnable() {
+                    BossBar bossbar;
+                    Score score;
 
-                        @Override
-                        protected synchronized void start() {
-                            bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + getName(), BarColor.PURPLE, BarStyle.SOLID);
-                            bossbar.addPlayer(player);
-                            Objective obj = player.getScoreboard().getObjective("Clones");
-                            if (obj == null)
-                                obj = player.getScoreboard().registerNewObjective("Clones", "dummy", "Clones");
-                            score = obj.getScore(ChatColor.GRAY + "Clones left");
-                            obj.setDisplaySlot(DisplaySlot.SIDEBAR);
-                            score.setScore(countNPCs());
-                        }
+                    @Override
+                    protected synchronized void start() {
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + getName(), BarColor.PURPLE, BarStyle.SOLID);
+                        bossbar.addPlayer(player);
+                        Objective obj = player.getScoreboard().getObjective("Clones");
+                        if (obj == null)
+                            obj = player.getScoreboard().registerNewObjective("Clones", "dummy", "Clones");
+                        score = obj.getScore(ChatColor.GRAY + "Clones left");
+                        obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+                        score.setScore(countNPCs());
+                    }
 
-                        @Override
-                        protected synchronized void tick() {
-                            if (!abilityActive.get()) {
-                                cancel();
-                                return;
-                            }
-                            bossbar.setProgress(count * 10 / (double) getDuration());
-                            int count = countNPCs();
-                            score.setScore(count);
-                            if (count == 0) cancel();
+                    @Override
+                    protected synchronized void tick() {
+                        if (!abilityActive.get()) {
+                            cancel();
+                            return;
                         }
+                        bossbar.setProgress(count * 10 / (double) getDuration());
+                        int count = countNPCs();
+                        score.setScore(count);
+                        if (count == 0) cancel();
+                    }
 
-                        @Override
-                        protected synchronized void end() {
-                            bossbar.removeAll();
-                            removeAllNPCs();
-                            player.getScoreboard().clearSlot(DisplaySlot.SIDEBAR);
-                            abilityActive.set(false);
-                            cooldown.startCooldown(getCooldown());
-                            next.invoke();
-                        }
-                    }.runTaskRepeated(plugin, 0, 10, getDuration() / 10);
-                }
+                    @Override
+                    protected synchronized void end() {
+                        bossbar.removeAll();
+                        removeAllNPCs();
+                        player.getScoreboard().clearSlot(DisplaySlot.SIDEBAR);
+                        abilityActive.set(false);
+                        cooldown.startCooldown(getCooldown());
+                        next.invoke();
+                    }
+                }.runTaskRepeated(plugin, 0, 10, getDuration() / 10)
         ).execute();
     }
 }

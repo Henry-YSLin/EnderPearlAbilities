@@ -3,6 +3,7 @@ package io.github.henryyslin.enderpearlabilities.wraith;
 import io.github.henryyslin.enderpearlabilities.Ability;
 import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
 import io.github.henryyslin.enderpearlabilities.ActivationHand;
+import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.AdvancedRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
 import org.bukkit.*;
@@ -13,7 +14,6 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -116,12 +116,8 @@ public class AbilityWraith implements Ability {
     @EventHandler
     public void onPlayerClicks(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        Action action = event.getAction();
-        ItemStack item = event.getItem();
 
-        if (!player.getName().equals(ownerName)) return;
-        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
-        if (item == null || item.getType() != Material.ENDER_PEARL) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, getActivation())) return;
 
         event.setCancelled(true);
 
@@ -137,30 +133,7 @@ public class AbilityWraith implements Ability {
                     }
                     next.invoke();
                 },
-                next -> {
-                    new AdvancedRunnable() {
-                        BossBar bossbar;
-
-                        @Override
-                        protected synchronized void start() {
-                            player.setCooldown(Material.ENDER_PEARL, getChargeUp());
-                            bossbar = Bukkit.createBossBar("Charging up", BarColor.WHITE, BarStyle.SOLID);
-                            bossbar.addPlayer(player);
-                        }
-
-                        @Override
-                        protected synchronized void tick() {
-                            bossbar.setProgress(count / (double) getChargeUp());
-                            player.getWorld().spawnParticle(Particle.WHITE_ASH, player.getLocation(), 5, 0.5, 0.5, 0.5, 0.02);
-                        }
-
-                        @Override
-                        protected synchronized void end() {
-                            bossbar.removeAll();
-                            next.invoke();
-                        }
-                    }.runTaskRepeated(plugin, 0, 1, getChargeUp());
-                },
+                next -> AbilityUtils.chargeUpSequence(plugin, player, getChargeUp(), next),
                 next -> {
                     abilityActive.set(true);
                     prevGameMode.set(player.getGameMode());
@@ -170,47 +143,45 @@ public class AbilityWraith implements Ability {
                     player.teleport(player.getLocation().add(0, 0.5, 0));
                     next.invoke();
                 },
-                next -> {
-                    new AdvancedRunnable() {
-                        BossBar bossbar;
-                        Location lastLocation;
+                next -> new AdvancedRunnable() {
+                    BossBar bossbar;
+                    Location lastLocation;
 
-                        @Override
-                        protected synchronized void start() {
-                            player.setCooldown(Material.ENDER_PEARL, getChargeUp());
-                            bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + getName(), BarColor.PURPLE, BarStyle.SOLID);
-                            bossbar.addPlayer(player);
-                            lastLocation = player.getLocation();
-                        }
+                    @Override
+                    protected synchronized void start() {
+                        player.setCooldown(Material.ENDER_PEARL, getChargeUp());
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + getName(), BarColor.PURPLE, BarStyle.SOLID);
+                        bossbar.addPlayer(player);
+                        lastLocation = player.getLocation();
+                    }
 
-                        @Override
-                        protected synchronized void tick() {
-                            if (!abilityActive.get()) {
-                                cancel();
-                            }
-                            bossbar.setProgress(count / (double) getDuration());
-                            Block headBlock = player.getWorld().getBlockAt(player.getEyeLocation());
-                            if (headBlock.getType().isOccluding()) {
-                                player.teleport(lastLocation);
-                            }
-                            lastLocation = player.getLocation();
-                            player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 10, 0.5, 1, 0.5, 0.02);
+                    @Override
+                    protected synchronized void tick() {
+                        if (!abilityActive.get()) {
+                            cancel();
                         }
+                        bossbar.setProgress(count / (double) getDuration());
+                        Block headBlock = player.getWorld().getBlockAt(player.getEyeLocation());
+                        if (headBlock.getType().isOccluding()) {
+                            player.teleport(lastLocation);
+                        }
+                        lastLocation = player.getLocation();
+                        player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 10, 0.5, 1, 0.5, 0.02);
+                    }
 
-                        @Override
-                        protected synchronized void end() {
-                            bossbar.removeAll();
-                            if (!abilityActive.get()) {
-                                player.teleport(player.getLocation().add(0, 1, 0));
-                            }
-                            Block headBlock = player.getWorld().getBlockAt(player.getEyeLocation());
-                            if (headBlock.getType().isOccluding()) {
-                                player.teleport(lastLocation);
-                            }
-                            next.invoke();
+                    @Override
+                    protected synchronized void end() {
+                        bossbar.removeAll();
+                        if (!abilityActive.get()) {
+                            player.teleport(player.getLocation().add(0, 1, 0));
                         }
-                    }.runTaskRepeated(plugin, 0, 1, getDuration());
-                },
+                        Block headBlock = player.getWorld().getBlockAt(player.getEyeLocation());
+                        if (headBlock.getType().isOccluding()) {
+                            player.teleport(lastLocation);
+                        }
+                        next.invoke();
+                    }
+                }.runTaskRepeated(plugin, 0, 1, getDuration()),
                 next -> {
                     player.setGameMode(prevGameMode.get());
                     abilityActive.set(false);

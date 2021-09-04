@@ -3,6 +3,7 @@ package io.github.henryyslin.enderpearlabilities.pathfinder;
 import io.github.henryyslin.enderpearlabilities.Ability;
 import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
 import io.github.henryyslin.enderpearlabilities.ActivationHand;
+import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.AdvancedRunnable;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
@@ -11,7 +12,6 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityUnleashEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -96,13 +96,8 @@ public class AbilityPathfinder implements Ability {
     @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        Action action = event.getAction();
-        ItemStack item = event.getItem();
 
-        if (!player.getName().equals(ownerName)) return;
-        if (player.getInventory().getItemInOffHand().getType() != Material.ENDER_PEARL) return;
-        if (item == null || item.getType() != Material.ENDER_PEARL) return;
-        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, getActivation())) return;
 
         event.setCancelled(true);
 

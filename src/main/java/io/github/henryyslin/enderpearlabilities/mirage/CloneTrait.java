@@ -1,6 +1,8 @@
 package io.github.henryyslin.enderpearlabilities.mirage;
 
+import io.github.henryyslin.enderpearlabilities.utils.ListUtils;
 import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.ai.EntityTarget;
 import net.citizensnpcs.api.ai.flocking.Flocker;
 import net.citizensnpcs.api.ai.flocking.RadiusNPCFlock;
 import net.citizensnpcs.api.ai.flocking.SeparationBehavior;
@@ -9,15 +11,15 @@ import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
+import java.util.ArrayList;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @TraitName("cloneTrait")
 public class CloneTrait extends Trait {
@@ -56,21 +58,38 @@ public class CloneTrait extends Trait {
 
     @EventHandler
     private void onEntityDamage(EntityDamageByEntityEvent event) {
-        if (isActive() && protect && (event.getEntity().equals(player) || (event.getEntity().equals(npc.getEntity()) && !event.getDamager().equals(player)))) {
+        if (isActive() && protect && event.getEntity().getName().equals(player.getName())) {
             Entity damager = event.getDamager();
-            if (event.getEntity() instanceof Projectile projectile) {
+            if (damager instanceof Projectile projectile) {
                 if (projectile.getShooter() instanceof Entity) {
                     damager = (Entity) projectile.getShooter();
                 }
             }
+            if (damager.getName().equals(player.getName())) return;
+            EntityTarget npcTarget = npc.getNavigator().getEntityTarget();
+            if (npcTarget != null && npcTarget.isAggressive() && npcTarget.getTarget().isValid()) return;
+            if (!(damager instanceof LivingEntity)) return;
             npc.getNavigator().setTarget(damager, true);
         }
+    }
+
+    @EventHandler
+    public void onEntityTargetLivingEntity(EntityTargetLivingEntityEvent event) {
+        if (!isActive() || !protect) return;
+        LivingEntity target = event.getTarget();
+        Entity entity = event.getEntity();
+        if (target == null) return;
+        if (!(target.getName().equals(player.getName()))) return;
+        EntityTarget npcTarget = npc.getNavigator().getEntityTarget();
+        if (npcTarget != null && npcTarget.isAggressive() && npcTarget.getTarget().isValid()) return;
+        if (!(entity instanceof LivingEntity)) return;
+        npc.getNavigator().setTarget(entity, true);
     }
 
     @Override
     public void onSpawn() {
         flock = new Flocker(npc, new RadiusNPCFlock(4, 0), new SeparationBehavior(1));
-        npc.getNavigator().getDefaultParameters().useNewPathfinder(true).speedModifier(1.5f).range(10).updatePathRate(40).stuckAction((npc, navigator) -> {
+        npc.getNavigator().getDefaultParameters().useNewPathfinder(true).speedModifier(1.5f).range(10).updatePathRate(20).stuckAction((npc, navigator) -> {
             npc.teleport(navigator.getTargetAsLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
             return true;
         });

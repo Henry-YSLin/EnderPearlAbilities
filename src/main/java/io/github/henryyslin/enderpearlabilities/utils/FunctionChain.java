@@ -6,6 +6,7 @@ public class FunctionChain {
     final Consumer<NextFunction>[] chain;
     int chainIndex = -1;
 
+    @SafeVarargs
     public FunctionChain(Consumer<NextFunction>... chain) {
         this.chain = chain;
     }
