@@ -55,7 +55,7 @@ public class AbilityValkyrie implements Ability {
     }
 
     public String getDescription() {
-        return "Fire a swarm of homing missiles that damage and slow enemies.";
+        return "Fire a swarm of missiles that damage and slow entities.";
     }
 
     public ActivationHand getActivation() {
@@ -63,7 +63,7 @@ public class AbilityValkyrie implements Ability {
     }
 
     public int getChargeUp() {
-        return 4;
+        return 0;
     }
 
     public int getDuration() {
@@ -71,7 +71,7 @@ public class AbilityValkyrie implements Ability {
     }
 
     public int getCooldown() {
-        return 20;
+        return 400;
     }
 
     final Plugin plugin;
