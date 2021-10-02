@@ -2,6 +2,7 @@ package io.github.henryyslin.enderpearlabilities;
 
 import io.github.henryyslin.enderpearlabilities.mirage.AbilityMirage;
 import io.github.henryyslin.enderpearlabilities.pathfinder.AbilityPathfinder;
+import io.github.henryyslin.enderpearlabilities.valkyrie.AbilityValkyrie;
 import io.github.henryyslin.enderpearlabilities.wraith.AbilityWraith;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -13,6 +14,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
             new AbilityWraith(this, config),
             new AbilityPathfinder(this, config),
             new AbilityMirage(this, config),
+            new AbilityValkyrie(this, config),
     };
 
     @Override

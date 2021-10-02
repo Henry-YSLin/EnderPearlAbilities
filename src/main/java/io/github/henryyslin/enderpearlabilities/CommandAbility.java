@@ -21,7 +21,7 @@ public class CommandAbility implements CommandExecutor {
 
     private String friendlyNumber(int number) {
         if (number == Integer.MAX_VALUE) return "infinite";
-        return String.valueOf(number / 20);
+        return String.valueOf(number / 20f);
     }
 
     @Override

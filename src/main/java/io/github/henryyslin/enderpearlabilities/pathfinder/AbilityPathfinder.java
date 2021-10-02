@@ -30,7 +30,7 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AbilityPathfinder implements Ability {
-    static final int PROJECTILE_LIFETIME = 60;
+    static final int PROJECTILE_LIFETIME = 20;
     static final int GRAPPLE_LIFETIME = 100;
 
     public String getName() {
@@ -46,7 +46,7 @@ public class AbilityPathfinder implements Ability {
     }
 
     public String getDescription() {
-        return "Shoot a grappling hook to swing around.";
+        return "Shoot a grappling hook to swing around, pull yourself up, or pull other entities close to you.";
     }
 
     public ActivationHand getActivation() {
@@ -115,7 +115,7 @@ public class AbilityPathfinder implements Ability {
             player.getInventory().removeItem(new ItemStack(Material.ENDER_PEARL, 1));
         }
 
-        Projectile projectile = player.launchProjectile(EnderPearl.class, player.getLocation().getDirection().clone().normalize().multiply(2.3));
+        Projectile projectile = player.launchProjectile(EnderPearl.class, player.getLocation().getDirection().clone().normalize().multiply(4));
         projectile.setGravity(false);
 
         projectile.setMetadata("ability", new FixedMetadataValue(plugin, ownerName));
@@ -171,7 +171,7 @@ public class AbilityPathfinder implements Ability {
             int count = 0;
 
             World world = player.getWorld();
-            while (!world.getBlockAt(fixedLocation).getType().isSolid() && count < 3) {
+            while (!world.getBlockAt(fixedLocation).getType().isSolid() && count < 8) {
                 fixedLocation.add(offset);
                 count++;
             }
