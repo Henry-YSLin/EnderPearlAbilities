@@ -115,6 +115,10 @@ public class AbilityValkyrie implements Ability {
         if (projectile instanceof EnderPearl) {
             event.setCancelled(true);
 
+            cooldown.startCooldown(getCooldown());
+            abilityActive.set(true);
+            blockShoot.set(false);
+
             Entity hitEntity = event.getHitEntity();
 
             Location finalLocation;
@@ -195,6 +199,7 @@ public class AbilityValkyrie implements Ability {
                         @Override
                         protected void end() {
                             super.end();
+                            abilityActive.set(false);
                             nextFunction.invoke();
                         }
                     }.runTaskRepeated(plugin, 0, 1, getDuration())
