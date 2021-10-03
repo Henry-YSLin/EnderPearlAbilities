@@ -92,6 +92,10 @@ public class AbilityUtils {
     }
 
     public static Projectile relaunchEnderPearl(Plugin plugin, Player player, AtomicBoolean blockShoot, int projectileLifetime, double projectileSpeed) {
+        return relaunchEnderPearl(plugin, player, blockShoot, projectileLifetime, projectileSpeed, false);
+    }
+
+    public static Projectile relaunchEnderPearl(Plugin plugin, Player player, AtomicBoolean blockShoot, int projectileLifetime, double projectileSpeed, boolean gravity) {
         if (blockShoot != null) {
             if (blockShoot.get()) return null;
             blockShoot.set(true);
@@ -100,7 +104,7 @@ public class AbilityUtils {
         consumeEnderPearl(player);
 
         Projectile projectile = player.launchProjectile(EnderPearl.class, player.getLocation().getDirection().clone().normalize().multiply(projectileSpeed));
-        projectile.setGravity(false);
+        projectile.setGravity(gravity);
 
         projectile.setMetadata("ability", new FixedMetadataValue(plugin, player.getName()));
 

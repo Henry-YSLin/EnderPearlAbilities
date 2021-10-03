@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class AbilityValkyrie implements Ability {
     static final int PROJECTILE_LIFETIME = 20;
@@ -72,6 +73,7 @@ public class AbilityValkyrie implements Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final Random random = new Random();
     AbilityCooldown cooldown;
+    AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     public AbilityValkyrie(Plugin plugin, FileConfiguration config) {
         this.plugin = plugin;
@@ -112,103 +114,105 @@ public class AbilityValkyrie implements Ability {
         if (!projectile.hasMetadata("ability")) return;
         if (!player.getName().equals(ownerName)) return;
 
-        if (projectile instanceof EnderPearl) {
-            event.setCancelled(true);
+        if (!(projectile instanceof EnderPearl)) return;
 
-            cooldown.startCooldown(getCooldown());
-            abilityActive.set(true);
-            blockShoot.set(false);
+        event.setCancelled(true);
 
-            Entity hitEntity = event.getHitEntity();
+        projectile.remove();
+        cooldown.startCooldown(getCooldown());
+        abilityActive.set(true);
+        blockShoot.set(false);
+        enderPearlHitTime.set(player.getTicksLived());
 
-            Location finalLocation;
+        Entity hitEntity = event.getHitEntity();
 
-            if (hitEntity == null) {
-                // improve accuracy of the hit location
-                finalLocation = AbilityUtils.fixProjectileHitLocation(player, projectile, PROJECTILE_SPEED);
-            } else {
-                finalLocation = hitEntity.getLocation();
-            }
+        Location finalLocation;
 
-            final List<Arrow> arrows = new ArrayList<>();
-
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (arrows.size() == 0) return;
-                    boolean valid = false;
-                    for (Arrow arrow : arrows) {
-                        if (arrow.isOnGround()) continue;
-                        valid = true;
-
-                        if (!arrow.hasMetadata("target")) continue;
-                        List<MetadataValue> metadataList = arrow.getMetadata("target");
-
-                        if (metadataList.size() == 0) continue;
-                        Vector target = (Vector) metadataList.get(0).value();
-                        if (target == null) continue;
-                        Vector distance = target.clone().subtract(arrow.getLocation().toVector());
-                        if (distance.lengthSquared() < 4) arrow.removeMetadata("target", plugin);
-                        arrow.setVelocity(arrow.getVelocity().multiply(0.99).add(distance.normalize().multiply(2)).normalize().multiply(2));
-                    }
-                    if (!valid) cancel();
-                }
-            }.runTaskTimer(plugin, 0, 1);
-
-            new FunctionChain(
-                    nextFunction -> new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            abilityActive.set(false);
-                            nextFunction.invoke();
-                        }
-                    }.runTaskLater(plugin, 1),
-                    nextFunction -> new AdvancedRunnable() {
-                        @Override
-                        protected void start() {
-                            super.start();
-                        }
-
-                        @Override
-                        protected void tick() {
-                            Vector facing = player.getLocation().getDirection();
-                            Vector offset = facing.clone().add(new Vector(0, 1, 0)).crossProduct(facing).normalize();
-                            for (int i = 0; i < ARROW_PER_TICK; i++) {
-                                Vector side = offset.clone();
-                                if (i % 2 == 1)
-                                    side.multiply(-0.4);
-                                else
-                                    side.multiply(0.4);
-                                Arrow arrow = player.launchProjectile(Arrow.class, facing.clone().multiply(4).add(new Vector(random.nextDouble() * 2d - 1d, random.nextDouble() * 2d, random.nextDouble() * 2d - 1d)));
-
-                                arrow.teleport(arrow.getLocation().add(side));
-                                arrow.setTicksLived(1160);
-                                arrow.setCritical(true);
-                                arrow.setBounce(false);
-                                arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
-                                arrow.setBasePotionData(new PotionData(PotionType.SLOWNESS, false, true));
-                                arrow.setMetadata("ability", new FixedMetadataValue(plugin, ownerName));
-                                arrow.setMetadata("target", new FixedMetadataValue(plugin, finalLocation.toVector().add(new Vector(random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d))));
-                                arrows.add(arrow);
-                            }
-                        }
-
-                        @Override
-                        protected void end() {
-                            super.end();
-                            abilityActive.set(false);
-                            nextFunction.invoke();
-                        }
-                    }.runTaskRepeated(plugin, 0, 1, getDuration())
-            ).execute();
+        if (hitEntity == null) {
+            // improve accuracy of the hit location
+            finalLocation = AbilityUtils.fixProjectileHitLocation(player, projectile, PROJECTILE_SPEED);
+        } else {
+            finalLocation = hitEntity.getLocation();
         }
+
+        final List<Arrow> arrows = new ArrayList<>();
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (arrows.size() == 0) return;
+                boolean valid = false;
+                for (Arrow arrow : arrows) {
+                    if (arrow.isOnGround()) continue;
+                    valid = true;
+
+                    if (!arrow.hasMetadata("target")) continue;
+                    List<MetadataValue> metadataList = arrow.getMetadata("target");
+
+                    if (metadataList.size() == 0) continue;
+                    Vector target = (Vector) metadataList.get(0).value();
+                    if (target == null) continue;
+                    Vector distance = target.clone().subtract(arrow.getLocation().toVector());
+                    if (distance.lengthSquared() < 4) arrow.removeMetadata("target", plugin);
+                    arrow.setVelocity(arrow.getVelocity().multiply(0.99).add(distance.normalize().multiply(2)).normalize().multiply(2));
+                }
+                if (!valid) cancel();
+            }
+        }.runTaskTimer(plugin, 0, 1);
+
+        new FunctionChain(
+                nextFunction -> new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        abilityActive.set(false);
+                        nextFunction.invoke();
+                    }
+                }.runTaskLater(plugin, 1),
+                nextFunction -> new AdvancedRunnable() {
+                    @Override
+                    protected void start() {
+                        super.start();
+                    }
+
+                    @Override
+                    protected void tick() {
+                        Vector facing = player.getLocation().getDirection();
+                        Vector offset = facing.clone().add(new Vector(0, 1, 0)).crossProduct(facing).normalize();
+                        for (int i = 0; i < ARROW_PER_TICK; i++) {
+                            Vector side = offset.clone();
+                            if (i % 2 == 1)
+                                side.multiply(-0.4);
+                            else
+                                side.multiply(0.4);
+                            Arrow arrow = player.launchProjectile(Arrow.class, facing.clone().multiply(4).add(new Vector(random.nextDouble() * 2d - 1d, random.nextDouble() * 2d, random.nextDouble() * 2d - 1d)));
+
+                            arrow.teleport(arrow.getLocation().add(side));
+                            arrow.setTicksLived(1160);
+                            arrow.setCritical(true);
+                            arrow.setBounce(false);
+                            arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
+                            arrow.setBasePotionData(new PotionData(PotionType.SLOWNESS, false, true));
+                            arrow.setMetadata("ability", new FixedMetadataValue(plugin, ownerName));
+                            arrow.setMetadata("target", new FixedMetadataValue(plugin, finalLocation.toVector().add(new Vector(random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d))));
+                            arrows.add(arrow);
+                        }
+                    }
+
+                    @Override
+                    protected void end() {
+                        super.end();
+                        abilityActive.set(false);
+                        nextFunction.invoke();
+                    }
+                }.runTaskRepeated(plugin, 0, 1, getDuration())
+        ).execute();
     }
 
     @EventHandler
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
-        if (!abilityActive.get()) return;
+        if (Math.abs(event.getPlayer().getTicksLived() - enderPearlHitTime.get()) > 1) return;
         event.setCancelled(true);
     }
 }

@@ -1,5 +1,6 @@
 package io.github.henryyslin.enderpearlabilities;
 
+import io.github.henryyslin.enderpearlabilities.horizon.AbilityHorizon;
 import io.github.henryyslin.enderpearlabilities.mirage.AbilityMirage;
 import io.github.henryyslin.enderpearlabilities.necromancer.AbilityNecromancer;
 import io.github.henryyslin.enderpearlabilities.pathfinder.AbilityPathfinder;
@@ -20,6 +21,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
             new AbilityValkyrie(this, config),
             new AbilityNecromancer(this, config),
             new AbilityWorldShaper(this, config),
+            new AbilityHorizon(this, config),
     };
 
     @Override

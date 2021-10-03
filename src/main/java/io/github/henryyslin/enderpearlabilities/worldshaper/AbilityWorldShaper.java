@@ -103,54 +103,55 @@ public class AbilityWorldShaper implements Ability {
         if (!projectile.hasMetadata("ability")) return;
         if (!player.getName().equals(ownerName)) return;
 
-        if (projectile instanceof EnderPearl) {
-            event.setCancelled(true);
+        if (!(projectile instanceof EnderPearl)) return;
 
-            cooldown.startCooldown(getCooldown());
-            enderPearlHitTime.set(player.getTicksLived());
+        event.setCancelled(true);
 
-            Entity hitEntity = event.getHitEntity();
+        projectile.remove();
+        cooldown.startCooldown(getCooldown());
+        enderPearlHitTime.set(player.getTicksLived());
 
-            Location finalLocation;
+        Entity hitEntity = event.getHitEntity();
 
-            if (hitEntity == null) {
-                // improve accuracy of the hit location
-                finalLocation = AbilityUtils.fixProjectileHitLocation(player, projectile, PROJECTILE_SPEED);
-            } else {
-                finalLocation = hitEntity.getLocation();
-            }
+        Location finalLocation;
 
-            finalLocation.setX(finalLocation.getBlockX() + 0.5);
-            finalLocation.setY(finalLocation.getBlockY() + 0.5);
-            finalLocation.setZ(finalLocation.getBlockZ() + 0.5);
+        if (hitEntity == null) {
+            // improve accuracy of the hit location
+            finalLocation = AbilityUtils.fixProjectileHitLocation(player, projectile, PROJECTILE_SPEED);
+        } else {
+            finalLocation = hitEntity.getLocation();
+        }
 
-            WorldUtils.spawnParticleRect(finalLocation.clone().add(-1.5, -1.5, -1.5), finalLocation.clone().add(1.5, 1.5, 1.5), Particle.VILLAGER_HAPPY, 5);
+        finalLocation.setX(finalLocation.getBlockX() + 0.5);
+        finalLocation.setY(finalLocation.getBlockY() + 0.5);
+        finalLocation.setZ(finalLocation.getBlockZ() + 0.5);
 
-            int unbreaking = player.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.DURABILITY);
+        WorldUtils.spawnParticleRect(finalLocation.clone().add(-1.5, -1.5, -1.5), finalLocation.clone().add(1.5, 1.5, 1.5), Particle.VILLAGER_HAPPY, 5);
 
-            player.getWorld().playSound(finalLocation, Sound.ENTITY_DRAGON_FIREBALL_EXPLODE, 1, 0);
+        int unbreaking = player.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.DURABILITY);
 
-            BlockUtils.getBlocks(finalLocation, 1).forEach(block -> {
-                Material type = block.getType();
-                if (type == Material.AIR) return;
-                if (!PlayerUtils.canMainHandBreakBlock(player, block)) return;
-                block.breakNaturally(player.getInventory().getItemInMainHand());
+        player.getWorld().playSound(finalLocation, Sound.ENTITY_DRAGON_FIREBALL_EXPLODE, 1, 0);
 
-                if (type.isSolid()) {
-                    if (player.getGameMode() != GameMode.CREATIVE) {
-                        if (Math.random() * (unbreaking + 1) < 1) {
-                            if (Math.random() < 0.5) {
-                                ItemUtils.damageTool(player.getInventory().getItemInMainHand(), 1);
-                            }
+        BlockUtils.getBlocks(finalLocation, 1).forEach(block -> {
+            Material type = block.getType();
+            if (type == Material.AIR) return;
+            if (!PlayerUtils.canMainHandBreakBlock(player, block)) return;
+            block.breakNaturally(player.getInventory().getItemInMainHand());
+
+            if (type.isSolid()) {
+                if (player.getGameMode() != GameMode.CREATIVE) {
+                    if (Math.random() * (unbreaking + 1) < 1) {
+                        if (Math.random() < 0.5) {
+                            ItemUtils.damageTool(player.getInventory().getItemInMainHand(), 1);
                         }
                     }
                 }
-            });
+            }
+        });
 
-            if (player.getGameMode() != GameMode.CREATIVE) {
-                if (Math.random() * 4 < 3) {
-                    player.getWorld().dropItem(finalLocation, new ItemStack(Material.ENDER_PEARL, 1));
-                }
+        if (player.getGameMode() != GameMode.CREATIVE) {
+            if (Math.random() * 4 < 3) {
+                player.getWorld().dropItem(finalLocation, new ItemStack(Material.ENDER_PEARL, 1));
             }
         }
     }

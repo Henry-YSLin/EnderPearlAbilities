@@ -15,7 +15,6 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityUnleashEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -30,6 +29,7 @@ import org.bukkit.util.Vector;
 
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class AbilityPathfinder implements Ability {
     static final int PROJECTILE_LIFETIME = 20;
@@ -75,6 +75,7 @@ public class AbilityPathfinder implements Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityCooldown cooldown;
     AdvancedRunnable grapple;
+    AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     public AbilityPathfinder(Plugin plugin, FileConfiguration config) {
         this.plugin = plugin;
@@ -141,8 +142,11 @@ public class AbilityPathfinder implements Ability {
         if (!projectile.hasMetadata("ability")) return;
         if (!player.getName().equals(ownerName)) return;
 
-        Entity hitEntity = event.getHitEntity();
+        event.setCancelled(true);
+        projectile.remove();
+        enderPearlHitTime.set(player.getTicksLived());
 
+        Entity hitEntity = event.getHitEntity();
         Mob anchor;
 
         if (hitEntity == null) {
@@ -213,16 +217,7 @@ public class AbilityPathfinder implements Ability {
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
-        if (!abilityActive.get()) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onDamage(EntityDamageEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-        if (!player.getName().equals(ownerName)) return;
-        if (event.getCause() != EntityDamageEvent.DamageCause.FALL) return;
-        if (!abilityActive.get()) return;
+        if (Math.abs(event.getPlayer().getTicksLived() - enderPearlHitTime.get()) > 1) return;
         event.setCancelled(true);
     }
 
