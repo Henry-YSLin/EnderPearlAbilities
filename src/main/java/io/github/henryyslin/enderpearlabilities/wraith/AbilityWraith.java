@@ -18,7 +18,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -128,9 +127,7 @@ public class AbilityWraith implements Ability {
         new FunctionChain(
                 next -> {
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 1, 0);
-                    if (player.getGameMode() != GameMode.CREATIVE) {
-                        player.getInventory().removeItem(new ItemStack(Material.ENDER_PEARL, 1));
-                    }
+                    AbilityUtils.consumeEnderPearl(player);
                     next.invoke();
                 },
                 next -> AbilityUtils.chargeUpSequence(plugin, player, getChargeUp(), next),

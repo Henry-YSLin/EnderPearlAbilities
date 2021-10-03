@@ -128,9 +128,7 @@ public class AbilityNecromancer implements Ability {
                 next -> {
                     cooldown.startCooldown(getCooldown());
                     player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_AMBIENT, 1, 0);
-                    if (player.getGameMode() != GameMode.CREATIVE) {
-                        player.getInventory().removeItem(new ItemStack(Material.ENDER_PEARL, 1));
-                    }
+                    AbilityUtils.consumeEnderPearl(player);
                     next.invoke();
                 },
                 next -> AbilityUtils.chargeUpSequence(plugin, player, getChargeUp(), next),

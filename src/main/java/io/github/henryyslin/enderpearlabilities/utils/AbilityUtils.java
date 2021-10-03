@@ -16,6 +16,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AbilityUtils {
@@ -61,15 +62,42 @@ public class AbilityUtils {
         return action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK;
     }
 
+    public static boolean consumeEnderPearl(Player player) {
+        if (player.getGameMode() != GameMode.CREATIVE) {
+            HashMap<Integer, ItemStack> remainingItems = player.getInventory().removeItem(new ItemStack(Material.ENDER_PEARL, 1));
+            player.updateInventory();
+            if (!remainingItems.isEmpty()) {
+                ItemStack heldItem = player.getInventory().getItemInMainHand();
+                if (heldItem.getType() == Material.ENDER_PEARL) {
+                    heldItem.setAmount(heldItem.getAmount() - 1);
+                    if (heldItem.getAmount() == 0) {
+                        heldItem.setType(Material.AIR);
+                    }
+                    player.getInventory().setItemInMainHand(heldItem);
+                } else {
+                    heldItem = player.getInventory().getItemInOffHand();
+                    if (heldItem.getType() == Material.ENDER_PEARL) {
+                        heldItem.setAmount(heldItem.getAmount() - 1);
+                        if (heldItem.getAmount() == 0) {
+                            heldItem.setType(Material.AIR);
+                        }
+                        player.getInventory().setItemInOffHand(heldItem);
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     public static Projectile relaunchEnderPearl(Plugin plugin, Player player, AtomicBoolean blockShoot, int projectileLifetime, double projectileSpeed) {
         if (blockShoot != null) {
             if (blockShoot.get()) return null;
             blockShoot.set(true);
         }
 
-        if (player.getGameMode() != GameMode.CREATIVE) {
-            player.getInventory().removeItem(new ItemStack(Material.ENDER_PEARL, 1));
-        }
+        consumeEnderPearl(player);
 
         Projectile projectile = player.launchProjectile(EnderPearl.class, player.getLocation().getDirection().clone().normalize().multiply(projectileSpeed));
         projectile.setGravity(false);

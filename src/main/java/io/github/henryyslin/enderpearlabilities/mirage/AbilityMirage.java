@@ -22,7 +22,6 @@ import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.DisplaySlot;
@@ -161,9 +160,7 @@ public class AbilityMirage implements Ability {
         new FunctionChain(
                 next -> {
                     abilityActive.set(true);
-                    if (player.getGameMode() != GameMode.CREATIVE) {
-                        player.getInventory().removeItem(new ItemStack(Material.ENDER_PEARL, 1));
-                    }
+                    AbilityUtils.consumeEnderPearl(player);
                     next.invoke();
                 },
                 next -> AbilityUtils.chargeUpSequence(plugin, player, getChargeUp(), next),
