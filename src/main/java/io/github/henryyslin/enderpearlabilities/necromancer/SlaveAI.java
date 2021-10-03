@@ -28,7 +28,11 @@ public class SlaveAI extends BukkitRunnable {
 
         LivingEntity currentTarget = playerTarget.get();
         if (currentTarget != null) skeleton.setTarget(currentTarget);
-        if (skeleton.getTarget() == player) skeleton.setTarget(null);
+        LivingEntity prevTarget = skeleton.getTarget();
+        if (prevTarget != null) {
+            if (prevTarget == player) skeleton.setTarget(null);
+            else if (!prevTarget.isValid()) skeleton.setTarget(null);
+        }
 
         skeleton.getWorld().spawnParticle(Particle.SOUL, skeleton.getLocation(), 5, 0.5, 0.5, 0.5, 0.02);
         LivingEntity skeletonTarget = skeleton.getTarget();
