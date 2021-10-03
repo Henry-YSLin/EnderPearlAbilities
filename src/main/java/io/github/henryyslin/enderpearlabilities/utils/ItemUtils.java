@@ -20,6 +20,7 @@ public class ItemUtils {
             damageable.setDamage(Math.min(maxDamage, damageable.getDamage() + damage));
         else
             damageable.setDamage(Math.min(maxDamage, damage));
+        itemStack.setItemMeta(damageable);
     }
 
     public static Optional<Integer> getToolDurability(ItemStack itemStack) {

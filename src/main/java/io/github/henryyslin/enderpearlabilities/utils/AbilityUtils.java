@@ -57,6 +57,7 @@ public class AbilityUtils {
             if (player.getInventory().getItemInOffHand().getType() != Material.ENDER_PEARL) return false;
         }
         if (item == null || item.getType() != Material.ENDER_PEARL) return false;
+        if (player.getCooldown(Material.ENDER_PEARL) > 0) return false;
         return action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK;
     }
 
