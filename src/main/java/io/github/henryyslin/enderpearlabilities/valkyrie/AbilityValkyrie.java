@@ -6,25 +6,21 @@ import io.github.henryyslin.enderpearlabilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.AdvancedRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
-import org.bukkit.*;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarStyle;
-import org.bukkit.boss.BossBar;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityUnleashEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
 import org.bukkit.projectiles.ProjectileSource;
@@ -32,11 +28,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 
 public class AbilityValkyrie implements Ability {
     static final int PROJECTILE_LIFETIME = 20;
@@ -185,6 +179,7 @@ public class AbilityValkyrie implements Ability {
 
                         if (metadataList.size() == 0) continue;
                         Vector target = (Vector) metadataList.get(0).value();
+                        if (target == null) continue;
                         Vector distance = target.clone().subtract(arrow.getLocation().toVector());
                         if (distance.lengthSquared() < 4) arrow.removeMetadata("target", plugin);
                         arrow.setVelocity(arrow.getVelocity().multiply(0.99).add(distance.normalize().multiply(2)).normalize().multiply(2));
