@@ -130,9 +130,6 @@ public class AbilityValkyrie implements Ability {
                 finalLocation = hitEntity.getLocation();
             }
 
-            blockShoot.set(false);
-            abilityActive.set(true);
-
             final List<Arrow> arrows = new ArrayList<>();
 
             new BukkitRunnable() {

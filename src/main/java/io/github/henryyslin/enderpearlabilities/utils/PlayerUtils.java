@@ -1,10 +1,13 @@
 package io.github.henryyslin.enderpearlabilities.utils;
 
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
+
+import java.util.Optional;
 
 public class PlayerUtils {
     public static Entity getPlayerTargetEntity(Player player) {
@@ -30,5 +33,13 @@ public class PlayerUtils {
         });
         if (result == null) return null;
         return (LivingEntity) result.getHitEntity();
+    }
+
+    public static Optional<Integer> getMainHandToolDurability(Player player) {
+        return ItemUtils.getToolDurability(player.getInventory().getItemInMainHand());
+    }
+
+    public static boolean canMainHandBreakBlock(Player player, Block block) {
+        return !block.getDrops(player.getInventory().getItemInMainHand(), player).isEmpty();
     }
 }

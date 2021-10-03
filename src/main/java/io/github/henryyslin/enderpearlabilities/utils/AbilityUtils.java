@@ -61,8 +61,10 @@ public class AbilityUtils {
     }
 
     public static Projectile relaunchEnderPearl(Plugin plugin, Player player, AtomicBoolean blockShoot, int projectileLifetime, double projectileSpeed) {
-        if (blockShoot.get()) return null;
-        blockShoot.set(true);
+        if (blockShoot != null) {
+            if (blockShoot.get()) return null;
+            blockShoot.set(true);
+        }
 
         if (player.getGameMode() != GameMode.CREATIVE) {
             player.getInventory().removeItem(new ItemStack(Material.ENDER_PEARL, 1));
@@ -81,7 +83,8 @@ public class AbilityUtils {
                 if (projectile.isValid()) {
                     projectile.remove();
                 }
-                blockShoot.set(false);
+                if (blockShoot != null)
+                    blockShoot.set(false);
             }
         }.runTaskLater(plugin, projectileLifetime);
 
