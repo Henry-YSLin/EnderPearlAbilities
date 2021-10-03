@@ -149,7 +149,7 @@ public class AbilityWraith implements Ability {
 
                     @Override
                     protected synchronized void start() {
-                        player.setCooldown(Material.ENDER_PEARL, getChargeUp());
+                        player.setCooldown(Material.ENDER_PEARL, getDuration());
                         bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + getName(), BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                         lastLocation = player.getLocation();

@@ -1,6 +1,7 @@
 package io.github.henryyslin.enderpearlabilities;
 
 import io.github.henryyslin.enderpearlabilities.mirage.AbilityMirage;
+import io.github.henryyslin.enderpearlabilities.necromancer.AbilityNecromancer;
 import io.github.henryyslin.enderpearlabilities.pathfinder.AbilityPathfinder;
 import io.github.henryyslin.enderpearlabilities.valkyrie.AbilityValkyrie;
 import io.github.henryyslin.enderpearlabilities.wraith.AbilityWraith;
@@ -16,13 +17,14 @@ public final class EnderPearlAbilities extends JavaPlugin {
             new AbilityPathfinder(this, config),
             new AbilityMirage(this, config),
             new AbilityValkyrie(this, config),
+            new AbilityNecromancer(this, config),
     };
 
     @Override
     public void onEnable() {
         // Plugin startup logic
         for (Ability ability : abilities) {
-            config.addDefault(ability.getConfigName(), null);
+            config.addDefault(ability.getConfigName(), "");
         }
         config.options().copyDefaults(true);
         saveConfig();

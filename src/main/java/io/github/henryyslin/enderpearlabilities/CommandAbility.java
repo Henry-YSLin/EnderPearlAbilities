@@ -26,7 +26,7 @@ public record CommandAbility(FileConfiguration config,
         else if (sender instanceof Player)
             lookupPlayer = sender.getName();
 
-        if (lookupPlayer == null)
+        if (lookupPlayer == null || lookupPlayer.length() == 0)
             return false;
 
         String finalLookupPlayer = lookupPlayer;

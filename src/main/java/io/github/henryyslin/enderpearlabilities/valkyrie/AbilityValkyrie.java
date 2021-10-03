@@ -213,6 +213,5 @@ public class AbilityValkyrie implements Ability {
         if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
         if (!abilityActive.get()) return;
         event.setCancelled(true);
-        // event.getPlayer().setNoDamageTicks(1);
     }
 }

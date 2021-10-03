@@ -173,14 +173,7 @@ public class AbilityMirage implements Ability {
 
                     removeAllNPCs();
 
-                    List<Block> spawnLocations = BlockUtils.getBlocks(player.getLocation(), 4).stream().filter(block -> {
-                        if (block.getType().isOccluding() || block.getType().isSolid()) return false;
-                        Material above = world.getBlockAt(block.getLocation().add(0, 1, 0)).getType();
-                        if (above.isOccluding() || above.isSolid()) return false;
-                        Material ground = world.getBlockAt(block.getLocation().add(0, -1, 0)).getType();
-                        if (!ground.isSolid()) return false;
-                        return !ground.isAir() && ground != Material.WATER && ground != Material.LAVA && ground != Material.FIRE && ground != Material.MAGMA_BLOCK;
-                    }).toList();
+                    List<Block> spawnLocations = BlockUtils.getSafeSpawningBlocks(player.getLocation(), 4);
 
                     if (spawnLocations.isEmpty()) {
                         abilityActive.set(false);
