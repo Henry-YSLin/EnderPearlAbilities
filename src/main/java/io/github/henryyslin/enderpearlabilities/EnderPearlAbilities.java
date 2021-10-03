@@ -4,6 +4,7 @@ import io.github.henryyslin.enderpearlabilities.mirage.AbilityMirage;
 import io.github.henryyslin.enderpearlabilities.pathfinder.AbilityPathfinder;
 import io.github.henryyslin.enderpearlabilities.valkyrie.AbilityValkyrie;
 import io.github.henryyslin.enderpearlabilities.wraith.AbilityWraith;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -21,14 +22,19 @@ public final class EnderPearlAbilities extends JavaPlugin {
     public void onEnable() {
         // Plugin startup logic
         for (Ability ability : abilities) {
-            config.addDefault(ability.getConfigName(), "null");
+            config.addDefault(ability.getConfigName(), null);
         }
         config.options().copyDefaults(true);
         saveConfig();
 
         getLogger().info("Setting up abilities");
 
-        this.getCommand("ability").setExecutor(new CommandAbility(config, abilities));
+        PluginCommand command = this.getCommand("ability");
+        if (command != null) {
+            command.setExecutor(new CommandAbility(config, abilities));
+        } else {
+            getServer().broadcastMessage("Failed to register /ability command. Please check plugin description file.");
+        }
 
         for (Ability ability : abilities) {
             getServer().getPluginManager().registerEvents(ability, this);

@@ -1,7 +1,5 @@
 package io.github.henryyslin.enderpearlabilities.mirage;
 
-import io.github.henryyslin.enderpearlabilities.utils.ListUtils;
-import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.ai.EntityTarget;
 import net.citizensnpcs.api.ai.flocking.Flocker;
 import net.citizensnpcs.api.ai.flocking.RadiusNPCFlock;
@@ -11,14 +9,15 @@ import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
-import java.util.ArrayList;
 import java.util.UUID;
 
 @TraitName("cloneTrait")

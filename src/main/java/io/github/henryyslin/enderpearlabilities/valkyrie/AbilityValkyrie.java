@@ -6,10 +6,7 @@ import io.github.henryyslin.enderpearlabilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.AdvancedRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -17,7 +14,6 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
@@ -35,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AbilityValkyrie implements Ability {
     static final int PROJECTILE_LIFETIME = 20;
     static final int ARROW_PER_TICK = 4;
+    static final double PROJECTILE_SPEED = 4;
 
     public String getName() {
         return "Missile Swarm";
@@ -103,29 +100,7 @@ public class AbilityValkyrie implements Ability {
 
         if (cooldown.getCoolingDown()) return;
 
-        if (blockShoot.get()) return;
-        blockShoot.set(true);
-
-        if (player.getGameMode() != GameMode.CREATIVE) {
-            player.getInventory().removeItem(new ItemStack(Material.ENDER_PEARL, 1));
-        }
-
-        Projectile projectile = player.launchProjectile(EnderPearl.class, player.getLocation().getDirection().clone().normalize().multiply(4));
-        projectile.setGravity(false);
-
-        projectile.setMetadata("ability", new FixedMetadataValue(plugin, ownerName));
-
-        player.setCooldown(Material.ENDER_PEARL, 1);
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (projectile.isValid()) {
-                    projectile.remove();
-                }
-                blockShoot.set(false);
-            }
-        }.runTaskLater(plugin, PROJECTILE_LIFETIME);
+        AbilityUtils.relaunchEnderPearl(plugin, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
     }
 
     @EventHandler
@@ -146,16 +121,7 @@ public class AbilityValkyrie implements Ability {
 
             if (hitEntity == null) {
                 // improve accuracy of the hit location
-                Location fixedLocation = projectile.getLocation();
-                Vector offset = projectile.getVelocity().clone().normalize().multiply(0.5);
-                int count = 0;
-
-                World world = player.getWorld();
-                while (!world.getBlockAt(fixedLocation).getType().isSolid() && count < 8) {
-                    fixedLocation.add(offset);
-                    count++;
-                }
-                finalLocation = fixedLocation.clone();
+                finalLocation = AbilityUtils.fixProjectileHitLocation(player, projectile, PROJECTILE_SPEED);
             } else {
                 finalLocation = hitEntity.getLocation();
             }

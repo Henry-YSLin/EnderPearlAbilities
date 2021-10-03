@@ -5,7 +5,10 @@ import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
 import io.github.henryyslin.enderpearlabilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.AdvancedRunnable;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -19,7 +22,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.projectiles.ProjectileSource;
@@ -32,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AbilityPathfinder implements Ability {
     static final int PROJECTILE_LIFETIME = 20;
     static final int GRAPPLE_LIFETIME = 100;
+    static final double PROJECTILE_SPEED = 4;
 
     public String getName() {
         return "Grappling Hook";
@@ -108,29 +111,7 @@ public class AbilityPathfinder implements Ability {
             return;
         }
 
-        if (blockShoot.get()) return;
-        blockShoot.set(true);
-
-        if (player.getGameMode() != GameMode.CREATIVE) {
-            player.getInventory().removeItem(new ItemStack(Material.ENDER_PEARL, 1));
-        }
-
-        Projectile projectile = player.launchProjectile(EnderPearl.class, player.getLocation().getDirection().clone().normalize().multiply(4));
-        projectile.setGravity(false);
-
-        projectile.setMetadata("ability", new FixedMetadataValue(plugin, ownerName));
-
-        player.setCooldown(Material.ENDER_PEARL, 1);
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (projectile.isValid()) {
-                    projectile.remove();
-                }
-                blockShoot.set(false);
-            }
-        }.runTaskLater(plugin, PROJECTILE_LIFETIME);
+        AbilityUtils.relaunchEnderPearl(plugin, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
     }
 
     @EventHandler
@@ -166,15 +147,7 @@ public class AbilityPathfinder implements Ability {
 
         if (hitEntity == null) {
             // improve accuracy of the hit location
-            Location fixedLocation = projectile.getLocation();
-            Vector offset = projectile.getVelocity().clone().normalize().multiply(0.5);
-            int count = 0;
-
-            World world = player.getWorld();
-            while (!world.getBlockAt(fixedLocation).getType().isSolid() && count < 8) {
-                fixedLocation.add(offset);
-                count++;
-            }
+            Location fixedLocation = AbilityUtils.fixProjectileHitLocation(player, projectile, PROJECTILE_SPEED);
             anchor = spawnAnchor(player.getWorld(), fixedLocation);
         } else {
             anchor = spawnAnchor(player.getWorld(), hitEntity.getLocation());

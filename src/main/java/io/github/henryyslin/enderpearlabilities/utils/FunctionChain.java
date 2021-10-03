@@ -14,7 +14,7 @@ public class FunctionChain {
     private void executeOne() {
         chainIndex++;
         if (chainIndex < chain.length)
-            chain[chainIndex].accept(() -> executeOne());
+            chain[chainIndex].accept(this::executeOne);
     }
 
     public void execute() {
