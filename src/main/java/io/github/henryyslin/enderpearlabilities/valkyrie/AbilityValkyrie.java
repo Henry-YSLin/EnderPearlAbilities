@@ -58,7 +58,7 @@ public class AbilityValkyrie implements Ability {
     }
 
     public int getDuration() {
-        return 13;
+        return 12;
     }
 
     public int getCooldown() {

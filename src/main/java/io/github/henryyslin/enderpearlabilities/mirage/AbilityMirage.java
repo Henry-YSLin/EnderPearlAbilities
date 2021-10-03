@@ -48,7 +48,7 @@ public class AbilityMirage implements Ability {
     }
 
     public String getDescription() {
-        return "Deploy a team of decoys to distract enemies. Decoys last for a set amount of time and will explode when attacked by players.";
+        return "Deploy a team of decoys to distract enemies and protect the player. Decoys last for a set amount of time and use tools on their hands with reduced efficiency.";
     }
 
     public ActivationHand getActivation() {
@@ -80,7 +80,7 @@ public class AbilityMirage implements Ability {
     }
 
     private void removeAllNPCs() {
-        CitizensAPI.getNPCRegistries().forEach(registry -> registry.forEach(npc-> {
+        CitizensAPI.getNPCRegistries().forEach(registry -> registry.forEach(npc -> {
             if (npc.isSpawned()) {
                 npc.getEntity().getWorld().spawnParticle(Particle.ASH, npc.getEntity().getLocation(), 20, 0.5, 1, 0.5, 0.02);
             }
@@ -115,7 +115,7 @@ public class AbilityMirage implements Ability {
             removeAllNPCs();
             abilityActive.set(false);
             cooldown = new AbilityCooldown(plugin, player);
-            // cooldown.startCooldown(getCooldown()); // TODO
+            cooldown.startCooldown(getCooldown());
         }
     }
 
@@ -139,9 +139,9 @@ public class AbilityMirage implements Ability {
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-         Entity damager = event.getDamager();
-         if (!damager.hasMetadata("NPC")) return;
-         event.setDamage(event.getDamage() * 3);
+        Entity damager = event.getDamager();
+        if (!damager.hasMetadata("NPC")) return;
+        event.setDamage(event.getDamage() * 3);
     }
 
     @EventHandler

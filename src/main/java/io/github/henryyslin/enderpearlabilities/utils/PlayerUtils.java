@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
 
 public class PlayerUtils {
-    public static Entity getPlayerTarget(Player player) {
+    public static Entity getPlayerTargetEntity(Player player) {
         World world = player.getWorld();
         RayTraceResult result = world.rayTraceEntities(player.getEyeLocation(), player.getEyeLocation().getDirection(), 48, entity -> {
             if (entity instanceof Player p) {

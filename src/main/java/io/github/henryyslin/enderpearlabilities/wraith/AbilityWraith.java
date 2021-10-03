@@ -53,11 +53,11 @@ public class AbilityWraith implements Ability {
     }
 
     public int getDuration() {
-        return 100;
+        return 140;
     }
 
     public int getCooldown() {
-        return 150;
+        return 160;
     }
 
     final Plugin plugin;

@@ -40,7 +40,7 @@ public class AbilityNecromancer implements Ability {
     }
 
     public String getDescription() {
-        return "Summon skeletons to fight whatever the summoner is looking at. Summoned skeletons obey commands until death.\nPassive ability: No skeletons will ever actively attack the summoner.";
+        return "Summon skeletons to fight whatever the player is looking at. Summoned skeletons obey commands until death.\nPassive ability: No skeletons will ever actively attack the player.";
     }
 
     public ActivationHand getActivation() {
@@ -56,7 +56,7 @@ public class AbilityNecromancer implements Ability {
     }
 
     public int getCooldown() {
-        return 20;
+        return 1800;
     }
 
     final Plugin plugin;
