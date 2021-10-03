@@ -83,7 +83,10 @@ public class AbilityNecromancer implements Ability {
             cooldown.startCooldown(getCooldown());
             if (playerTargetTracker != null && !playerTargetTracker.isCancelled())
                 playerTargetTracker.cancel();
-            playerTargetTracker = new PlayerTargetTracker(player, slaves, playerTarget);
+            playerTargetTracker = new PlayerTargetTracker(player, () -> {
+                slaves.removeIf(skeleton -> !skeleton.isValid());
+                return !slaves.isEmpty();
+            }, playerTarget);
             playerTargetTracker.runTaskTimer(plugin, 0, 10);
         }
     }
@@ -168,7 +171,7 @@ public class AbilityNecromancer implements Ability {
                         if (WorldUtils.isDaytime(skeleton.getWorld())) {
                             if (Math.random() < 0.5) {
                                 EntityEquipment equipment = skeleton.getEquipment();
-                                if (equipment != null && equipment.getHelmet() == null)
+                                if (equipment != null && (equipment.getHelmet() == null || equipment.getHelmet().getType() == Material.AIR))
                                     equipment.setHelmet(new ItemStack(Material.IRON_HELMET, 1));
                             }
                         }

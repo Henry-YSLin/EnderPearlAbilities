@@ -1,29 +1,26 @@
-package io.github.henryyslin.enderpearlabilities.necromancer;
+package io.github.henryyslin.enderpearlabilities.utils;
 
-import io.github.henryyslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Skeleton;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 public class PlayerTargetTracker extends BukkitRunnable {
     Player player;
-    List<Skeleton> skeletons;
+    Supplier<Boolean> shouldTrack;
     AtomicReference<LivingEntity> playerTarget;
 
-    public PlayerTargetTracker(Player player, List<Skeleton> skeletons, AtomicReference<LivingEntity> playerTarget) {
+    public PlayerTargetTracker(Player player, Supplier<Boolean> shouldTrack, AtomicReference<LivingEntity> playerTarget) {
         this.player = player;
-        this.skeletons = skeletons;
+        this.shouldTrack = shouldTrack;
         this.playerTarget = playerTarget;
     }
 
     @Override
     public void run() {
-        skeletons.removeIf(skeleton -> !skeleton.isValid());
-        if (skeletons.isEmpty()) return;
+        if (!shouldTrack.get()) return;
         playerTarget.set(PlayerUtils.getPlayerTargetLivingEntity(player));
     }
 }

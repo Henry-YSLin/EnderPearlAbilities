@@ -26,6 +26,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
         for (Ability ability : abilities) {
             config.addDefault(ability.getConfigName(), "");
         }
+        config.addDefault("no-cooldown", false);
         config.options().copyDefaults(true);
         saveConfig();
 
@@ -36,6 +37,10 @@ public final class EnderPearlAbilities extends JavaPlugin {
             command.setExecutor(new CommandAbility(config, abilities));
         } else {
             getServer().broadcastMessage("Failed to register /ability command. Please check plugin description file.");
+        }
+
+        if (config.getBoolean("no-cooldown")) {
+            getLogger().info("No cooldown mode is ON. All ability cooldowns are set to 1s.");
         }
 
         for (Ability ability : abilities) {
