@@ -17,7 +17,7 @@ public abstract class AdvancedRunnable extends BukkitRunnable {
 
         if (count == Long.MIN_VALUE) return;
         count--;
-        if (count <= 0) {
+        if (count < 0) {
             cancel();
         }
     }

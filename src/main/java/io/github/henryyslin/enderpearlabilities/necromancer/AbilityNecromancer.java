@@ -168,7 +168,7 @@ public class AbilityNecromancer implements Ability {
                         if (WorldUtils.isDaytime(skeleton.getWorld())) {
                             if (Math.random() < 0.5) {
                                 EntityEquipment equipment = skeleton.getEquipment();
-                                if (equipment != null)
+                                if (equipment != null && equipment.getHelmet() == null)
                                     equipment.setHelmet(new ItemStack(Material.IRON_HELMET, 1));
                             }
                         }
