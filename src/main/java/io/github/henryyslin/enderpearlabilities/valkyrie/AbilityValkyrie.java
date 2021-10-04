@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AbilityValkyrie implements Ability {
     static final int PROJECTILE_LIFETIME = 20;
     static final int ARROW_PER_TICK = 4;
-    static final double PROJECTILE_SPEED = 4;
+    static final double PROJECTILE_SPEED = 5;
 
     public String getName() {
         return "Missile Swarm";
@@ -154,7 +154,25 @@ public class AbilityValkyrie implements Ability {
                     if (target == null) continue;
                     Vector distance = target.clone().subtract(arrow.getLocation().toVector());
                     if (distance.lengthSquared() < 4) arrow.removeMetadata("target", plugin);
-                    arrow.setVelocity(arrow.getVelocity().multiply(0.99).add(distance.normalize().multiply(2)).normalize().multiply(2));
+
+                    double propelStrength = 1;
+
+                    if (!arrow.hasMetadata("homing")) continue;
+                    metadataList = arrow.getMetadata("homing");
+                    if (metadataList.size() == 0) continue;
+                    Integer boxedHoming = (Integer) metadataList.get(0).value();
+                    if (boxedHoming == null) return;
+                    int homing = boxedHoming;
+                    arrow.removeMetadata("homing", plugin);
+                    if (homing > 80) {
+                        arrow.removeMetadata("target", plugin);
+                    } else if (homing > 40) {
+                        propelStrength = 1 + (homing - 40) / 40d;
+                    } else {
+                        arrow.setMetadata("homing", new FixedMetadataValue(plugin, homing + 1));
+                    }
+
+                    arrow.setVelocity(arrow.getVelocity().multiply(0.99).add(distance.normalize().multiply(propelStrength)).normalize().multiply(2));
                 }
                 if (!valid) cancel();
             }
@@ -184,7 +202,7 @@ public class AbilityValkyrie implements Ability {
                                 side.multiply(-0.4);
                             else
                                 side.multiply(0.4);
-                            Arrow arrow = player.launchProjectile(Arrow.class, facing.clone().multiply(4).add(new Vector(random.nextDouble() * 2d - 1d, random.nextDouble() * 2d, random.nextDouble() * 2d - 1d)));
+                            Arrow arrow = player.launchProjectile(Arrow.class, facing.clone().multiply(4).add(new Vector(random.nextDouble() * 2d - 1d, random.nextDouble() * 2d + 2d, random.nextDouble() * 2d - 1d)));
 
                             arrow.teleport(arrow.getLocation().add(side));
                             arrow.setTicksLived(1160);
@@ -193,6 +211,7 @@ public class AbilityValkyrie implements Ability {
                             arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
                             arrow.setBasePotionData(new PotionData(PotionType.SLOWNESS, false, true));
                             arrow.setMetadata("ability", new FixedMetadataValue(plugin, ownerName));
+                            arrow.setMetadata("homing", new FixedMetadataValue(plugin, 0));
                             arrow.setMetadata("target", new FixedMetadataValue(plugin, finalLocation.toVector().add(new Vector(random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d))));
                             arrows.add(arrow);
                         }
