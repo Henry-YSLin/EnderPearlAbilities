@@ -13,7 +13,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
@@ -22,6 +21,7 @@ import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -135,23 +135,17 @@ public class AbilityValkyrie extends Ability {
                     if (arrow.isOnGround()) continue;
                     valid = true;
 
-                    if (!arrow.hasMetadata("target")) continue;
-                    List<MetadataValue> metadataList = arrow.getMetadata("target");
-
-                    if (metadataList.size() == 0) continue;
-                    Vector target = (Vector) metadataList.get(0).value();
-                    if (target == null) continue;
+                    Optional<Object> boxedVector = AbilityUtils.getMetadata(arrow, "target");
+                    if (boxedVector.isEmpty()) continue;
+                    Vector target = (Vector) boxedVector.get();
                     Vector distance = target.clone().subtract(arrow.getLocation().toVector());
                     if (distance.lengthSquared() < 4) arrow.removeMetadata("target", plugin);
 
                     double propelStrength = 1;
 
-                    if (!arrow.hasMetadata("homing")) continue;
-                    metadataList = arrow.getMetadata("homing");
-                    if (metadataList.size() == 0) continue;
-                    Integer boxedHoming = (Integer) metadataList.get(0).value();
-                    if (boxedHoming == null) return;
-                    int homing = boxedHoming;
+                    Optional<Object> boxedHoming = AbilityUtils.getMetadata(arrow, "homing");
+                    if (boxedHoming.isEmpty()) continue;
+                    int homing = (int) boxedHoming.get();
                     arrow.removeMetadata("homing", plugin);
                     if (homing > 80) {
                         arrow.removeMetadata("target", plugin);
