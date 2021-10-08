@@ -1,16 +1,17 @@
 package io.github.henryyslin.enderpearlabilities;
 
-import io.github.henryyslin.enderpearlabilities.utils.AdvancedRunnable;
+import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+// TODO: multiple cooldowns on the same player
+
 public class AbilityCooldown {
-    final Plugin plugin;
+    final Ability ability;
     final FileConfiguration config;
     final Player player;
     final AtomicBoolean coolingDown = new AtomicBoolean(false);
@@ -20,18 +21,18 @@ public class AbilityCooldown {
         return coolingDown.get();
     }
 
-    public AbilityCooldown(Plugin plugin, Player player) {
-        this.plugin = plugin;
-        this.config = plugin.getConfig();
+    public AbilityCooldown(Ability ability, Player player) {
+        this.ability = ability;
+        this.config = ability.plugin.getConfig();
         this.player = player;
     }
 
     public void startCooldown(int ticks) {
-        if (plugin.getConfig().getBoolean("no-cooldown"))
+        if (ability.plugin.getConfig().getBoolean("no-cooldown"))
             ticks = 20;
         player.setCooldown(Material.ENDER_PEARL, ticks);
         runnable = new AbilityCooldownRunnable();
-        runnable.runTaskRepeated(plugin, 0, 1, ticks);
+        runnable.runTaskRepeated(ability, 0, 1, ticks);
     }
 
     public void cancelCooldown() {
@@ -41,7 +42,7 @@ public class AbilityCooldown {
         }
     }
 
-    class AbilityCooldownRunnable extends AdvancedRunnable {
+    class AbilityCooldownRunnable extends AbilityRunnable {
         @Override
         protected void start() {
             coolingDown.set(true);

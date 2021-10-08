@@ -1,12 +1,9 @@
 package io.github.henryyslin.enderpearlabilities.mirage;
 
-import io.github.henryyslin.enderpearlabilities.Ability;
-import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
-import io.github.henryyslin.enderpearlabilities.ActivationHand;
+import io.github.henryyslin.enderpearlabilities.*;
 import io.github.henryyslin.enderpearlabilities.utils.*;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
-import net.citizensnpcs.api.npc.NPCRegistry;
 import net.citizensnpcs.api.trait.TraitInfo;
 import net.citizensnpcs.api.trait.trait.Equipment;
 import org.bukkit.*;
@@ -14,7 +11,7 @@ import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -22,8 +19,8 @@ import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
@@ -33,78 +30,80 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AbilityMirage implements Ability {
-    public String getName() {
-        return "Life of the Party";
+public class AbilityMirage extends Ability {
+    private final AbilityInfo info;
+
+    @Override
+    public void setConfigDefaults(ConfigurationSection config) {
+        config.addDefault("charge-up", 40);
+        config.addDefault("duration", 1000);
+        config.addDefault("cooldown", 800);
     }
 
-    public String getOrigin() {
-        return "Apex - Mirage";
+    public AbilityMirage(Plugin plugin, String ownerName, ConfigurationSection config) {
+        super(plugin, ownerName, config);
+
+        AbilityInfo.Builder builder = new AbilityInfo.Builder()
+                .codeName("mirage")
+                .name("Life of the Party")
+                .origin("Apex - Mirage")
+                .description("Deploy a team of decoys to distract enemies and protect the player. Decoys last for a set amount of time and use tools on their hands with reduced efficiency.")
+                .activation(ActivationHand.OffHand);
+
+        if (config != null)
+            builder
+                    .chargeUp(config.getInt("charge-up"))
+                    .duration(config.getInt("duration"))
+                    .cooldown(config.getInt("cooldown"));
+
+        info = builder.build();
     }
 
-    public String getConfigName() {
-        return "mirage";
+    @Override
+    public AbilityInfo getInfo() {
+        return info;
     }
 
-    public String getDescription() {
-        return "Deploy a team of decoys to distract enemies and protect the player. Decoys last for a set amount of time and use tools on their hands with reduced efficiency.";
-    }
-
-    public ActivationHand getActivation() {
-        return ActivationHand.OffHand;
-    }
-
-    public int getChargeUp() {
-        return 40;
-    }
-
-    public int getDuration() {
-        return 1000;
-    }
-
-    public int getCooldown() {
-        return 800;
-    }
-
-    final Plugin plugin;
-    final FileConfiguration config;
-    final String ownerName;
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityCooldown cooldown;
 
-    public AbilityMirage(Plugin plugin, FileConfiguration config) {
-        this.plugin = plugin;
-        this.config = config;
-        this.ownerName = config.getString(getConfigName());
-    }
-
     private void removeAllNPCs() {
         CitizensAPI.getNPCRegistries().forEach(registry -> registry.forEach(npc -> {
+            if (npc.getEntity().hasMetadata("ability")) return;
+            if (AbilityUtils.verifyAbilityCouple(this, npc.getEntity())) return;
             if (npc.isSpawned()) {
                 npc.getEntity().getWorld().spawnParticle(Particle.ASH, npc.getEntity().getLocation(), 20, 0.5, 1, 0.5, 0.02);
             }
+            npc.destroy();
         }));
-        CitizensAPI.getNPCRegistries().forEach(NPCRegistry::deregisterAll);
+        //CitizensAPI.getNPCRegistries().forEach(NPCRegistry::deregisterAll);
     }
 
     private int countNPCs() {
         AtomicInteger count = new AtomicInteger();
         CitizensAPI.getNPCRegistries().forEach(registry -> registry.forEach(npc -> {
-            if (npc.isSpawned()) count.getAndIncrement();
+            if (!npc.isSpawned()) return;
+            if (!npc.getEntity().hasMetadata("ability")) return;
+            if (!AbilityUtils.verifyAbilityCouple(this, npc.getEntity())) return;
+            count.getAndIncrement();
         }));
         return count.get();
     }
 
     @Override
     public void onEnable() {
+        super.onEnable();
         removeAllNPCs();
-        CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(CloneTrait.class).withName("cloneTrait"));
+        if (CitizensAPI.getTraitFactory().getRegisteredTraits().stream().noneMatch(traitInfo -> traitInfo.getTraitName().equals("cloneTrait")))
+            CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(CloneTrait.class).withName("cloneTrait"));
     }
 
     @Override
     public void onDisable() {
+        super.onDisable();
         removeAllNPCs();
-        CitizensAPI.getTraitFactory().deregisterTrait(TraitInfo.create(CloneTrait.class).withName("cloneTrait"));
+        if (CitizensAPI.getTraitFactory().getRegisteredTraits().stream().anyMatch(traitInfo -> traitInfo.getTraitName().equals("cloneTrait")))
+            CitizensAPI.getTraitFactory().deregisterTrait(TraitInfo.create(CloneTrait.class).withName("cloneTrait"));
     }
 
     @EventHandler
@@ -113,8 +112,8 @@ public class AbilityMirage implements Ability {
         if (player.getName().equals(ownerName)) {
             removeAllNPCs();
             abilityActive.set(false);
-            cooldown = new AbilityCooldown(plugin, player);
-            cooldown.startCooldown(getCooldown());
+            cooldown = new AbilityCooldown(this, player);
+            cooldown.startCooldown(info.cooldown);
         }
     }
 
@@ -124,13 +123,15 @@ public class AbilityMirage implements Ability {
         Entity entity = event.getEntity();
         if (!(entity instanceof Mob mob)) return;
         if (target == null) return;
-        if (target.hasMetadata("NPC")) return;
+        if (AbilityUtils.verifyAbilityCouple(this, target)) return;
         if (!(target instanceof Player player)) return;
         if (!player.getName().equals(ownerName)) return;
-        if (entity.hasMetadata("NPC")) return;
+        if (AbilityUtils.verifyAbilityCouple(this, entity)) return;
         ArrayList<LivingEntity> candidates = new ArrayList<>();
         CitizensAPI.getNPCRegistry().forEach(npc -> {
-            if (npc.isSpawned()) candidates.add((LivingEntity) npc.getEntity());
+            if (!npc.isSpawned()) return;
+            if (!AbilityUtils.verifyAbilityCouple(this, npc.getEntity())) return;
+            candidates.add((LivingEntity) npc.getEntity());
         });
         if (candidates.isEmpty()) return;
         mob.setTarget(ListUtils.getRandom(candidates));
@@ -139,7 +140,7 @@ public class AbilityMirage implements Ability {
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         Entity damager = event.getDamager();
-        if (!damager.hasMetadata("NPC")) return;
+        if (!AbilityUtils.verifyAbilityCouple(this, damager)) return;
         event.setDamage(event.getDamage() * 3);
     }
 
@@ -147,7 +148,7 @@ public class AbilityMirage implements Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, getActivation())) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
 
         event.setCancelled(true);
 
@@ -161,9 +162,9 @@ public class AbilityMirage implements Ability {
                 next -> {
                     abilityActive.set(true);
                     AbilityUtils.consumeEnderPearl(player);
-                    next.invoke();
+                    next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(plugin, player, getChargeUp(), next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
                 next -> {
                     World world = player.getWorld();
                     world.playSound(player.getLocation(), Sound.ENTITY_ILLUSIONER_CAST_SPELL, 1, 0);
@@ -176,7 +177,7 @@ public class AbilityMirage implements Ability {
                         abilityActive.set(false);
                         cooldown.cancelCooldown();
                         player.sendMessage(ChatColor.RED + "No place to spawn clones!");
-                        plugin.getLogger().info("[" + getName() + "] No valid spawn locations at " + player.getLocation() + ". Cancelling.");
+                        plugin.getLogger().info("[" + info.name + "] No valid spawn locations at " + player.getLocation() + ". Cancelling.");
                         return;
                     }
 
@@ -186,15 +187,16 @@ public class AbilityMirage implements Ability {
                         NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, player.getName());
                         npc.spawn(spawn);
                         npc.getEntity().setGravity(false);
+                        npc.getEntity().setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
                         npc.setProtected(false);
                         npcs.add(npc);
                     }
 
-                    next.invoke();
+                    next.run();
                 },
-                next -> new BukkitRunnable() {
+                next -> new AbilityRunnable() {
                     @Override
-                    public void run() {
+                    public void tick() {
                         for (NPC npc : npcs) {
                             npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HELMET, player.getInventory().getHelmet());
                             npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.CHESTPLATE, player.getInventory().getChestplate());
@@ -202,28 +204,28 @@ public class AbilityMirage implements Ability {
                             npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.BOOTS, player.getInventory().getBoots());
                             npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HAND, player.getInventory().getItemInMainHand());
                         }
-                        next.invoke();
+                        next.run();
                     }
-                }.runTaskLater(plugin, 10),
-                next -> new BukkitRunnable() {
+                }.runTaskLater(this, 10),
+                next -> new AbilityRunnable() {
                     @Override
-                    public void run() {
+                    public void tick() {
                         for (NPC npc : npcs) {
                             npc.teleport(npc.getEntity().getLocation().add(0, -300, 0), PlayerTeleportEvent.TeleportCause.PLUGIN);
                             npc.getEntity().setGravity(true);
                             CloneTrait trait = npc.getOrAddTrait(CloneTrait.class);
                             trait.toggle(player, true);
                         }
-                        next.invoke();
+                        next.run();
                     }
-                }.runTaskLater(plugin, 5),
-                next -> new AdvancedRunnable() {
+                }.runTaskLater(this, 5),
+                next -> new AbilityRunnable() {
                     BossBar bossbar;
                     Score score;
 
                     @Override
                     protected synchronized void start() {
-                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + getName(), BarColor.PURPLE, BarStyle.SOLID);
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                         Objective obj = player.getScoreboard().getObjective("Clones");
                         if (obj == null)
@@ -239,7 +241,7 @@ public class AbilityMirage implements Ability {
                             cancel();
                             return;
                         }
-                        bossbar.setProgress(count * 10 / (double) getDuration());
+                        bossbar.setProgress(count * 10 / (double) info.duration);
                         int count = countNPCs();
                         score.setScore(count);
                         if (count == 0) cancel();
@@ -251,10 +253,10 @@ public class AbilityMirage implements Ability {
                         removeAllNPCs();
                         player.getScoreboard().clearSlot(DisplaySlot.SIDEBAR);
                         abilityActive.set(false);
-                        cooldown.startCooldown(getCooldown());
-                        next.invoke();
+                        cooldown.startCooldown(info.cooldown);
+                        next.run();
                     }
-                }.runTaskRepeated(plugin, 0, 10, getDuration() / 10)
+                }.runTaskRepeated(this, 0, 10, info.duration / 10)
         ).execute();
     }
 }

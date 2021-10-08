@@ -3,11 +3,11 @@ package io.github.henryyslin.enderpearlabilities.utils;
 import java.util.function.Consumer;
 
 public class FunctionChain {
-    final Consumer<NextFunction>[] chain;
+    final Consumer<Runnable>[] chain;
     int chainIndex = -1;
 
     @SafeVarargs
-    public FunctionChain(Consumer<NextFunction>... chain) {
+    public FunctionChain(Consumer<Runnable>... chain) {
         this.chain = chain;
     }
 

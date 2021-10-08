@@ -1,17 +1,17 @@
 package io.github.henryyslin.enderpearlabilities.necromancer;
 
+import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-public class SlaveAI extends BukkitRunnable {
-    Player player;
-    Skeleton skeleton;
-    AtomicReference<LivingEntity> playerTarget;
+public class SlaveAI extends AbilityRunnable {
+    final Player player;
+    final Skeleton skeleton;
+    final AtomicReference<LivingEntity> playerTarget;
 
     public SlaveAI(Player player, Skeleton skeleton, AtomicReference<LivingEntity> playerTarget) {
         this.player = player;
@@ -20,7 +20,7 @@ public class SlaveAI extends BukkitRunnable {
     }
 
     @Override
-    public void run() {
+    public void tick() {
         if (!skeleton.isValid()) {
             cancel();
             return;

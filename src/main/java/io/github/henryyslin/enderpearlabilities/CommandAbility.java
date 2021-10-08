@@ -6,12 +6,13 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public record CommandAbility(FileConfiguration config,
-                             Ability[] abilities) implements CommandExecutor {
+                             List<Ability> abilities) implements CommandExecutor {
 
     private String friendlyNumber(int number) {
         if (number == Integer.MAX_VALUE) return "infinite";
@@ -19,7 +20,7 @@ public record CommandAbility(FileConfiguration config,
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         String lookupPlayer = null;
         if (args.length >= 1)
             lookupPlayer = args[0];
@@ -30,16 +31,16 @@ public record CommandAbility(FileConfiguration config,
             return false;
 
         String finalLookupPlayer = lookupPlayer;
-        Optional<Ability> targetAbility = Arrays.stream(abilities).filter(x -> finalLookupPlayer.equals(config.getString(x.getConfigName()))).findFirst();
+        Optional<Ability> targetAbility = abilities.stream().filter(x -> config.getStringList(x.getInfo().codeName).contains(finalLookupPlayer)).findFirst();
         if (targetAbility.isEmpty()) {
             sender.sendMessage(ChatColor.RED + "Cannot find " + finalLookupPlayer + "'s ability");
         } else {
-            Ability ability = targetAbility.get();
+            AbilityInfo info = targetAbility.get().getInfo();
             sender.sendMessage(
-                    String.format("%s - %s%s%s - %s", finalLookupPlayer, ChatColor.LIGHT_PURPLE, ChatColor.BOLD, ability.getOrigin(), ability.getName()),
-                    ability.getDescription(),
-                    String.format("%sActivation: %s", ChatColor.GRAY, ability.getActivation() == ActivationHand.MainHand ? "main hand" : "off hand"),
-                    String.format("%sCharge up: %ss   Duration: %ss   Cool down: %ss", ChatColor.GRAY, friendlyNumber(ability.getChargeUp()), friendlyNumber(ability.getDuration()), friendlyNumber(ability.getCooldown()))
+                    String.format("%s - %s%s%s - %s", finalLookupPlayer, ChatColor.LIGHT_PURPLE, ChatColor.BOLD, info.origin, info.name),
+                    info.description,
+                    String.format("%sActivation: %s", ChatColor.GRAY, info.activation == ActivationHand.MainHand ? "main hand" : "off hand"),
+                    String.format("%sCharge up: %ss   Duration: %ss   Cool down: %ss", ChatColor.GRAY, friendlyNumber(info.chargeUp), friendlyNumber(info.duration), friendlyNumber(info.cooldown))
             );
         }
 

@@ -2,10 +2,11 @@ package io.github.henryyslin.enderpearlabilities.worldshaper;
 
 import io.github.henryyslin.enderpearlabilities.Ability;
 import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
+import io.github.henryyslin.enderpearlabilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.Entity;
@@ -22,60 +23,52 @@ import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AbilityWorldShaper implements Ability {
+public class AbilityWorldShaper extends Ability {
     static final int PROJECTILE_LIFETIME = 20;
     static final double PROJECTILE_SPEED = 4;
 
-    public String getName() {
-        return "World Shaper";
+    private final AbilityInfo info;
+
+    @Override
+    public void setConfigDefaults(ConfigurationSection config) {
+        config.addDefault("charge-up", 0);
+        config.addDefault("duration", 0);
+        config.addDefault("cooldown", 20);
     }
 
-    public String getOrigin() {
-        return "Create Mod";
+    public AbilityWorldShaper(Plugin plugin, String ownerName, ConfigurationSection config) {
+        super(plugin, ownerName, config);
+
+        AbilityInfo.Builder builder = new AbilityInfo.Builder()
+                .codeName("worldshaper")
+                .name("World Shaper")
+                .origin("Create Mod")
+                .description("Fires an ender pearl which explodes on impact, instantly mining a 3x3 area of blocks using the tool held in main hand.")
+                .activation(ActivationHand.OffHand);
+
+        if (config != null)
+            builder
+                    .chargeUp(config.getInt("charge-up"))
+                    .duration(config.getInt("duration"))
+                    .cooldown(config.getInt("cooldown"));
+
+        info = builder.build();
     }
 
-    public String getConfigName() {
-        return "worldshaper";
+    @Override
+    public AbilityInfo getInfo() {
+        return info;
     }
 
-    public String getDescription() {
-        return "Fires an ender pearl which explodes on impact, instantly mining a 3x3 area of blocks using the tool held in main hand.";
-    }
-
-    public ActivationHand getActivation() {
-        return ActivationHand.OffHand;
-    }
-
-    public int getChargeUp() {
-        return 0;
-    }
-
-    public int getDuration() {
-        return 0;
-    }
-
-    public int getCooldown() {
-        return 20;
-    }
-
-    final Plugin plugin;
-    final FileConfiguration config;
-    final String ownerName;
     AbilityCooldown cooldown;
-    AtomicInteger enderPearlHitTime = new AtomicInteger();
-
-    public AbilityWorldShaper(Plugin plugin, FileConfiguration config) {
-        this.plugin = plugin;
-        this.config = config;
-        this.ownerName = config.getString(getConfigName());
-    }
+    final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
-            cooldown = new AbilityCooldown(plugin, player);
-            cooldown.startCooldown(getCooldown());
+            cooldown = new AbilityCooldown(this, player);
+            cooldown.startCooldown(info.cooldown);
         }
     }
 
@@ -83,15 +76,15 @@ public class AbilityWorldShaper implements Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, getActivation())) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
 
         event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
         if (PlayerUtils.getMainHandToolDurability(player).orElse(2) <= 1) return;
 
-        AbilityUtils.relaunchEnderPearl(plugin, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
-        cooldown.startCooldown(getCooldown());
+        AbilityUtils.relaunchEnderPearl(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
+        cooldown.startCooldown(info.cooldown);
     }
 
     @EventHandler
@@ -100,7 +93,7 @@ public class AbilityWorldShaper implements Ability {
         ProjectileSource shooter = projectile.getShooter();
 
         if (!(shooter instanceof Player player)) return;
-        if (!projectile.hasMetadata("ability")) return;
+        if (!AbilityUtils.verifyAbilityCouple(this, projectile)) return;
         if (!player.getName().equals(ownerName)) return;
 
         if (!(projectile instanceof EnderPearl)) return;
@@ -108,7 +101,7 @@ public class AbilityWorldShaper implements Ability {
         event.setCancelled(true);
 
         projectile.remove();
-        cooldown.startCooldown(getCooldown());
+        cooldown.startCooldown(info.cooldown);
         enderPearlHitTime.set(player.getTicksLived());
 
         Entity hitEntity = event.getHitEntity();

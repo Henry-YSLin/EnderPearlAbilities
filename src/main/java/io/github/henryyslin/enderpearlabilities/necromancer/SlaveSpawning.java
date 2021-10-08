@@ -1,24 +1,24 @@
 package io.github.henryyslin.enderpearlabilities.necromancer;
 
-import io.github.henryyslin.enderpearlabilities.utils.AdvancedRunnable;
+import io.github.henryyslin.enderpearlabilities.Ability;
+import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
-import org.bukkit.plugin.Plugin;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-public class SlaveSpawning extends AdvancedRunnable {
-    Plugin plugin;
-    Player player;
-    Skeleton skeleton;
-    AtomicReference<LivingEntity> playerTarget;
+public class SlaveSpawning extends AbilityRunnable {
+    final Ability ability;
+    final Player player;
+    final Skeleton skeleton;
+    final AtomicReference<LivingEntity> playerTarget;
     Location particleLocation;
 
-    public SlaveSpawning(Plugin plugin, Player player, Skeleton skeleton, AtomicReference<LivingEntity> playerTarget) {
-        this.plugin = plugin;
+    public SlaveSpawning(Ability ability, Player player, Skeleton skeleton, AtomicReference<LivingEntity> playerTarget) {
+        this.ability = ability;
         this.player = player;
         this.skeleton = skeleton;
         this.playerTarget = playerTarget;
@@ -43,6 +43,6 @@ public class SlaveSpawning extends AdvancedRunnable {
     protected void end() {
         if (!skeleton.isValid()) return;
         skeleton.setAI(true);
-        new SlaveAI(player, skeleton, playerTarget).runTaskTimer(plugin, 0, 10);
+        new SlaveAI(player, skeleton, playerTarget).runTaskTimer(ability, 0, 10);
     }
 }

@@ -1,27 +1,32 @@
 package io.github.henryyslin.enderpearlabilities.utils;
 
+import io.github.henryyslin.enderpearlabilities.Ability;
+import io.github.henryyslin.enderpearlabilities.AbilityCouple;
 import io.github.henryyslin.enderpearlabilities.ActivationHand;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.EnderPearl;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AbilityUtils {
-    public static void chargeUpSequence(Plugin plugin, Player player, int chargeUp, NextFunction next) {
-        new AdvancedRunnable() {
+    public static void chargeUpSequence(Ability ability, Player player, int chargeUp, Runnable next) {
+        new AbilityRunnable() {
             BossBar bossbar;
 
             @Override
@@ -40,9 +45,9 @@ public class AbilityUtils {
             @Override
             protected synchronized void end() {
                 bossbar.removeAll();
-                next.invoke();
+                next.run();
             }
-        }.runTaskRepeated(plugin, 0, 1, chargeUp);
+        }.runTaskRepeated(ability, 0, 1, chargeUp);
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -91,11 +96,11 @@ public class AbilityUtils {
         return true;
     }
 
-    public static Projectile relaunchEnderPearl(Plugin plugin, Player player, AtomicBoolean blockShoot, int projectileLifetime, double projectileSpeed) {
-        return relaunchEnderPearl(plugin, player, blockShoot, projectileLifetime, projectileSpeed, false);
+    public static Projectile relaunchEnderPearl(Ability ability, Player player, AtomicBoolean blockShoot, int projectileLifetime, double projectileSpeed) {
+        return relaunchEnderPearl(ability, player, blockShoot, projectileLifetime, projectileSpeed, false);
     }
 
-    public static Projectile relaunchEnderPearl(Plugin plugin, Player player, AtomicBoolean blockShoot, int projectileLifetime, double projectileSpeed, boolean gravity) {
+    public static Projectile relaunchEnderPearl(Ability ability, Player player, AtomicBoolean blockShoot, int projectileLifetime, double projectileSpeed, boolean gravity) {
         if (blockShoot != null) {
             if (blockShoot.get()) return null;
             blockShoot.set(true);
@@ -106,20 +111,20 @@ public class AbilityUtils {
         Projectile projectile = player.launchProjectile(EnderPearl.class, player.getLocation().getDirection().clone().normalize().multiply(projectileSpeed));
         projectile.setGravity(gravity);
 
-        projectile.setMetadata("ability", new FixedMetadataValue(plugin, player.getName()));
+        projectile.setMetadata("ability", new FixedMetadataValue(ability.plugin, new AbilityCouple(ability.getInfo().codeName, player.getName())));
 
         player.setCooldown(Material.ENDER_PEARL, 1);
 
-        new BukkitRunnable() {
+        new AbilityRunnable() {
             @Override
-            public void run() {
+            public void tick() {
                 if (projectile.isValid()) {
                     projectile.remove();
                 }
                 if (blockShoot != null)
                     blockShoot.set(false);
             }
-        }.runTaskLater(plugin, projectileLifetime);
+        }.runTaskLater(ability, projectileLifetime);
 
         return projectile;
     }
@@ -135,5 +140,25 @@ public class AbilityUtils {
             distance += 0.5;
         }
         return fixedLocation;
+    }
+
+    public static Optional<Object> getMetadata(Entity entity, String key) {
+        if (!entity.hasMetadata(key)) return Optional.empty();
+        List<MetadataValue> metadata = entity.getMetadata(key);
+        if (metadata.size() == 0) return Optional.empty();
+        Object value = metadata.get(metadata.size() - 1).value();
+        if (value == null) return Optional.empty();
+        return Optional.of(value);
+    }
+
+    public static boolean verifyAbilityCouple(Ability ability, AbilityCouple couple) {
+        if (!Objects.equals(ability.getInfo().codeName, couple.ability())) return false;
+        return Objects.equals(ability.ownerName, couple.player());
+    }
+
+    public static boolean verifyAbilityCouple(Ability ability, Entity entity) {
+        Optional<Object> couple = getMetadata(entity, "ability");
+        if (couple.isEmpty()) return false;
+        return verifyAbilityCouple(ability, (AbilityCouple) couple.get());
     }
 }

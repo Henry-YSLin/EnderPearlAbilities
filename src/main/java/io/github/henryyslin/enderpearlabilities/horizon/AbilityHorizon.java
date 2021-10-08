@@ -2,13 +2,14 @@ package io.github.henryyslin.enderpearlabilities.horizon;
 
 import io.github.henryyslin.enderpearlabilities.Ability;
 import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
+import io.github.henryyslin.enderpearlabilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.*;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -25,56 +26,48 @@ import org.bukkit.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AbilityHorizon implements Ability {
+public class AbilityHorizon extends Ability {
     static final int PROJECTILE_LIFETIME = 100;
     static final double PROJECTILE_SPEED = 2;
     static final boolean PROJECTILE_GRAVITY = true;
 
-    public String getName() {
-        return "Black Hole";
+    private final AbilityInfo info;
+
+    @Override
+    public void setConfigDefaults(ConfigurationSection config) {
+        config.addDefault("charge-up", 20);
+        config.addDefault("duration", 200);
+        config.addDefault("cooldown", 1000);
     }
 
-    public String getOrigin() {
-        return "Apex - Horizon";
+    public AbilityHorizon(Plugin plugin, String ownerName, ConfigurationSection config) {
+        super(plugin, ownerName, config);
+
+        AbilityInfo.Builder builder = new AbilityInfo.Builder()
+                .codeName("horizon")
+                .name("Black Hole")
+                .origin("Apex - Horizon")
+                .description("Create an inescapable micro black hole that pulls all entities in towards it.")
+                .activation(ActivationHand.MainHand);
+
+        if (config != null)
+            builder
+                    .chargeUp(config.getInt("charge-up"))
+                    .duration(config.getInt("duration"))
+                    .cooldown(config.getInt("cooldown"));
+
+        info = builder.build();
     }
 
-    public String getConfigName() {
-        return "horizon";
+    @Override
+    public AbilityInfo getInfo() {
+        return info;
     }
 
-    public String getDescription() {
-        return "Create an inescapable micro black hole that pulls all entities in towards it.";
-    }
-
-    public ActivationHand getActivation() {
-        return ActivationHand.MainHand;
-    }
-
-    public int getChargeUp() {
-        return 20;
-    }
-
-    public int getDuration() {
-        return 200;
-    }
-
-    public int getCooldown() {
-        return 1000;
-    }
-
-    final Plugin plugin;
-    final FileConfiguration config;
-    final String ownerName;
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityCooldown cooldown;
-    AtomicInteger enderPearlHitTime = new AtomicInteger();
-
-    public AbilityHorizon(Plugin plugin, FileConfiguration config) {
-        this.plugin = plugin;
-        this.config = config;
-        this.ownerName = config.getString(getConfigName());
-    }
+    final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -82,8 +75,8 @@ public class AbilityHorizon implements Ability {
         if (player.getName().equals(ownerName)) {
             abilityActive.set(false);
             blockShoot.set(false);
-            cooldown = new AbilityCooldown(plugin, player);
-            cooldown.startCooldown(getCooldown());
+            cooldown = new AbilityCooldown(this, player);
+            cooldown.startCooldown(info.cooldown);
         }
     }
 
@@ -91,14 +84,14 @@ public class AbilityHorizon implements Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, getActivation())) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
 
         event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
         if (abilityActive.get()) return;
 
-        AbilityUtils.relaunchEnderPearl(plugin, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
+        AbilityUtils.relaunchEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
     }
 
     @EventHandler
@@ -107,7 +100,7 @@ public class AbilityHorizon implements Ability {
         ProjectileSource shooter = projectile.getShooter();
 
         if (!(shooter instanceof Player player)) return;
-        if (!projectile.hasMetadata("ability")) return;
+        if (!AbilityUtils.verifyAbilityCouple(this, projectile)) return;
         if (!player.getName().equals(ownerName)) return;
 
         if (!(projectile instanceof EnderPearl)) return;
@@ -126,7 +119,7 @@ public class AbilityHorizon implements Ability {
         World world = projectile.getWorld();
 
         new FunctionChain(
-                nextFunction -> new AdvancedRunnable() {
+                nextFunction -> new AbilityRunnable() {
                     @Override
                     protected void tick() {
                         world.spawnParticle(Particle.EXPLOSION_NORMAL, finalLocation, 2, 0.5, 0.5, 0.5, 0.02);
@@ -134,10 +127,10 @@ public class AbilityHorizon implements Ability {
 
                     @Override
                     protected void end() {
-                        nextFunction.invoke();
+                        nextFunction.run();
                     }
-                }.runTaskRepeated(plugin, 0, 2, getChargeUp() / 2),
-                nextFunction -> new AdvancedRunnable() {
+                }.runTaskRepeated(this, 0, 2, info.chargeUp / 2),
+                nextFunction -> new AbilityRunnable() {
                     Location blackHoleLocation;
 
                     @Override
@@ -169,11 +162,11 @@ public class AbilityHorizon implements Ability {
 
                     @Override
                     protected void end() {
-                        cooldown.startCooldown(getCooldown());
+                        cooldown.startCooldown(info.cooldown);
                         abilityActive.set(false);
-                        nextFunction.invoke();
+                        nextFunction.run();
                     }
-                }.runTaskRepeated(plugin, 0, 1, getDuration())
+                }.runTaskRepeated(this, 0, 1, info.duration)
         ).execute();
     }
 

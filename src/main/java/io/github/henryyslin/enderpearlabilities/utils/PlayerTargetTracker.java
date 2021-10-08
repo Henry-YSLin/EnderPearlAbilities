@@ -2,15 +2,14 @@ package io.github.henryyslin.enderpearlabilities.utils;
 
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-public class PlayerTargetTracker extends BukkitRunnable {
-    Player player;
-    Supplier<Boolean> shouldTrack;
-    AtomicReference<LivingEntity> playerTarget;
+public class PlayerTargetTracker extends AbilityRunnable {
+    final Player player;
+    final Supplier<Boolean> shouldTrack;
+    final AtomicReference<LivingEntity> playerTarget;
 
     public PlayerTargetTracker(Player player, Supplier<Boolean> shouldTrack, AtomicReference<LivingEntity> playerTarget) {
         this.player = player;
@@ -19,7 +18,7 @@ public class PlayerTargetTracker extends BukkitRunnable {
     }
 
     @Override
-    public void run() {
+    public void tick() {
         if (!shouldTrack.get()) return;
         playerTarget.set(PlayerUtils.getPlayerTargetLivingEntity(player));
     }

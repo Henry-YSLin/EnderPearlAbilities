@@ -2,6 +2,7 @@ package io.github.henryyslin.enderpearlabilities.necromancer;
 
 import io.github.henryyslin.enderpearlabilities.Ability;
 import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
+import io.github.henryyslin.enderpearlabilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
@@ -9,7 +10,7 @@ import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -26,68 +27,60 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class AbilityNecromancer implements Ability {
-    public String getName() {
-        return "Skeleton Army";
+public class AbilityNecromancer extends Ability {
+    private final AbilityInfo info;
+
+    @Override
+    public void setConfigDefaults(ConfigurationSection config) {
+        config.addDefault("charge-up", 60);
+        config.addDefault("duration", 100);
+        config.addDefault("cooldown", 1800);
     }
 
-    public String getOrigin() {
-        return "Clash Royale";
+    public AbilityNecromancer(Plugin plugin, String ownerName, ConfigurationSection config) {
+        super(plugin, ownerName, config);
+
+        AbilityInfo.Builder builder = new AbilityInfo.Builder()
+                .codeName("necromancer")
+                .name("Skeleton Army")
+                .origin("Clash Royale")
+                .description("Summon skeletons to fight whatever the player is looking at. Summoned skeletons obey commands until death.\nPassive ability: No skeletons will ever actively attack the player.")
+                .activation(ActivationHand.MainHand);
+
+        if (config != null)
+            builder
+                    .chargeUp(config.getInt("charge-up"))
+                    .duration(config.getInt("duration"))
+                    .cooldown(config.getInt("cooldown"));
+
+        info = builder.build();
     }
 
-    public String getConfigName() {
-        return "necromancer";
+    @Override
+    public AbilityInfo getInfo() {
+        return info;
     }
 
-    public String getDescription() {
-        return "Summon skeletons to fight whatever the player is looking at. Summoned skeletons obey commands until death.\nPassive ability: No skeletons will ever actively attack the player.";
-    }
-
-    public ActivationHand getActivation() {
-        return ActivationHand.MainHand;
-    }
-
-    public int getChargeUp() {
-        return 60;
-    }
-
-    public int getDuration() {
-        return 100;
-    }
-
-    public int getCooldown() {
-        return 1800;
-    }
-
-    final Plugin plugin;
-    final FileConfiguration config;
-    final String ownerName;
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicReference<LivingEntity> playerTarget = new AtomicReference<>();
     final List<Skeleton> slaves = new ArrayList<>();
     AbilityCooldown cooldown;
     PlayerTargetTracker playerTargetTracker;
 
-    public AbilityNecromancer(Plugin plugin, FileConfiguration config) {
-        this.plugin = plugin;
-        this.config = config;
-        this.ownerName = config.getString(getConfigName());
-    }
-
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             abilityActive.set(false);
-            cooldown = new AbilityCooldown(plugin, player);
-            cooldown.startCooldown(getCooldown());
+            cooldown = new AbilityCooldown(this, player);
+            cooldown.startCooldown(info.cooldown);
             if (playerTargetTracker != null && !playerTargetTracker.isCancelled())
                 playerTargetTracker.cancel();
             playerTargetTracker = new PlayerTargetTracker(player, () -> {
                 slaves.removeIf(skeleton -> !skeleton.isValid());
                 return !slaves.isEmpty();
             }, playerTarget);
-            playerTargetTracker.runTaskTimer(plugin, 0, 10);
+            playerTargetTracker.runTaskTimer(this, 0, 10);
         }
     }
 
@@ -100,7 +93,7 @@ public class AbilityNecromancer implements Ability {
                 player.getWorld().spawnParticle(Particle.SOUL, player.getLocation(), 2, 0.5, 0.5, 0.5, 0.02);
                 event.setCancelled(true);
             } else if (event.getTarget() instanceof Skeleton target) {
-                if (skeleton.hasMetadata("ability") && target.hasMetadata("ability"))
+                if (AbilityUtils.verifyAbilityCouple(this, skeleton) && AbilityUtils.verifyAbilityCouple(this, target))
                     event.setCancelled(true);
             }
         }
@@ -109,7 +102,7 @@ public class AbilityNecromancer implements Ability {
     @EventHandler
     public void onProjectileHit(ProjectileHitEvent event) {
         if (!(event.getEntity().getShooter() instanceof Skeleton skeleton)) return;
-        if (skeleton.hasMetadata("ability"))
+        if (AbilityUtils.verifyAbilityCouple(this, skeleton))
             event.getEntity().setTicksLived(1000);
     }
 
@@ -117,30 +110,32 @@ public class AbilityNecromancer implements Ability {
     public void onPlayerClicks(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, getActivation())) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
 
         event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
         if (abilityActive.get()) return;
 
+        final Ability self = this;
+
         new FunctionChain(
                 next -> {
-                    cooldown.startCooldown(getCooldown());
+                    cooldown.startCooldown(info.cooldown);
                     player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_AMBIENT, 1, 0);
                     AbilityUtils.consumeEnderPearl(player);
-                    next.invoke();
+                    next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(plugin, player, getChargeUp(), next),
-                next -> new AdvancedRunnable() {
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
+                next -> new AbilityRunnable() {
                     BossBar bossbar;
                     List<Block> spawnLocations;
 
                     @Override
                     protected synchronized void start() {
                         abilityActive.set(true);
-                        player.setCooldown(Material.ENDER_PEARL, getDuration());
-                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + getName(), BarColor.PURPLE, BarStyle.SOLID);
+                        player.setCooldown(Material.ENDER_PEARL, info.duration);
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                         spawnLocations = BlockUtils.getSafeSpawningBlocks(player.getLocation(), 10);
 
@@ -148,7 +143,7 @@ public class AbilityNecromancer implements Ability {
                             abilityActive.set(false);
                             cooldown.cancelCooldown();
                             player.sendMessage(ChatColor.RED + "No place to summon slaves!");
-                            plugin.getLogger().info("[" + getName() + "] No valid spawn locations at " + player.getLocation() + ". Cancelling.");
+                            plugin.getLogger().info("[" + info.name + "] No valid spawn locations at " + player.getLocation() + ". Cancelling.");
                             cancel();
                         }
                     }
@@ -158,7 +153,7 @@ public class AbilityNecromancer implements Ability {
                         if (!abilityActive.get()) {
                             cancel();
                         }
-                        bossbar.setProgress(count / (double) getDuration() * 10);
+                        bossbar.setProgress(count / (double) info.duration * 10);
                         Location spawnLocation = ListUtils.getRandom(spawnLocations).getLocation().add(0, -1, 0);
                         Skeleton skeleton = (Skeleton) player.getWorld().spawnEntity(spawnLocation, EntityType.SKELETON);
                         skeleton.setAI(false);
@@ -174,7 +169,7 @@ public class AbilityNecromancer implements Ability {
                             }
                         }
                         slaves.add(skeleton);
-                        new SlaveSpawning(plugin, player, skeleton, playerTarget).runTaskRepeated(plugin, 0, 2, 11);
+                        new SlaveSpawning(self, player, skeleton, playerTarget).runTaskRepeated(self, 0, 2, 11);
                     }
 
                     @Override
@@ -182,11 +177,11 @@ public class AbilityNecromancer implements Ability {
                         bossbar.removeAll();
                         if (abilityActive.get()) {
                             abilityActive.set(false);
-                            cooldown.startCooldown(getCooldown());
-                            next.invoke();
+                            cooldown.startCooldown(info.cooldown);
+                            next.run();
                         }
                     }
-                }.runTaskRepeated(plugin, 0, 10, getDuration() / 10)
+                }.runTaskRepeated(this, 0, 10, info.duration / 10)
         ).execute();
     }
 }

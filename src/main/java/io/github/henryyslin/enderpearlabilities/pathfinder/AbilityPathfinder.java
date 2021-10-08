@@ -1,10 +1,8 @@
 package io.github.henryyslin.enderpearlabilities.pathfinder;
 
-import io.github.henryyslin.enderpearlabilities.Ability;
-import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
-import io.github.henryyslin.enderpearlabilities.ActivationHand;
+import io.github.henryyslin.enderpearlabilities.*;
+import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henryyslin.enderpearlabilities.utils.AdvancedRunnable;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -12,7 +10,7 @@ import org.bukkit.World;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityUnleashEvent;
@@ -24,64 +22,55 @@ import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AbilityPathfinder implements Ability {
+public class AbilityPathfinder extends Ability {
     static final int PROJECTILE_LIFETIME = 20;
-    static final int GRAPPLE_LIFETIME = 100;
     static final double PROJECTILE_SPEED = 4;
 
-    public String getName() {
-        return "Grappling Hook";
+    private final AbilityInfo info;
+
+    @Override
+    public void setConfigDefaults(ConfigurationSection config) {
+        // TODO: add charge up
+        config.addDefault("charge-up", 0);
+        config.addDefault("duration", 100);
+        config.addDefault("cooldown", 20);
     }
 
-    public String getOrigin() {
-        return "Apex - Pathfinder";
+    public AbilityPathfinder(Plugin plugin, String ownerName, ConfigurationSection config) {
+        super(plugin, ownerName, config);
+
+        AbilityInfo.Builder builder = new AbilityInfo.Builder()
+                .codeName("pathfinder")
+                .name("Grappling Hook")
+                .origin("Apex - Pathfinder")
+                .description("Shoot a grappling hook to swing around, pull yourself up, or pull other entities close to you.")
+                .activation(ActivationHand.OffHand);
+
+        if (config != null)
+            builder
+                    .chargeUp(config.getInt("charge-up"))
+                    .duration(config.getInt("duration"))
+                    .cooldown(config.getInt("cooldown"));
+
+        info = builder.build();
     }
 
-    public String getConfigName() {
-        return "pathfinder";
+    @Override
+    public AbilityInfo getInfo() {
+        return info;
     }
 
-    public String getDescription() {
-        return "Shoot a grappling hook to swing around, pull yourself up, or pull other entities close to you.";
-    }
-
-    public ActivationHand getActivation() {
-        return ActivationHand.OffHand;
-    }
-
-    public int getChargeUp() {
-        return 0;
-    }
-
-    public int getDuration() {
-        return GRAPPLE_LIFETIME;
-    }
-
-    public int getCooldown() {
-        return 20;
-    }
-
-    final Plugin plugin;
-    final FileConfiguration config;
-    final String ownerName;
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityCooldown cooldown;
-    AdvancedRunnable grapple;
-    AtomicInteger enderPearlHitTime = new AtomicInteger();
-
-    public AbilityPathfinder(Plugin plugin, FileConfiguration config) {
-        this.plugin = plugin;
-        this.config = config;
-        this.ownerName = config.getString(getConfigName());
-    }
+    AbilityRunnable grapple;
+    final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -92,8 +81,8 @@ public class AbilityPathfinder implements Ability {
             if (grapple != null)
                 if (!grapple.isCancelled())
                     grapple.cancel();
-            cooldown = new AbilityCooldown(plugin, player);
-            cooldown.startCooldown(getCooldown());
+            cooldown = new AbilityCooldown(this, player);
+            cooldown.startCooldown(info.cooldown);
         }
     }
 
@@ -101,7 +90,7 @@ public class AbilityPathfinder implements Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, getActivation())) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
 
         event.setCancelled(true);
 
@@ -112,7 +101,7 @@ public class AbilityPathfinder implements Ability {
             return;
         }
 
-        AbilityUtils.relaunchEnderPearl(plugin, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
+        AbilityUtils.relaunchEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
     }
 
     @EventHandler
@@ -129,7 +118,7 @@ public class AbilityPathfinder implements Ability {
         anchor.setGravity(false);
         anchor.setInvulnerable(true);
         anchor.setInvisible(true);
-        anchor.setMetadata("ability", new FixedMetadataValue(plugin, true));
+        anchor.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
         return anchor;
     }
 
@@ -139,7 +128,7 @@ public class AbilityPathfinder implements Ability {
         ProjectileSource shooter = projectile.getShooter();
 
         if (!(shooter instanceof Player player)) return;
-        if (!projectile.hasMetadata("ability")) return;
+        if (!AbilityUtils.verifyAbilityCouple(this, projectile)) return;
         if (!player.getName().equals(ownerName)) return;
 
         event.setCancelled(true);
@@ -157,7 +146,7 @@ public class AbilityPathfinder implements Ability {
             anchor = spawnAnchor(player.getWorld(), hitEntity.getLocation());
         }
 
-        (grapple = new AdvancedRunnable() {
+        (grapple = new AbilityRunnable() {
             BossBar bossbar;
             Location anchorLocation;
 
@@ -165,14 +154,14 @@ public class AbilityPathfinder implements Ability {
             protected void start() {
                 abilityActive.set(true);
                 blockShoot.set(false);
-                bossbar = Bukkit.createBossBar(getName(), BarColor.PURPLE, BarStyle.SOLID);
+                bossbar = Bukkit.createBossBar(info.name, BarColor.PURPLE, BarStyle.SOLID);
                 bossbar.addPlayer(player);
                 anchorLocation = anchor.getLocation();
             }
 
             @Override
             protected void tick() {
-                bossbar.setProgress(count / (double) getDuration());
+                bossbar.setProgress(count / (double) info.duration);
                 if (hitEntity != null)
                     anchorLocation = hitEntity.getLocation();
                 anchor.teleport(anchorLocation);
@@ -208,9 +197,9 @@ public class AbilityPathfinder implements Ability {
                 bossbar.removeAll();
                 anchor.remove();
                 abilityActive.set(false);
-                cooldown.startCooldown(getCooldown());
+                cooldown.startCooldown(info.cooldown);
             }
-        }).runTaskRepeated(plugin, 0, 1, GRAPPLE_LIFETIME);
+        }).runTaskRepeated(this, 0, 1, info.duration);
     }
 
     @EventHandler
@@ -224,15 +213,15 @@ public class AbilityPathfinder implements Ability {
     @EventHandler
     public void onUnleash(EntityUnleashEvent event) {
         Entity entity = event.getEntity();
-        if (!entity.hasMetadata("ability")) return;
-        new BukkitRunnable() {
+        if (!AbilityUtils.verifyAbilityCouple(this, entity)) return;
+        new AbilityRunnable() {
             @Override
-            public void run() {
+            public void tick() {
                 Collection<Entity> entities = entity.getWorld().getNearbyEntities(entity.getLocation(), 2, 2, 2, e -> e.getType() == EntityType.DROPPED_ITEM && ((Item) e).getItemStack().getType() == Material.LEAD);
                 for (Entity entity : entities) {
                     entity.remove();
                 }
             }
-        }.runTaskLater(plugin, 1);
+        }.runTaskLater(this, 1);
     }
 }

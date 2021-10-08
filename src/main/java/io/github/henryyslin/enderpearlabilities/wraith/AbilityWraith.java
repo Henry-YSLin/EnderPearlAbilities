@@ -2,16 +2,17 @@ package io.github.henryyslin.enderpearlabilities.wraith;
 
 import io.github.henryyslin.enderpearlabilities.Ability;
 import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
+import io.github.henryyslin.enderpearlabilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.ActivationHand;
+import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henryyslin.enderpearlabilities.utils.AdvancedRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -21,55 +22,46 @@ import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class AbilityWraith implements Ability {
-    public String getName() {
-        return "Into The Void";
+public class AbilityWraith extends Ability {
+    private final AbilityInfo info;
+
+    @Override
+    public void setConfigDefaults(ConfigurationSection config) {
+        config.addDefault("charge-up", 20);
+        config.addDefault("duration", 140);
+        config.addDefault("cooldown", 160);
     }
 
-    public String getOrigin() {
-        return "Apex - Wraith";
+    public AbilityWraith(Plugin plugin, String ownerName, ConfigurationSection config) {
+        super(plugin, ownerName, config);
+
+        AbilityInfo.Builder builder = new AbilityInfo.Builder()
+                .codeName("wraith")
+                .name("Into The Void")
+                .origin("Apex - Wraith")
+                .description("For a short duration, improve vision and switch to spectator mode for fast flying, leaving a particle trail behind. Cannot go through walls.")
+                .activation(ActivationHand.MainHand);
+
+        if (config != null)
+            builder
+                    .chargeUp(config.getInt("charge-up"))
+                    .duration(config.getInt("duration"))
+                    .cooldown(config.getInt("cooldown"));
+
+        info = builder.build();
     }
 
-    public String getConfigName() {
-        return "wraith";
+    @Override
+    public AbilityInfo getInfo() {
+        return info;
     }
 
-    public String getDescription() {
-        return "For a short duration, improve vision and switch to spectator mode for fast flying, leaving a particle trail behind. Cannot go through walls.";
-    }
-
-    public ActivationHand getActivation() {
-        return ActivationHand.MainHand;
-    }
-
-    public int getChargeUp() {
-        return 20;
-    }
-
-    public int getDuration() {
-        return 140;
-    }
-
-    public int getCooldown() {
-        return 160;
-    }
-
-    final Plugin plugin;
-    final FileConfiguration config;
-    final String ownerName;
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityCooldown cooldown;
-
-    public AbilityWraith(Plugin plugin, FileConfiguration config) {
-        this.plugin = plugin;
-        this.config = config;
-        this.ownerName = config.getString(getConfigName());
-    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -80,8 +72,8 @@ public class AbilityWraith implements Ability {
                 player.setGameMode(GameMode.SURVIVAL);
             }
             abilityActive.set(false);
-            cooldown = new AbilityCooldown(plugin, player);
-            cooldown.startCooldown(getCooldown());
+            cooldown = new AbilityCooldown(this, player);
+            cooldown.startCooldown(info.cooldown);
         }
     }
 
@@ -94,14 +86,14 @@ public class AbilityWraith implements Ability {
 
         int lastSneakCount = sneakCount;
         sneakCount++;
-        new BukkitRunnable() {
+        new AbilityRunnable() {
             @Override
-            public void run() {
+            public void tick() {
                 if (sneakCount - lastSneakCount >= 6) {
                     abilityActive.set(false);
                 }
             }
-        }.runTaskLater(plugin, 10);
+        }.runTaskLater(this, 10);
     }
 
     @EventHandler
@@ -116,7 +108,7 @@ public class AbilityWraith implements Ability {
     public void onPlayerClicks(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, getActivation())) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
 
         event.setCancelled(true);
 
@@ -128,9 +120,9 @@ public class AbilityWraith implements Ability {
                 next -> {
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 1, 0);
                     AbilityUtils.consumeEnderPearl(player);
-                    next.invoke();
+                    next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(plugin, player, getChargeUp(), next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
                 next -> {
                     abilityActive.set(true);
                     prevGameMode.set(player.getGameMode());
@@ -138,16 +130,16 @@ public class AbilityWraith implements Ability {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 100, 1));
                     player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 100, 1));
                     player.teleport(player.getLocation().add(0, 0.5, 0));
-                    next.invoke();
+                    next.run();
                 },
-                next -> new AdvancedRunnable() {
+                next -> new AbilityRunnable() {
                     BossBar bossbar;
                     Location lastLocation;
 
                     @Override
                     protected synchronized void start() {
-                        player.setCooldown(Material.ENDER_PEARL, getDuration());
-                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + getName(), BarColor.PURPLE, BarStyle.SOLID);
+                        player.setCooldown(Material.ENDER_PEARL, info.duration);
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                         lastLocation = player.getLocation();
                     }
@@ -157,7 +149,7 @@ public class AbilityWraith implements Ability {
                         if (!abilityActive.get()) {
                             cancel();
                         }
-                        bossbar.setProgress(count / (double) getDuration());
+                        bossbar.setProgress(count / (double) info.duration);
                         Block headBlock = player.getWorld().getBlockAt(player.getEyeLocation());
                         if (headBlock.getType().isOccluding()) {
                             player.teleport(lastLocation);
@@ -176,17 +168,17 @@ public class AbilityWraith implements Ability {
                         if (headBlock.getType().isOccluding()) {
                             player.teleport(lastLocation);
                         }
-                        next.invoke();
+                        next.run();
                     }
-                }.runTaskRepeated(plugin, 0, 1, getDuration()),
+                }.runTaskRepeated(this, 0, 1, info.duration),
                 next -> {
                     player.setGameMode(prevGameMode.get());
                     abilityActive.set(false);
                     sneakCount = 0;
                     player.removePotionEffect(PotionEffectType.CONDUIT_POWER);
                     player.removePotionEffect(PotionEffectType.NIGHT_VISION);
-                    cooldown.startCooldown(getCooldown());
-                    next.invoke();
+                    cooldown.startCooldown(info.cooldown);
+                    next.run();
                 }
         ).execute();
     }

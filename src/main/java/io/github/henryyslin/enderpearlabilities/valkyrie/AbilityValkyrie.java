@@ -1,13 +1,11 @@
 package io.github.henryyslin.enderpearlabilities.valkyrie;
 
-import io.github.henryyslin.enderpearlabilities.Ability;
-import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
-import io.github.henryyslin.enderpearlabilities.ActivationHand;
+import io.github.henryyslin.enderpearlabilities.*;
+import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henryyslin.enderpearlabilities.utils.AdvancedRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -20,7 +18,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
 import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -29,57 +26,49 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AbilityValkyrie implements Ability {
+public class AbilityValkyrie extends Ability {
     static final int PROJECTILE_LIFETIME = 20;
     static final int ARROW_PER_TICK = 4;
     static final double PROJECTILE_SPEED = 4;
 
-    public String getName() {
-        return "Missile Swarm";
+    private final AbilityInfo info;
+
+    @Override
+    public void setConfigDefaults(ConfigurationSection config) {
+        config.addDefault("charge-up", 0);
+        config.addDefault("duration", 12);
+        config.addDefault("cooldown", 400);
     }
 
-    public String getOrigin() {
-        return "Apex - Valkyrie";
+    public AbilityValkyrie(Plugin plugin, String ownerName, ConfigurationSection config) {
+        super(plugin, ownerName, config);
+
+        AbilityInfo.Builder builder = new AbilityInfo.Builder()
+                .codeName("valkyrie")
+                .name("Missile Swarm")
+                .origin("Apex - Valkyrie")
+                .description("Fire a swarm of missiles that damage and slow entities.")
+                .activation(ActivationHand.MainHand);
+
+        if (config != null)
+            builder
+                    .chargeUp(config.getInt("charge-up"))
+                    .duration(config.getInt("duration"))
+                    .cooldown(config.getInt("cooldown"));
+
+        info = builder.build();
     }
 
-    public String getConfigName() {
-        return "valkyrie";
+    @Override
+    public AbilityInfo getInfo() {
+        return info;
     }
 
-    public String getDescription() {
-        return "Fire a swarm of missiles that damage and slow entities.";
-    }
-
-    public ActivationHand getActivation() {
-        return ActivationHand.MainHand;
-    }
-
-    public int getChargeUp() {
-        return 0;
-    }
-
-    public int getDuration() {
-        return 12;
-    }
-
-    public int getCooldown() {
-        return 400;
-    }
-
-    final Plugin plugin;
-    final FileConfiguration config;
-    final String ownerName;
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final Random random = new Random();
     AbilityCooldown cooldown;
-    AtomicInteger enderPearlHitTime = new AtomicInteger();
-
-    public AbilityValkyrie(Plugin plugin, FileConfiguration config) {
-        this.plugin = plugin;
-        this.config = config;
-        this.ownerName = config.getString(getConfigName());
-    }
+    final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -87,8 +76,8 @@ public class AbilityValkyrie implements Ability {
         if (player.getName().equals(ownerName)) {
             abilityActive.set(false);
             blockShoot.set(false);
-            cooldown = new AbilityCooldown(plugin, player);
-            cooldown.startCooldown(getCooldown());
+            cooldown = new AbilityCooldown(this, player);
+            cooldown.startCooldown(info.cooldown);
         }
     }
 
@@ -96,13 +85,13 @@ public class AbilityValkyrie implements Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, getActivation())) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
 
         event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
 
-        AbilityUtils.relaunchEnderPearl(plugin, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
+        AbilityUtils.relaunchEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
     }
 
     @EventHandler
@@ -111,7 +100,7 @@ public class AbilityValkyrie implements Ability {
         ProjectileSource shooter = projectile.getShooter();
 
         if (!(shooter instanceof Player player)) return;
-        if (!projectile.hasMetadata("ability")) return;
+        if (!AbilityUtils.verifyAbilityCouple(this, projectile)) return;
         if (!player.getName().equals(ownerName)) return;
 
         if (!(projectile instanceof EnderPearl)) return;
@@ -119,7 +108,7 @@ public class AbilityValkyrie implements Ability {
         event.setCancelled(true);
 
         projectile.remove();
-        cooldown.startCooldown(getCooldown());
+        cooldown.startCooldown(info.cooldown);
         abilityActive.set(true);
         blockShoot.set(false);
         enderPearlHitTime.set(player.getTicksLived());
@@ -137,9 +126,9 @@ public class AbilityValkyrie implements Ability {
 
         final List<Arrow> arrows = new ArrayList<>();
 
-        new BukkitRunnable() {
+        new AbilityRunnable() {
             @Override
-            public void run() {
+            public void tick() {
                 if (arrows.size() == 0) return;
                 boolean valid = false;
                 for (Arrow arrow : arrows) {
@@ -158,17 +147,17 @@ public class AbilityValkyrie implements Ability {
                 }
                 if (!valid) cancel();
             }
-        }.runTaskTimer(plugin, 0, 1);
+        }.runTaskTimer(this, 0, 1);
 
         new FunctionChain(
-                nextFunction -> new BukkitRunnable() {
+                nextFunction -> new AbilityRunnable() {
                     @Override
-                    public void run() {
+                    public void tick() {
                         abilityActive.set(false);
-                        nextFunction.invoke();
+                        nextFunction.run();
                     }
-                }.runTaskLater(plugin, 1),
-                nextFunction -> new AdvancedRunnable() {
+                }.runTaskLater(this, 1),
+                nextFunction -> new AbilityRunnable() {
                     @Override
                     protected void start() {
                         super.start();
@@ -192,7 +181,7 @@ public class AbilityValkyrie implements Ability {
                             arrow.setBounce(false);
                             arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
                             arrow.setBasePotionData(new PotionData(PotionType.SLOWNESS, false, true));
-                            arrow.setMetadata("ability", new FixedMetadataValue(plugin, ownerName));
+                            arrow.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
                             arrow.setMetadata("target", new FixedMetadataValue(plugin, finalLocation.toVector().add(new Vector(random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d))));
                             arrows.add(arrow);
                         }
@@ -202,9 +191,9 @@ public class AbilityValkyrie implements Ability {
                     protected void end() {
                         super.end();
                         abilityActive.set(false);
-                        nextFunction.invoke();
+                        nextFunction.run();
                     }
-                }.runTaskRepeated(plugin, 0, 1, getDuration())
+                }.runTaskRepeated(this, 0, 1, info.duration)
         ).execute();
     }
 
