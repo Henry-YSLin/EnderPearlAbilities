@@ -1,8 +1,9 @@
 package io.github.henryyslin.enderpearlabilities.utils;
 
-import io.github.henryyslin.enderpearlabilities.Ability;
-import io.github.henryyslin.enderpearlabilities.AbilityCouple;
-import io.github.henryyslin.enderpearlabilities.ActivationHand;
+import io.github.henryyslin.enderpearlabilities.abilities.Ability;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
+import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -26,6 +27,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AbilityUtils {
     public static void chargeUpSequence(Ability ability, Player player, int chargeUp, Runnable next) {
+        if (chargeUp <= 0) {
+            next.run();
+            return;
+        }
         new AbilityRunnable() {
             BossBar bossbar;
 
@@ -45,7 +50,8 @@ public class AbilityUtils {
             @Override
             protected synchronized void end() {
                 bossbar.removeAll();
-                next.run();
+                if (this.hasCompleted())
+                    next.run();
             }
         }.runTaskRepeated(ability, 0, 1, chargeUp);
     }
@@ -160,5 +166,27 @@ public class AbilityUtils {
         Optional<Object> couple = getMetadata(entity, "ability");
         if (couple.isEmpty()) return false;
         return verifyAbilityCouple(ability, (AbilityCouple) couple.get());
+    }
+
+    private static String friendlyNumber(int number) {
+        if (number == Integer.MAX_VALUE) return "infinite";
+        return String.valueOf(number / 20f);
+    }
+
+    public static String formatAbilityInfo(Ability ability) {
+        AbilityInfo info = ability.getInfo();
+        String s;
+        if (ability.ownerName != null)
+            s = String.format("%s - %s%s%s - %s", ability.ownerName, ChatColor.LIGHT_PURPLE, ChatColor.BOLD, info.origin, info.name);
+        else
+            s = String.format("%s%s%s - %s", ChatColor.LIGHT_PURPLE, ChatColor.BOLD, info.origin, info.name);
+        s += "\n" +
+                ChatColor.RESET + ChatColor.WHITE + info.description +
+                "\n" +
+                String.format("%sActivation: %s", ChatColor.GRAY, info.activation == ActivationHand.MainHand ? "main hand" : "off hand") +
+                "\n" +
+                String.format("%sCharge up: %ss   Duration: %ss   Cool down: %ss", ChatColor.GRAY, friendlyNumber(info.chargeUp), friendlyNumber(info.duration), friendlyNumber(info.cooldown)) +
+                "\n";
+        return s;
     }
 }

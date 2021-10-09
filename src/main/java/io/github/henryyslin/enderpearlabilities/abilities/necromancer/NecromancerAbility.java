@@ -1,9 +1,8 @@
-package io.github.henryyslin.enderpearlabilities.necromancer;
+package io.github.henryyslin.enderpearlabilities.abilities.necromancer;
 
-import io.github.henryyslin.enderpearlabilities.Ability;
-import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
-import io.github.henryyslin.enderpearlabilities.AbilityInfo;
-import io.github.henryyslin.enderpearlabilities.ActivationHand;
+import io.github.henryyslin.enderpearlabilities.abilities.Ability;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
+import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -27,7 +26,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class AbilityNecromancer extends Ability {
+public class NecromancerAbility extends Ability {
     private final AbilityInfo info;
 
     @Override
@@ -37,7 +36,7 @@ public class AbilityNecromancer extends Ability {
         config.addDefault("cooldown", 1800);
     }
 
-    public AbilityNecromancer(Plugin plugin, String ownerName, ConfigurationSection config) {
+    public NecromancerAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
         super(plugin, ownerName, config);
 
         AbilityInfo.Builder builder = new AbilityInfo.Builder()
@@ -64,15 +63,14 @@ public class AbilityNecromancer extends Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicReference<LivingEntity> playerTarget = new AtomicReference<>();
     final List<Skeleton> slaves = new ArrayList<>();
-    AbilityCooldown cooldown;
     PlayerTargetTracker playerTargetTracker;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             abilityActive.set(false);
-            cooldown = new AbilityCooldown(this, player);
             cooldown.startCooldown(info.cooldown);
             if (playerTargetTracker != null && !playerTargetTracker.isCancelled())
                 playerTargetTracker.cancel();
@@ -177,7 +175,8 @@ public class AbilityNecromancer extends Ability {
                         bossbar.removeAll();
                         if (abilityActive.get()) {
                             abilityActive.set(false);
-                            cooldown.startCooldown(info.cooldown);
+                            if (this.hasCompleted())
+                                cooldown.startCooldown(info.cooldown);
                             next.run();
                         }
                     }

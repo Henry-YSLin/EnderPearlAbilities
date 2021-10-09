@@ -1,9 +1,8 @@
-package io.github.henryyslin.enderpearlabilities.wraith;
+package io.github.henryyslin.enderpearlabilities.abilities.wraith;
 
-import io.github.henryyslin.enderpearlabilities.Ability;
-import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
-import io.github.henryyslin.enderpearlabilities.AbilityInfo;
-import io.github.henryyslin.enderpearlabilities.ActivationHand;
+import io.github.henryyslin.enderpearlabilities.abilities.Ability;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
+import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
@@ -26,7 +25,7 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class AbilityWraith extends Ability {
+public class WraithAbility extends Ability {
     private final AbilityInfo info;
 
     @Override
@@ -36,7 +35,7 @@ public class AbilityWraith extends Ability {
         config.addDefault("cooldown", 160);
     }
 
-    public AbilityWraith(Plugin plugin, String ownerName, ConfigurationSection config) {
+    public WraithAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
         super(plugin, ownerName, config);
 
         AbilityInfo.Builder builder = new AbilityInfo.Builder()
@@ -61,10 +60,10 @@ public class AbilityWraith extends Ability {
     }
 
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
-    AbilityCooldown cooldown;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             Block headBlock = player.getWorld().getBlockAt(player.getEyeLocation());
@@ -72,7 +71,6 @@ public class AbilityWraith extends Ability {
                 player.setGameMode(GameMode.SURVIVAL);
             }
             abilityActive.set(false);
-            cooldown = new AbilityCooldown(this, player);
             cooldown.startCooldown(info.cooldown);
         }
     }

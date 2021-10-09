@@ -1,6 +1,9 @@
-package io.github.henryyslin.enderpearlabilities.mirage;
+package io.github.henryyslin.enderpearlabilities.abilities.mirage;
 
-import io.github.henryyslin.enderpearlabilities.*;
+import io.github.henryyslin.enderpearlabilities.abilities.Ability;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
+import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.*;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
@@ -30,7 +33,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AbilityMirage extends Ability {
+public class MirageAbility extends Ability {
     private final AbilityInfo info;
 
     @Override
@@ -40,7 +43,7 @@ public class AbilityMirage extends Ability {
         config.addDefault("cooldown", 800);
     }
 
-    public AbilityMirage(Plugin plugin, String ownerName, ConfigurationSection config) {
+    public MirageAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
         super(plugin, ownerName, config);
 
         AbilityInfo.Builder builder = new AbilityInfo.Builder()
@@ -65,18 +68,20 @@ public class AbilityMirage extends Ability {
     }
 
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
-    AbilityCooldown cooldown;
 
     private void removeAllNPCs() {
-        CitizensAPI.getNPCRegistries().forEach(registry -> registry.forEach(npc -> {
-            if (npc.getEntity().hasMetadata("ability")) return;
-            if (AbilityUtils.verifyAbilityCouple(this, npc.getEntity())) return;
-            if (npc.isSpawned()) {
-                npc.getEntity().getWorld().spawnParticle(Particle.ASH, npc.getEntity().getLocation(), 20, 0.5, 1, 0.5, 0.02);
-            }
-            npc.destroy();
-        }));
-        //CitizensAPI.getNPCRegistries().forEach(NPCRegistry::deregisterAll);
+        CitizensAPI.getNPCRegistries().forEach(registry -> {
+            List<NPC> toBeRemoved = new ArrayList<>();
+            registry.forEach(npc -> {
+                if (npc.isSpawned()) {
+                    if (!npc.getEntity().hasMetadata("ability")) return;
+                    if (!AbilityUtils.verifyAbilityCouple(this, npc.getEntity())) return;
+                    npc.getEntity().getWorld().spawnParticle(Particle.ASH, npc.getEntity().getLocation(), 20, 0.5, 1, 0.5, 0.02);
+                }
+                toBeRemoved.add(npc);
+            });
+            toBeRemoved.forEach(registry::deregister);
+        });
     }
 
     private int countNPCs() {
@@ -94,25 +99,26 @@ public class AbilityMirage extends Ability {
     public void onEnable() {
         super.onEnable();
         removeAllNPCs();
-        if (CitizensAPI.getTraitFactory().getRegisteredTraits().stream().noneMatch(traitInfo -> traitInfo.getTraitName().equals("cloneTrait")))
-            CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(CloneTrait.class).withName("cloneTrait"));
+        if (CitizensAPI.getTraitFactory().getRegisteredTraits().stream().anyMatch(traitInfo -> traitInfo.getTraitName().equals("clonetrait")))
+            CitizensAPI.getTraitFactory().deregisterTrait(TraitInfo.create(CloneTrait.class).withName("clonetrait"));
+        CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(CloneTrait.class).withName("clonetrait"));
     }
 
     @Override
     public void onDisable() {
         super.onDisable();
         removeAllNPCs();
-        if (CitizensAPI.getTraitFactory().getRegisteredTraits().stream().anyMatch(traitInfo -> traitInfo.getTraitName().equals("cloneTrait")))
-            CitizensAPI.getTraitFactory().deregisterTrait(TraitInfo.create(CloneTrait.class).withName("cloneTrait"));
+        if (CitizensAPI.getTraitFactory().getRegisteredTraits().stream().anyMatch(traitInfo -> traitInfo.getTraitName().equals("clonetrait")))
+            CitizensAPI.getTraitFactory().deregisterTrait(TraitInfo.create(CloneTrait.class).withName("clonetrait"));
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             removeAllNPCs();
             abilityActive.set(false);
-            cooldown = new AbilityCooldown(this, player);
             cooldown.startCooldown(info.cooldown);
         }
     }

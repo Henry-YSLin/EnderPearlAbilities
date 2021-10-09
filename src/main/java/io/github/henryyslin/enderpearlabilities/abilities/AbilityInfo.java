@@ -1,4 +1,4 @@
-package io.github.henryyslin.enderpearlabilities;
+package io.github.henryyslin.enderpearlabilities.abilities;
 
 import java.util.Objects;
 

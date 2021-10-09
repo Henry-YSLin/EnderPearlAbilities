@@ -4,6 +4,28 @@ main: io.github.henryyslin.enderpearlabilities.EnderPearlAbilities
 api-version: 1.17
 depend: [Citizens]
 commands:
+  ability query:
+    description: Check the abilities of a player
+    usage: /ability query [player name]
+  ability info:
+    description: Check the detailed description of an ability
+    usage: /ability info [code name]
+  ability register:
+    description: |
+      Register an ability for yourself
+      You can only register an ability if you have a free hand to activate that ability
+    usage: /ability register [code name]
+  ability unregister:
+    description: Unregister an ability for yourself
+    usage: /ability unregister [code name]
+  ability list:
+    description: List all available abilities
+    usage: /ability list
   ability:
-    description: Get the description of a player's ability
-    usage: "Usage: /<command> [player name]"
+    description: Commands to manage ender pearl abilities
+    usage: |
+      /ability query - Check the abilities of a player
+      /ability info - Check the detailed description of an ability
+      /ability register - Register an ability for yourself
+      /ability unregister - Unregister an ability for yourself
+      /ability list - List all available abilities

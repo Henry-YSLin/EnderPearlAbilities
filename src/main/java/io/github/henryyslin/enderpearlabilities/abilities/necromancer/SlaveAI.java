@@ -1,4 +1,4 @@
-package io.github.henryyslin.enderpearlabilities.necromancer;
+package io.github.henryyslin.enderpearlabilities.abilities.necromancer;
 
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import org.bukkit.Particle;

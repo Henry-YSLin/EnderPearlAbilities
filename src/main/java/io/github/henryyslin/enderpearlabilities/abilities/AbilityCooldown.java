@@ -1,14 +1,14 @@
-package io.github.henryyslin.enderpearlabilities;
+package io.github.henryyslin.enderpearlabilities.abilities;
 
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-
-// TODO: multiple cooldowns on the same player
 
 public class AbilityCooldown {
     final Ability ability;
@@ -30,14 +30,12 @@ public class AbilityCooldown {
     public void startCooldown(int ticks) {
         if (ability.plugin.getConfig().getBoolean("no-cooldown"))
             ticks = 20;
-        player.setCooldown(Material.ENDER_PEARL, ticks);
         runnable = new AbilityCooldownRunnable();
         runnable.runTaskRepeated(ability, 0, 1, ticks);
     }
 
     public void cancelCooldown() {
         if (runnable != null) {
-            player.setCooldown(Material.ENDER_PEARL, 0);
             runnable.cancel();
         }
     }
@@ -50,12 +48,20 @@ public class AbilityCooldown {
 
         @Override
         protected void tick() {
+            boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
+            boolean offHandPearl = player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
+            if (ability.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
+                    ability.getInfo().activation == ActivationHand.OffHand && offHandPearl)
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ability.getInfo().name + " in " + count / 20 + "s"));
+            else if (!mainHandPearl && !offHandPearl)
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent());
             player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation(), 2, 0.5, 0.5, 0.5, 0.02);
         }
 
         @Override
         protected void end() {
             coolingDown.set(false);
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent());
         }
     }
 }

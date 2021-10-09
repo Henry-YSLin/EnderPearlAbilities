@@ -1,4 +1,4 @@
-package io.github.henryyslin.enderpearlabilities.mirage;
+package io.github.henryyslin.enderpearlabilities.abilities.mirage;
 
 import net.citizensnpcs.api.ai.EntityTarget;
 import net.citizensnpcs.api.ai.flocking.Flocker;
@@ -20,7 +20,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.UUID;
 
-@TraitName("cloneTrait")
+@TraitName("clonetrait")
 public class CloneTrait extends Trait {
     @Persist("active")
     private boolean enabled = false;
@@ -32,7 +32,7 @@ public class CloneTrait extends Trait {
     private boolean protect;
 
     public CloneTrait() {
-        super("cloneTrait");
+        super("clonetrait");
     }
 
     public Player getFollowingPlayer() {

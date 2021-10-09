@@ -1,9 +1,8 @@
-package io.github.henryyslin.enderpearlabilities.horizon;
+package io.github.henryyslin.enderpearlabilities.abilities.horizon;
 
-import io.github.henryyslin.enderpearlabilities.Ability;
-import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
-import io.github.henryyslin.enderpearlabilities.AbilityInfo;
-import io.github.henryyslin.enderpearlabilities.ActivationHand;
+import io.github.henryyslin.enderpearlabilities.abilities.Ability;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
+import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.*;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -26,7 +25,7 @@ import org.bukkit.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AbilityHorizon extends Ability {
+public class HorizonAbility extends Ability {
     static final int PROJECTILE_LIFETIME = 100;
     static final double PROJECTILE_SPEED = 2;
     static final boolean PROJECTILE_GRAVITY = true;
@@ -40,7 +39,7 @@ public class AbilityHorizon extends Ability {
         config.addDefault("cooldown", 1000);
     }
 
-    public AbilityHorizon(Plugin plugin, String ownerName, ConfigurationSection config) {
+    public HorizonAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
         super(plugin, ownerName, config);
 
         AbilityInfo.Builder builder = new AbilityInfo.Builder()
@@ -66,16 +65,15 @@ public class AbilityHorizon extends Ability {
 
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
-    AbilityCooldown cooldown;
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             abilityActive.set(false);
             blockShoot.set(false);
-            cooldown = new AbilityCooldown(this, player);
             cooldown.startCooldown(info.cooldown);
         }
     }
@@ -127,7 +125,8 @@ public class AbilityHorizon extends Ability {
 
                     @Override
                     protected void end() {
-                        nextFunction.run();
+                        if (this.hasCompleted())
+                            nextFunction.run();
                     }
                 }.runTaskRepeated(this, 0, 2, info.chargeUp / 2),
                 nextFunction -> new AbilityRunnable() {
@@ -162,7 +161,8 @@ public class AbilityHorizon extends Ability {
 
                     @Override
                     protected void end() {
-                        cooldown.startCooldown(info.cooldown);
+                        if (this.hasCompleted())
+                            cooldown.startCooldown(info.cooldown);
                         abilityActive.set(false);
                         nextFunction.run();
                     }

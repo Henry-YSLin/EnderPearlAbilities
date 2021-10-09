@@ -1,8 +1,12 @@
-package io.github.henryyslin.enderpearlabilities.pathfinder;
+package io.github.henryyslin.enderpearlabilities.abilities.pathfinder;
 
-import io.github.henryyslin.enderpearlabilities.*;
+import io.github.henryyslin.enderpearlabilities.abilities.Ability;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
+import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
+import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -28,7 +32,7 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AbilityPathfinder extends Ability {
+public class PathfinderAbility extends Ability {
     static final int PROJECTILE_LIFETIME = 20;
     static final double PROJECTILE_SPEED = 4;
 
@@ -36,13 +40,12 @@ public class AbilityPathfinder extends Ability {
 
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
-        // TODO: add charge up
         config.addDefault("charge-up", 0);
         config.addDefault("duration", 100);
         config.addDefault("cooldown", 20);
     }
 
-    public AbilityPathfinder(Plugin plugin, String ownerName, ConfigurationSection config) {
+    public PathfinderAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
         super(plugin, ownerName, config);
 
         AbilityInfo.Builder builder = new AbilityInfo.Builder()
@@ -68,12 +71,12 @@ public class AbilityPathfinder extends Ability {
 
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
-    AbilityCooldown cooldown;
     AbilityRunnable grapple;
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             abilityActive.set(false);
@@ -81,7 +84,6 @@ public class AbilityPathfinder extends Ability {
             if (grapple != null)
                 if (!grapple.isCancelled())
                     grapple.cancel();
-            cooldown = new AbilityCooldown(this, player);
             cooldown.startCooldown(info.cooldown);
         }
     }
@@ -101,7 +103,10 @@ public class AbilityPathfinder extends Ability {
             return;
         }
 
-        AbilityUtils.relaunchEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
+        new FunctionChain(
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
+                next -> AbilityUtils.relaunchEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED)
+        ).execute();
     }
 
     @EventHandler

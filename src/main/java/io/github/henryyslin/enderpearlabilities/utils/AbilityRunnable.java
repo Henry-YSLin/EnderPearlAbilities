@@ -1,6 +1,6 @@
 package io.github.henryyslin.enderpearlabilities.utils;
 
-import io.github.henryyslin.enderpearlabilities.Ability;
+import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;

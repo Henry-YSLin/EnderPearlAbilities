@@ -1,6 +1,9 @@
-package io.github.henryyslin.enderpearlabilities.valkyrie;
+package io.github.henryyslin.enderpearlabilities.abilities.valkyrie;
 
-import io.github.henryyslin.enderpearlabilities.*;
+import io.github.henryyslin.enderpearlabilities.abilities.Ability;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
+import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
@@ -26,7 +29,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AbilityValkyrie extends Ability {
+public class ValkyrieAbility extends Ability {
     static final int PROJECTILE_LIFETIME = 20;
     static final int ARROW_PER_TICK = 4;
     static final double PROJECTILE_SPEED = 5;
@@ -40,7 +43,7 @@ public class AbilityValkyrie extends Ability {
         config.addDefault("cooldown", 400);
     }
 
-    public AbilityValkyrie(Plugin plugin, String ownerName, ConfigurationSection config) {
+    public ValkyrieAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
         super(plugin, ownerName, config);
 
         AbilityInfo.Builder builder = new AbilityInfo.Builder()
@@ -67,16 +70,15 @@ public class AbilityValkyrie extends Ability {
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final Random random = new Random();
-    AbilityCooldown cooldown;
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             abilityActive.set(false);
             blockShoot.set(false);
-            cooldown = new AbilityCooldown(this, player);
             cooldown.startCooldown(info.cooldown);
         }
     }
@@ -91,7 +93,10 @@ public class AbilityValkyrie extends Ability {
 
         if (cooldown.getCoolingDown()) return;
 
-        AbilityUtils.relaunchEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
+        new FunctionChain(
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
+                next -> AbilityUtils.relaunchEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED)
+        ).execute();
     }
 
     @EventHandler
@@ -108,7 +113,6 @@ public class AbilityValkyrie extends Ability {
         event.setCancelled(true);
 
         projectile.remove();
-        cooldown.startCooldown(info.cooldown);
         abilityActive.set(true);
         blockShoot.set(false);
         enderPearlHitTime.set(player.getTicksLived());
@@ -164,13 +168,6 @@ public class AbilityValkyrie extends Ability {
         new FunctionChain(
                 nextFunction -> new AbilityRunnable() {
                     @Override
-                    public void tick() {
-                        abilityActive.set(false);
-                        nextFunction.run();
-                    }
-                }.runTaskLater(this, 1),
-                nextFunction -> new AbilityRunnable() {
-                    @Override
                     protected void start() {
                         super.start();
                     }
@@ -204,6 +201,8 @@ public class AbilityValkyrie extends Ability {
                     protected void end() {
                         super.end();
                         abilityActive.set(false);
+                        if (this.hasCompleted())
+                            cooldown.startCooldown(info.cooldown);
                         nextFunction.run();
                     }
                 }.runTaskRepeated(this, 0, 1, info.duration)

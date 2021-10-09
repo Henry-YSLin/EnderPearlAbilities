@@ -1,6 +1,6 @@
-package io.github.henryyslin.enderpearlabilities.necromancer;
+package io.github.henryyslin.enderpearlabilities.abilities.necromancer;
 
-import io.github.henryyslin.enderpearlabilities.Ability;
+import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -43,6 +43,7 @@ public class SlaveSpawning extends AbilityRunnable {
     protected void end() {
         if (!skeleton.isValid()) return;
         skeleton.setAI(true);
-        new SlaveAI(player, skeleton, playerTarget).runTaskTimer(ability, 0, 10);
+        if (this.hasCompleted())
+            new SlaveAI(player, skeleton, playerTarget).runTaskTimer(ability, 0, 10);
     }
 }

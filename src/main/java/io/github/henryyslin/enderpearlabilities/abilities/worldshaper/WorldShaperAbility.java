@@ -1,9 +1,8 @@
-package io.github.henryyslin.enderpearlabilities.worldshaper;
+package io.github.henryyslin.enderpearlabilities.abilities.worldshaper;
 
-import io.github.henryyslin.enderpearlabilities.Ability;
-import io.github.henryyslin.enderpearlabilities.AbilityCooldown;
-import io.github.henryyslin.enderpearlabilities.AbilityInfo;
-import io.github.henryyslin.enderpearlabilities.ActivationHand;
+import io.github.henryyslin.enderpearlabilities.abilities.Ability;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
+import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
@@ -23,7 +22,7 @@ import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AbilityWorldShaper extends Ability {
+public class WorldShaperAbility extends Ability {
     static final int PROJECTILE_LIFETIME = 30;
     static final double PROJECTILE_SPEED = 4;
 
@@ -36,7 +35,7 @@ public class AbilityWorldShaper extends Ability {
         config.addDefault("cooldown", 20);
     }
 
-    public AbilityWorldShaper(Plugin plugin, String ownerName, ConfigurationSection config) {
+    public WorldShaperAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
         super(plugin, ownerName, config);
 
         AbilityInfo.Builder builder = new AbilityInfo.Builder()
@@ -60,14 +59,13 @@ public class AbilityWorldShaper extends Ability {
         return info;
     }
 
-    AbilityCooldown cooldown;
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
-            cooldown = new AbilityCooldown(this, player);
             cooldown.startCooldown(info.cooldown);
         }
     }
@@ -83,8 +81,13 @@ public class AbilityWorldShaper extends Ability {
         if (cooldown.getCoolingDown()) return;
         if (PlayerUtils.getMainHandToolDurability(player).orElse(2) <= 1) return;
 
-        AbilityUtils.relaunchEnderPearl(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
-        cooldown.startCooldown(info.cooldown);
+        new FunctionChain(
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
+                next -> {
+                    AbilityUtils.relaunchEnderPearl(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
+                    cooldown.startCooldown(info.cooldown);
+                }
+        ).execute();
     }
 
     @EventHandler
