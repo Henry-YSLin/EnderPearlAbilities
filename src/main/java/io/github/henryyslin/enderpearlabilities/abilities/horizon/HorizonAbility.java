@@ -66,15 +66,14 @@ public class HorizonAbility extends Ability {
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
+    AirControlRunnable airControlRunnable;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
-            abilityActive.set(false);
-            blockShoot.set(false);
-            cooldown.startCooldown(info.cooldown);
+            setUpPlayer(player);
         }
     }
 
@@ -82,10 +81,18 @@ public class HorizonAbility extends Ability {
     public void onEnable() {
         super.onEnable();
         if (player != null) {
-            abilityActive.set(false);
-            blockShoot.set(false);
-            cooldown.startCooldown(info.cooldown);
+            setUpPlayer(player);
         }
+    }
+
+    private void setUpPlayer(Player player) {
+        abilityActive.set(false);
+        blockShoot.set(false);
+        cooldown.startCooldown(info.cooldown);
+//        if (airControlRunnable != null && !airControlRunnable.isCancelled())
+//            airControlRunnable.cancel();
+//        airControlRunnable = new AirControlRunnable(player);
+//        airControlRunnable.runTaskTimer(this, 0, 1);
     }
 
     @EventHandler
