@@ -39,4 +39,14 @@ public class SlaveAI extends AbilityRunnable {
         if (skeletonTarget != null)
             skeleton.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, skeletonTarget.getLocation(), 10, 0.5, 1, 0.5, 0.05);
     }
+
+    @Override
+    protected void end() {
+        if (skeleton.isValid()) {
+            skeleton.setCustomName(null);
+            skeleton.setCustomNameVisible(false);
+            skeleton.removeMetadata("ability", ability.plugin);
+            skeleton.setAI(true);
+        }
+    }
 }

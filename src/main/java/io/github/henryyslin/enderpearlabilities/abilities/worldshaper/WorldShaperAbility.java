@@ -70,6 +70,14 @@ public class WorldShaperAbility extends Ability {
         }
     }
 
+    @Override
+    public void onEnable() {
+        super.onEnable();
+        if (player != null) {
+            cooldown.startCooldown(info.cooldown);
+        }
+    }
+
     @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();

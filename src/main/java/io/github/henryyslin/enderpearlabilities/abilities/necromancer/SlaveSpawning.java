@@ -45,5 +45,11 @@ public class SlaveSpawning extends AbilityRunnable {
         skeleton.setAI(true);
         if (this.hasCompleted())
             new SlaveAI(player, skeleton, playerTarget).runTaskTimer(ability, 0, 10);
+        else {
+            skeleton.setCustomName(null);
+            skeleton.setCustomNameVisible(false);
+            skeleton.removeMetadata("ability", ability.plugin);
+            skeleton.setAI(true);
+        }
     }
 }

@@ -70,16 +70,28 @@ public class NecromancerAbility extends Ability {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
-            abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
-            if (playerTargetTracker != null && !playerTargetTracker.isCancelled())
-                playerTargetTracker.cancel();
-            playerTargetTracker = new PlayerTargetTracker(player, () -> {
-                slaves.removeIf(skeleton -> !skeleton.isValid());
-                return !slaves.isEmpty();
-            }, playerTarget);
-            playerTargetTracker.runTaskTimer(this, 0, 10);
+            setUpPlayer(player);
         }
+    }
+
+    @Override
+    public void onEnable() {
+        super.onEnable();
+        if (player != null) {
+            setUpPlayer(player);
+        }
+    }
+
+    private void setUpPlayer(Player player) {
+        abilityActive.set(false);
+        cooldown.startCooldown(info.cooldown);
+        if (playerTargetTracker != null && !playerTargetTracker.isCancelled())
+            playerTargetTracker.cancel();
+        playerTargetTracker = new PlayerTargetTracker(player, () -> {
+            slaves.removeIf(skeleton -> !skeleton.isValid());
+            return !slaves.isEmpty();
+        }, playerTarget);
+        playerTargetTracker.runTaskTimer(this, 0, 10);
     }
 
     @EventHandler
@@ -177,6 +189,14 @@ public class NecromancerAbility extends Ability {
                             abilityActive.set(false);
                             if (this.hasCompleted())
                                 cooldown.startCooldown(info.cooldown);
+                            else {
+                                for (Skeleton skeleton : slaves) {
+                                    skeleton.setCustomName(null);
+                                    skeleton.setCustomNameVisible(false);
+                                    skeleton.removeMetadata("ability", ability.plugin);
+                                    skeleton.setAI(true);
+                                }
+                            }
                             next.run();
                         }
                     }

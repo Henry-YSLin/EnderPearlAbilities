@@ -99,6 +99,10 @@ public class MirageAbility extends Ability {
     public void onEnable() {
         super.onEnable();
         removeAllNPCs();
+        if (player != null) {
+            abilityActive.set(false);
+            cooldown.startCooldown(info.cooldown);
+        }
         if (CitizensAPI.getTraitFactory().getRegisteredTraits().stream().anyMatch(traitInfo -> traitInfo.getTraitName().equals("clonetrait")))
             CitizensAPI.getTraitFactory().deregisterTrait(TraitInfo.create(CloneTrait.class).withName("clonetrait"));
         CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(CloneTrait.class).withName("clonetrait"));

@@ -86,6 +86,10 @@ public class WattsonAbility extends Ability {
     @Override
     public void onEnable() {
         super.onEnable();
+        if (player != null) {
+            abilityActive.set(false);
+            cooldown.startCooldown(info.cooldown);
+        }
     }
 
     @Override

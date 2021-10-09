@@ -75,6 +75,19 @@ public class WraithAbility extends Ability {
         }
     }
 
+    @Override
+    public void onEnable() {
+        super.onEnable();
+        if (player != null) {
+            Block headBlock = player.getWorld().getBlockAt(player.getEyeLocation());
+            if (!headBlock.getType().isOccluding()) {
+                player.setGameMode(GameMode.SURVIVAL);
+            }
+            abilityActive.set(false);
+            cooldown.startCooldown(info.cooldown);
+        }
+    }
+
     int sneakCount = 0;
 
     @EventHandler
