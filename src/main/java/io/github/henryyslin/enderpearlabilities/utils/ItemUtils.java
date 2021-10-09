@@ -13,13 +13,14 @@ public class ItemUtils {
     }
 
     public static void damageTool(ItemStack itemStack, int damage) {
+        if (itemStack == null) return;
         if (!hasDurability(itemStack)) return;
         if (!(itemStack.getItemMeta() instanceof Damageable damageable)) return;
         int maxDamage = itemStack.getType().getMaxDurability() - 1;
         if (damageable.hasDamage())
-            damageable.setDamage(Math.min(maxDamage, damageable.getDamage() + damage));
+            damageable.setDamage(Math.max(0, Math.min(maxDamage, damageable.getDamage() + damage)));
         else
-            damageable.setDamage(Math.min(maxDamage, damage));
+            damageable.setDamage(Math.max(0, Math.min(maxDamage, damage)));
         itemStack.setItemMeta(damageable);
     }
 
