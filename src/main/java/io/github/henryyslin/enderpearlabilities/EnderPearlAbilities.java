@@ -37,6 +37,10 @@ public final class EnderPearlAbilities extends JavaPlugin {
         return abilities;
     }
 
+    public FileConfiguration getLoadedConfig() {
+        return config;
+    }
+
     @Override
     public void onEnable() {
         instance = this;
@@ -63,6 +67,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
         getLogger().info("Saving config");
 
         config.addDefault("no-cooldown", false);
+        config.addDefault("dynamic", false);
         config.options().copyDefaults(true);
         saveConfig();
 

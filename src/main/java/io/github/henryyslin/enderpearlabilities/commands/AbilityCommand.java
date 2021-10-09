@@ -15,6 +15,7 @@ public final class AbilityCommand implements CommandExecutor {
         registry.registerCommand(new RegisterAbilitySubCommand());
         registry.registerCommand(new UnregisterAbilitySubCommand());
         registry.registerCommand(new ListAbilitySubCommand());
+        registry.registerCommand(new ConfigAbilitySubCommand());
     }
 
     @Override

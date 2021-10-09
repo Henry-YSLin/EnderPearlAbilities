@@ -18,6 +18,11 @@ public class RegisterAbilitySubCommand extends SubCommand {
 
     @Override
     public boolean execute(CommandSender sender, Command command, String label, String subcommand, List<String> args) {
+        if (!EnderPearlAbilities.getInstance().getLoadedConfig().getBoolean("dynamic")) {
+            sender.sendMessage(ChatColor.RED + "This command is only allowed when dynamic abilities are on.");
+            return true;
+        }
+
         if (args.size() <= 0) return false;
         if (!(sender instanceof Player)) return false;
 

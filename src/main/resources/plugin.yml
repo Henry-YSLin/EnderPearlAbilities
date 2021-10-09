@@ -21,6 +21,9 @@ commands:
   ability list:
     description: List all available abilities
     usage: /ability list
+  ability config:
+    description: Check the global configs that are currently active
+    usage: /ability config
   ability:
     description: Commands to manage ender pearl abilities
     usage: |
@@ -29,3 +32,4 @@ commands:
       /ability register - Register an ability for yourself
       /ability unregister - Unregister an ability for yourself
       /ability list - List all available abilities
+      /ability config - Check the global configs that are currently active
