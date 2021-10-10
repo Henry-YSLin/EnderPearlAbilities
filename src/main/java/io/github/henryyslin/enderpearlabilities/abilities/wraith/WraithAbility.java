@@ -85,6 +85,15 @@ public class WraithAbility extends Ability {
         }
     }
 
+    @Override
+    public void onDisable() {
+        super.onDisable();
+        if (player != null) {
+            player.removePotionEffect(PotionEffectType.SPEED);
+            player.removePotionEffect(PotionEffectType.JUMP);
+        }
+    }
+
     int sneakCount = 0;
 
     @EventHandler
