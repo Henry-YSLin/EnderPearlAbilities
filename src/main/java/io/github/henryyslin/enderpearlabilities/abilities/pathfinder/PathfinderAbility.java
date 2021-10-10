@@ -52,7 +52,7 @@ public class PathfinderAbility extends Ability {
                 .codeName("pathfinder")
                 .name("Grappling Hook")
                 .origin("Apex - Pathfinder")
-                .description("Shoot a grappling hook to swing around, pull yourself up, or pull other entities close to you.")
+                .description("Shoot a grappling hook to swing around, pull yourself up, or pull other entities close to you.\nPassive ability: Break your fall for a brief moment if the fall will be lethal.")
                 .activation(ActivationHand.OffHand);
 
         if (config != null)
@@ -73,18 +73,14 @@ public class PathfinderAbility extends Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityRunnable grapple;
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
+    SlowFallRunnable slowFallRunnable;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
-            abilityActive.set(false);
-            blockShoot.set(false);
-            if (grapple != null)
-                if (!grapple.isCancelled())
-                    grapple.cancel();
-            cooldown.startCooldown(info.cooldown);
+            setUpPlayer(player);
         }
     }
 
@@ -92,13 +88,21 @@ public class PathfinderAbility extends Ability {
     public void onEnable() {
         super.onEnable();
         if (player != null) {
-            abilityActive.set(false);
-            blockShoot.set(false);
-            if (grapple != null)
-                if (!grapple.isCancelled())
-                    grapple.cancel();
-            cooldown.startCooldown(info.cooldown);
+            setUpPlayer(player);
         }
+    }
+
+    private void setUpPlayer(Player player) {
+        abilityActive.set(false);
+        blockShoot.set(false);
+        if (grapple != null)
+            if (!grapple.isCancelled())
+                grapple.cancel();
+        cooldown.startCooldown(info.cooldown);
+        if (slowFallRunnable != null && !slowFallRunnable.isCancelled())
+            slowFallRunnable.cancel();
+        slowFallRunnable = new SlowFallRunnable(player);
+        slowFallRunnable.runTaskTimer(this, 0, 5);
     }
 
     @EventHandler
@@ -187,7 +191,7 @@ public class PathfinderAbility extends Ability {
 
                 Vector lookDirection = player.getLocation().getDirection().normalize();
 
-                player.setVelocity(player.getVelocity().add(lookDirection.clone().multiply(0.3)));
+                player.setVelocity(player.getVelocity().add(lookDirection.clone().multiply(Math.max(0.000001, Math.min(0.1, player.getVelocity().length())))));
 
                 Vector distance = anchor.getLocation().subtract(player.getLocation()).toVector();
                 if (distance.lengthSquared() < 3) {
