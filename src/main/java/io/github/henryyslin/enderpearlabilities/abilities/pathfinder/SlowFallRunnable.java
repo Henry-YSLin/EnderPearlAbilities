@@ -33,6 +33,7 @@ public class SlowFallRunnable extends AbilityRunnable {
 
     @Override
     public void tick() {
+        //noinspection deprecation
         if (player.isOnGround()) {
             activated = false;
             lastActivation = -1;
