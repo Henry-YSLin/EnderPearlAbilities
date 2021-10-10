@@ -52,13 +52,14 @@ public final class EnderPearlAbilities extends JavaPlugin {
         for (Class<?> subType : subTypes) {
             try {
                 Ability ability = (Ability) subType.getDeclaredConstructor(Plugin.class, String.class, ConfigurationSection.class).newInstance(this, null, null);
-                internalTemplateAbilities.add(ability);
                 String codeName = ability.getInfo().codeName;
                 getLogger().info("Setting config defaults for " + codeName);
                 ConfigurationSection section = config.getConfigurationSection(codeName);
                 if (section == null) section = config.createSection(codeName);
                 ability.setConfigDefaults(section);
                 section.addDefault("players", new ArrayList<String>());
+                Ability template = ability.getClass().getDeclaredConstructor(Plugin.class, String.class, ConfigurationSection.class).newInstance(this, null, section);
+                internalTemplateAbilities.add(template);
             } catch (Exception e) {
                 e.printStackTrace();
             }
