@@ -14,10 +14,7 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -42,7 +39,7 @@ public class WraithAbility extends Ability {
                 .codeName("wraith")
                 .name("Into The Void")
                 .origin("Apex - Wraith")
-                .description("For a short duration, improve vision and switch to spectator mode for fast flying, leaving a particle trail behind. Cannot go through walls.")
+                .description("For a short duration, improve vision and switch to spectator mode for fast flying, leaving a particle trail behind. Cannot go through walls.\nPassive ability: run faster when you sprint, jump higher when you sneak.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
@@ -93,6 +90,13 @@ public class WraithAbility extends Ability {
     @EventHandler
     public synchronized void onPlayerToggleSneak(PlayerToggleSneakEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
+
+        if (event.isSneaking()) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 100000, 1, true, true));
+        } else {
+            player.removePotionEffect(PotionEffectType.JUMP);
+        }
+
         if (!abilityActive.get()) return;
 
         int lastSneakCount = sneakCount;
@@ -105,6 +109,15 @@ public class WraithAbility extends Ability {
                 }
             }
         }.runTaskLater(this, 10);
+    }
+
+    @EventHandler
+    public void onPlayerToggleSprint(PlayerToggleSprintEvent event) {
+        if (!event.getPlayer().getName().equals(ownerName)) return;
+        if (event.isSprinting())
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100000, 1, true, true));
+        else
+            player.removePotionEffect(PotionEffectType.SPEED);
     }
 
     @EventHandler

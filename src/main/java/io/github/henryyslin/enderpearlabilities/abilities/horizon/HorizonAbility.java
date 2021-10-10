@@ -66,7 +66,6 @@ public class HorizonAbility extends Ability {
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
-    AirControlRunnable airControlRunnable;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -89,10 +88,6 @@ public class HorizonAbility extends Ability {
         abilityActive.set(false);
         blockShoot.set(false);
         cooldown.startCooldown(info.cooldown);
-//        if (airControlRunnable != null && !airControlRunnable.isCancelled())
-//            airControlRunnable.cancel();
-//        airControlRunnable = new AirControlRunnable(player);
-//        airControlRunnable.runTaskTimer(this, 0, 1);
     }
 
     @EventHandler
