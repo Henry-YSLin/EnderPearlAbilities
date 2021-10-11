@@ -46,7 +46,7 @@ public class HorizonAbility extends Ability {
                 .codeName("horizon")
                 .name("Black Hole")
                 .origin("Apex - Horizon")
-                .description("Create an inescapable micro black hole that pulls all entities in towards it.")
+                .description("Create an inescapable micro black hole that pulls all entities in towards it.\nPassive ability: Cushion your fall to reduce fall damage.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
@@ -66,6 +66,7 @@ public class HorizonAbility extends Ability {
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
+    SpacewalkRunnable spacewalkRunnable;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -88,6 +89,10 @@ public class HorizonAbility extends Ability {
         abilityActive.set(false);
         blockShoot.set(false);
         cooldown.startCooldown(info.cooldown);
+        if (spacewalkRunnable != null && !spacewalkRunnable.isCancelled())
+            spacewalkRunnable.cancel();
+        spacewalkRunnable = new SpacewalkRunnable(player);
+        spacewalkRunnable.runTaskTimer(this, 0, 1);
     }
 
     @EventHandler
