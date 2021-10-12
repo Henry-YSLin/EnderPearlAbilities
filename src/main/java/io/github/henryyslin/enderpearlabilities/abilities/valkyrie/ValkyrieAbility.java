@@ -105,7 +105,7 @@ public class ValkyrieAbility extends Ability {
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
-                next -> AbilityUtils.relaunchEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED)
+                next -> AbilityUtils.fireEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false)
         ).execute();
     }
 
@@ -133,7 +133,7 @@ public class ValkyrieAbility extends Ability {
 
         if (hitEntity == null) {
             // improve accuracy of the hit location
-            finalLocation = AbilityUtils.fixProjectileHitLocation(player, projectile, PROJECTILE_SPEED);
+            finalLocation = AbilityUtils.correctProjectileHitLocation(projectile);
         } else {
             finalLocation = hitEntity.getLocation();
         }

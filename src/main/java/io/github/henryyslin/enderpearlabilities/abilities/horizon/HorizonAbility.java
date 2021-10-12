@@ -106,7 +106,7 @@ public class HorizonAbility extends Ability {
         if (cooldown.getCoolingDown()) return;
         if (abilityActive.get()) return;
 
-        AbilityUtils.relaunchEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
+        AbilityUtils.fireEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
     }
 
     @EventHandler

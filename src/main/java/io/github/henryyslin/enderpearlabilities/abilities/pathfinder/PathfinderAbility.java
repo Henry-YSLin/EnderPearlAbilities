@@ -122,7 +122,7 @@ public class PathfinderAbility extends Ability {
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
-                next -> AbilityUtils.relaunchEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED)
+                next -> AbilityUtils.fireEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false)
         ).execute();
     }
 
@@ -162,7 +162,7 @@ public class PathfinderAbility extends Ability {
 
         if (hitEntity == null) {
             // improve accuracy of the hit location
-            Location fixedLocation = AbilityUtils.fixProjectileHitLocation(player, projectile, PROJECTILE_SPEED);
+            Location fixedLocation = AbilityUtils.correctProjectileHitLocation(projectile);
             anchor = spawnAnchor(player.getWorld(), fixedLocation);
         } else {
             anchor = spawnAnchor(player.getWorld(), hitEntity.getLocation());

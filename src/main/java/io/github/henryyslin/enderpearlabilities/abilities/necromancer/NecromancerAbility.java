@@ -147,7 +147,7 @@ public class NecromancerAbility extends Ability {
                         player.setCooldown(Material.ENDER_PEARL, info.duration);
                         bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
-                        spawnLocations = BlockUtils.getSafeSpawningBlocks(player.getLocation(), 10);
+                        spawnLocations = BlockUtils.getBlocks(player.getLocation(), 10, BlockUtils::isSafeSpawningBlock);
 
                         if (spawnLocations.isEmpty()) {
                             abilityActive.set(false);

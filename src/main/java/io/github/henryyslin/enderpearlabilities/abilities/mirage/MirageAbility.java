@@ -181,7 +181,7 @@ public class MirageAbility extends Ability {
 
                     removeAllNPCs();
 
-                    List<Block> spawnLocations = BlockUtils.getSafeSpawningBlocks(player.getLocation(), 4);
+                    List<Block> spawnLocations = BlockUtils.getBlocks(player.getLocation(), 4, BlockUtils::isSafeSpawningBlock);
 
                     if (spawnLocations.isEmpty()) {
                         abilityActive.set(false);

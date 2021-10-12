@@ -7,8 +7,17 @@ import org.bukkit.block.Block;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class BlockUtils {
+
+    /**
+     * Get a cube of blocks within a given center and radius.
+     *
+     * @param center The center of the cube.
+     * @param radius The radius of the cube. For a radius of {@code n}, the block cube will have a side length of {@code 2n + 1}.
+     * @return A list of all blocks in the cube.
+     */
     public static List<Block> getBlocks(Location center, int radius) {
         ArrayList<Block> blocks = new ArrayList<>();
         for (double x = center.getX() - radius; x <= center.getX() + radius; x++) {
@@ -22,16 +31,32 @@ public class BlockUtils {
         return blocks;
     }
 
-    public static List<Block> getSafeSpawningBlocks(Location center, int radius) {
-        World world = center.getWorld();
-        if (world == null) return new ArrayList<>();
-        return getBlocks(center, radius).stream().filter(block -> {
-            if (block.getType().isOccluding() || block.getType().isSolid()) return false;
-            Material above = world.getBlockAt(block.getLocation().add(0, 1, 0)).getType();
-            if (above.isOccluding() || above.isSolid()) return false;
-            Material ground = world.getBlockAt(block.getLocation().add(0, -1, 0)).getType();
-            if (!ground.isSolid()) return false;
-            return !ground.isAir() && ground != Material.WATER && ground != Material.LAVA && ground != Material.FIRE && ground != Material.MAGMA_BLOCK;
-        }).toList();
+    /**
+     * Get a cube of blocks within a given center and radius, returning blocks that pass the filter.
+     *
+     * @param center The center of the cube.
+     * @param radius The radius of the cube. For a radius of {@code n}, the block cube will have a side length of {@code 2n + 1}.
+     * @param filter Filter the blocks in the cube.
+     * @return A list of all blocks in the cube that pass the filter.
+     */
+    public static List<Block> getBlocks(Location center, int radius, Predicate<Block> filter) {
+        return getBlocks(center, radius).stream().filter(filter).toList();
+    }
+
+    /**
+     * Check whether a block is safe for spawning an entity, if the entity is spawned with their feet inside this block.
+     *
+     * @param block The block to check.
+     * @return Whether the block is safe for spawning.
+     */
+    public static boolean isSafeSpawningBlock(Block block) {
+        World world = block.getWorld();
+
+        if (block.getType().isOccluding() || block.getType().isSolid()) return false;
+        Material above = world.getBlockAt(block.getLocation().add(0, 1, 0)).getType();
+        if (above.isOccluding() || above.isSolid()) return false;
+        Material ground = world.getBlockAt(block.getLocation().add(0, -1, 0)).getType();
+        if (!ground.isSolid()) return false;
+        return !ground.isAir() && ground != Material.WATER && ground != Material.LAVA && ground != Material.FIRE && ground != Material.MAGMA_BLOCK;
     }
 }

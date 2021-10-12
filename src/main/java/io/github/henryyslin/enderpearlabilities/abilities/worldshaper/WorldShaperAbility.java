@@ -92,7 +92,7 @@ public class WorldShaperAbility extends Ability {
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
                 next -> {
-                    AbilityUtils.relaunchEnderPearl(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED);
+                    AbilityUtils.fireEnderPearl(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false);
                     cooldown.startCooldown(info.cooldown);
                 }
         ).execute();
@@ -121,7 +121,7 @@ public class WorldShaperAbility extends Ability {
 
         if (hitEntity == null) {
             // improve accuracy of the hit location
-            finalLocation = AbilityUtils.fixProjectileHitLocation(player, projectile, PROJECTILE_SPEED);
+            finalLocation = AbilityUtils.correctProjectileHitLocation(projectile).add(projectile.getVelocity().normalize().multiply(0.1));
         } else {
             finalLocation = hitEntity.getLocation();
         }

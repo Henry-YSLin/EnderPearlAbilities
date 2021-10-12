@@ -10,6 +10,12 @@ import org.bukkit.util.RayTraceResult;
 import java.util.Optional;
 
 public class PlayerUtils {
+    /**
+     * Get the entity currently under the given player's crosshair.
+     *
+     * @param player The player to check.
+     * @return The entity under the player's crosshair.
+     */
     public static Entity getPlayerTargetEntity(Player player) {
         World world = player.getWorld();
         RayTraceResult result = world.rayTraceEntities(player.getEyeLocation(), player.getEyeLocation().getDirection(), 48, entity -> {
