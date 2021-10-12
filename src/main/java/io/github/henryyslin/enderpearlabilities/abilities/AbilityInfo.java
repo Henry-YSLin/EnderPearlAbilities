@@ -2,6 +2,10 @@ package io.github.henryyslin.enderpearlabilities.abilities;
 
 import java.util.Objects;
 
+/**
+ * A data class storing the information required to generate a detailed ability description.
+ * The {@code codeName} of {@link AbilityInfo} should be constant while other fields can be changed via config.
+ */
 public final class AbilityInfo {
     public final String codeName;
     public final String name;
@@ -59,6 +63,9 @@ public final class AbilityInfo {
                 "cooldown=" + cooldown + ']';
     }
 
+    /**
+     * A helper class to construct an {@link AbilityInfo} instance.
+     */
     public static class Builder {
         private String codeName;
         private String name;
@@ -72,6 +79,11 @@ public final class AbilityInfo {
         public Builder() {
         }
 
+        /**
+         * Shallowly copy fields from another {@link AbilityInfo} instance.
+         *
+         * @param info The {@link AbilityInfo} instance to copy from.
+         */
         public Builder(AbilityInfo info) {
             codeName = info.codeName;
             name = info.name;

@@ -1,7 +1,8 @@
-package io.github.henryyslin.enderpearlabilities.commands;
+package io.github.henryyslin.enderpearlabilities.commands.ability;
 
 import io.github.henryyslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henryyslin.enderpearlabilities.abilities.Ability;
+import io.github.henryyslin.enderpearlabilities.commands.SubCommand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -9,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class QueryAbilitySubCommand extends SubCommand {
@@ -31,7 +33,7 @@ public class QueryAbilitySubCommand extends SubCommand {
         List<Ability> abilities;
         List<Ability> targetAbilities;
         synchronized (abilities = EnderPearlAbilities.getInstance().getAbilities()) {
-            targetAbilities = abilities.stream().filter(x -> x.ownerName.equals(finalLookupPlayer)).collect(Collectors.toList());
+            targetAbilities = abilities.stream().filter(x -> Objects.equals(x.ownerName, finalLookupPlayer)).collect(Collectors.toList());
         }
         if (targetAbilities.isEmpty()) {
             sender.sendMessage(ChatColor.RED + "Cannot find " + finalLookupPlayer + "'s ability");

@@ -1,5 +1,6 @@
-package io.github.henryyslin.enderpearlabilities.commands;
+package io.github.henryyslin.enderpearlabilities.commands.ability;
 
+import io.github.henryyslin.enderpearlabilities.commands.CommandRegistry;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

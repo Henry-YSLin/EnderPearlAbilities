@@ -10,6 +10,9 @@ import org.bukkit.entity.Player;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Manages the timing, effects and UI of an ability cooldown.
+ */
 public class AbilityCooldown {
     final Ability ability;
     final FileConfiguration config;
@@ -17,6 +20,11 @@ public class AbilityCooldown {
     final AtomicBoolean coolingDown = new AtomicBoolean(false);
     AbilityCooldownRunnable runnable;
 
+    /**
+     * Get whether the cooldown is currently active.
+     *
+     * @return Whether the cooldown is currently active.
+     */
     public boolean getCoolingDown() {
         return coolingDown.get();
     }
@@ -27,6 +35,12 @@ public class AbilityCooldown {
         this.player = player;
     }
 
+    /**
+     * Start a cooldown sequence of a specified length.
+     * The length will be ignored if the {@code no-cooldown} config is set.
+     *
+     * @param ticks The length of cooldown in ticks.
+     */
     public void startCooldown(int ticks) {
         if (ability.plugin.getConfig().getBoolean("no-cooldown"))
             ticks = 20;
@@ -34,6 +48,9 @@ public class AbilityCooldown {
         runnable.runTaskRepeated(ability, 0, 1, ticks);
     }
 
+    /**
+     * Cancel the cooldown, if one is currently active.
+     */
     public void cancelCooldown() {
         if (runnable != null) {
             runnable.cancel();

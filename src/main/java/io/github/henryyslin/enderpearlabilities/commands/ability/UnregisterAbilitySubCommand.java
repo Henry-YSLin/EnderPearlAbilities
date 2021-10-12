@@ -1,13 +1,15 @@
-package io.github.henryyslin.enderpearlabilities.commands;
+package io.github.henryyslin.enderpearlabilities.commands.ability;
 
 import io.github.henryyslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henryyslin.enderpearlabilities.abilities.Ability;
+import io.github.henryyslin.enderpearlabilities.commands.SubCommand;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Objects;
 
 public class UnregisterAbilitySubCommand extends SubCommand {
     protected UnregisterAbilitySubCommand() {
@@ -27,7 +29,7 @@ public class UnregisterAbilitySubCommand extends SubCommand {
         List<Ability> abilities;
         synchronized (abilities = EnderPearlAbilities.getInstance().getAbilities()) {
             for (Ability ability : abilities) {
-                if (ability.ownerName.equals(sender.getName())) {
+                if (Objects.equals(ability.ownerName, sender.getName())) {
                     if (ability.getInfo().codeName.equals(args.get(0))) {
                         EnderPearlAbilities.getInstance().removeAbility(ability);
                         sender.sendMessage("" + ChatColor.LIGHT_PURPLE + ChatColor.BOLD + "Unregistered ability " + ability.getInfo().codeName);

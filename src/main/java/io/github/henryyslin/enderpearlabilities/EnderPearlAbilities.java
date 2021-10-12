@@ -1,7 +1,7 @@
 package io.github.henryyslin.enderpearlabilities;
 
 import io.github.henryyslin.enderpearlabilities.abilities.Ability;
-import io.github.henryyslin.enderpearlabilities.commands.AbilityCommand;
+import io.github.henryyslin.enderpearlabilities.commands.ability.AbilityCommand;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;

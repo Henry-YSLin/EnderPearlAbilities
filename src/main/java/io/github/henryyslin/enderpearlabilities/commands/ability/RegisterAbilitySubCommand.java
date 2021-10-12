@@ -1,15 +1,17 @@
-package io.github.henryyslin.enderpearlabilities.commands;
+package io.github.henryyslin.enderpearlabilities.commands.ability;
 
 import io.github.henryyslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
+import io.github.henryyslin.enderpearlabilities.commands.SubCommand;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Objects;
 
 public class RegisterAbilitySubCommand extends SubCommand {
     protected RegisterAbilitySubCommand() {
@@ -43,7 +45,7 @@ public class RegisterAbilitySubCommand extends SubCommand {
         List<Ability> abilities;
         synchronized (abilities = EnderPearlAbilities.getInstance().getAbilities()) {
             for (Ability ability : abilities) {
-                if (ability.ownerName.equals(sender.getName())) {
+                if (Objects.equals(ability.ownerName, sender.getName())) {
                     if (ability.getInfo().codeName.equals(args.get(0))) {
                         sender.sendMessage(ChatColor.RED + "You already have this ability registered");
                         return true;

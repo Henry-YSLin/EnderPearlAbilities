@@ -1,8 +1,9 @@
-package io.github.henryyslin.enderpearlabilities.commands;
+package io.github.henryyslin.enderpearlabilities.commands.ability;
 
 import io.github.henryyslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
+import io.github.henryyslin.enderpearlabilities.commands.SubCommand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;

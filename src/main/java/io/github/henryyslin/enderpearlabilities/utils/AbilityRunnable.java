@@ -10,6 +10,9 @@ public abstract class AbilityRunnable extends BukkitRunnable {
     protected long count = Long.MIN_VALUE;
     protected Ability ability;
 
+    /**
+     * Whether this runnable has completed all its iterations as scheduled by {@code runTaskRepeated}.
+     */
     public boolean hasCompleted() {
         return count < 0;
     }
@@ -25,12 +28,22 @@ public abstract class AbilityRunnable extends BukkitRunnable {
         end();
     }
 
+    /**
+     * Preparation work to be executed immediately in a {@code runTask*} call.
+     */
     protected void start() {
     }
 
+    /**
+     * To be executed in each iteration of the runnable, similar to {@code run} of a {@link BukkitRunnable}.
+     * If this runnable is scheduled by {@code runTaskRepeated}, access {@code count} for the number of remaining iterations.
+     */
     protected void tick() {
     }
 
+    /**
+     * Clean-up work to be executed after the last iteration, or before this runnable is cancelled.
+     */
     protected void end() {
     }
 
