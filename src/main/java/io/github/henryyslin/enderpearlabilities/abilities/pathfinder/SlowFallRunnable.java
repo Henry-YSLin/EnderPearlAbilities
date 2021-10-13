@@ -23,7 +23,7 @@ public class SlowFallRunnable extends AbilityRunnable {
     private static boolean shouldActivate(Player player) {
         if (player.getVelocity().getY() >= 0) return false;
         if (player.getFallDistance() > player.getHealth() + 2) return true;
-        RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), 50, FluidCollisionMode.ALWAYS);
+        RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), 50, FluidCollisionMode.ALWAYS, true);
         if (result == null) return true;
         if (result.getHitBlock() == null) return true;
         if (result.getHitBlock().getType() == Material.LAVA) return true;

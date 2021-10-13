@@ -177,7 +177,7 @@ public class AbilityUtils {
      * @return The accurate hit location of the projectile, ray traced from its current velocity.
      */
     public static Location correctProjectileHitLocation(Projectile projectile) {
-        RayTraceResult result = projectile.getWorld().rayTrace(projectile.getLocation(), projectile.getVelocity(), projectile.getVelocity().length(), FluidCollisionMode.NEVER, false, 0.1, null);
+        RayTraceResult result = projectile.getWorld().rayTrace(projectile.getLocation(), projectile.getVelocity(), projectile.getVelocity().length(), FluidCollisionMode.NEVER, true, 0.1, entity -> !entity.equals(projectile));
         if (result == null) {
             return projectile.getLocation();
         }

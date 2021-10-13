@@ -20,7 +20,7 @@ public class SpacewalkRunnable extends AbilityRunnable {
         if (player.getVelocity().getY() >= 0) return false;
         if (player.getFallDistance() < 3) return false;
 
-        RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), 2, FluidCollisionMode.NEVER);
+        RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), 2, FluidCollisionMode.NEVER, true);
         if (result == null) return false;
         return result.getHitBlock() != null;
     }
