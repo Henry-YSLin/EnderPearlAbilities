@@ -2,7 +2,6 @@ package io.github.henryyslin.enderpearlabilities.abilities.horizon;
 
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import org.bukkit.FluidCollisionMode;
-import org.bukkit.GameMode;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
@@ -18,7 +17,6 @@ public class SpacewalkRunnable extends AbilityRunnable {
     }
 
     private static boolean shouldActivate(Player player) {
-        if (player.getGameMode() != GameMode.ADVENTURE && player.getGameMode() != GameMode.SURVIVAL) return false;
         if (player.getVelocity().getY() >= 0) return false;
         if (player.getFallDistance() < 3) return false;
 
@@ -34,7 +32,7 @@ public class SpacewalkRunnable extends AbilityRunnable {
             activated = true;
             player.setVelocity(player.getVelocity().setY(player.getVelocity().getY() / 5));
             player.setFallDistance(player.getFallDistance() - 5);
-            player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 10, 0.1,0.1, 0.1, 0.02);
+            player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 10, 0.1, 0.1, 0.1, 0.02);
         } else {
             activated = false;
         }
