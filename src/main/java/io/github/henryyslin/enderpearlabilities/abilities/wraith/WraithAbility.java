@@ -65,12 +65,7 @@ public class WraithAbility extends Ability {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
-            Block headBlock = player.getWorld().getBlockAt(player.getEyeLocation());
-            if (!headBlock.getType().isOccluding()) {
-                player.setGameMode(GameMode.SURVIVAL);
-            }
-            abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
+            setUpPlayer(player);
         }
     }
 
@@ -78,13 +73,19 @@ public class WraithAbility extends Ability {
     public void onEnable() {
         super.onEnable();
         if (player != null) {
+            setUpPlayer(player);
+        }
+    }
+
+    private void setUpPlayer(Player player) {
+        if (player.getGameMode() == GameMode.SPECTATOR) {
             Block headBlock = player.getWorld().getBlockAt(player.getEyeLocation());
             if (!headBlock.getType().isOccluding()) {
                 player.setGameMode(GameMode.SURVIVAL);
             }
-            abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
         }
+        abilityActive.set(false);
+        cooldown.startCooldown(info.cooldown);
     }
 
     @Override
