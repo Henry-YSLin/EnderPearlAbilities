@@ -52,6 +52,7 @@ public class ValkyrieAbility extends Ability {
                 .name("Missile Swarm")
                 .origin("Apex - Valkyrie")
                 .description("Fire a swarm of missiles that damage and slow entities.")
+                .usage("Right click to fire an ender pearl. Homing missiles will then be fired towards the hit position of the ender pearl. Entities hit by missiles will be slowed for a brief moment.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)

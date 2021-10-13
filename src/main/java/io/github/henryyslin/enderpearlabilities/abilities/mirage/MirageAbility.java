@@ -52,6 +52,7 @@ public class MirageAbility extends Ability {
                 .name("Life of the Party")
                 .origin("Apex - Mirage")
                 .description("Deploy a team of decoys to distract enemies and protect the player. Decoys last for a set amount of time and use tools on their hands with reduced efficiency.")
+                .usage("Right click to summon decoys. Decoys wear the same armor and hold the same item in their main hand as the player. Decoys attack entities that damage them or the player. They will follow the player when idling. Mobs that target the player may get distracted by decoys.")
                 .activation(ActivationHand.OffHand);
 
         if (config != null)

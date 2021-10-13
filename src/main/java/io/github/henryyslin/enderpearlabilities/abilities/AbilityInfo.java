@@ -12,19 +12,21 @@ public final class AbilityInfo {
     public final String name;
     public final String origin;
     public final String description;
+    public final String usage;
     public final ActivationHand activation;
     public final int chargeUp;
     public final int duration;
     public final int cooldown;
 
     private AbilityInfo(String codeName, String name, String origin,
-                        String description,
+                        String description, String usage,
                         ActivationHand activation, int chargeUp,
                         int duration, int cooldown) {
         this.codeName = codeName;
         this.name = name;
         this.origin = origin;
         this.description = description;
+        this.usage = usage;
         this.activation = activation;
         this.chargeUp = chargeUp;
         this.duration = duration;
@@ -40,6 +42,7 @@ public final class AbilityInfo {
                 Objects.equals(this.name, that.name) &&
                 Objects.equals(this.origin, that.origin) &&
                 Objects.equals(this.description, that.description) &&
+                Objects.equals(this.usage, that.usage) &&
                 Objects.equals(this.activation, that.activation) &&
                 this.chargeUp == that.chargeUp &&
                 this.duration == that.duration &&
@@ -48,7 +51,7 @@ public final class AbilityInfo {
 
     @Override
     public int hashCode() {
-        return Objects.hash(codeName, name, origin, description, activation, chargeUp, duration, cooldown);
+        return Objects.hash(codeName, name, origin, description, usage, activation, chargeUp, duration, cooldown);
     }
 
     @Override
@@ -58,6 +61,7 @@ public final class AbilityInfo {
                 "name=" + name + ", " +
                 "origin=" + origin + ", " +
                 "description=" + description + ", " +
+                "usage=" + usage + ", " +
                 "activation=" + activation + ", " +
                 "chargeUp=" + chargeUp + ", " +
                 "duration=" + duration + ", " +
@@ -72,6 +76,7 @@ public final class AbilityInfo {
         private String name;
         private String origin;
         private String description;
+        private String usage;
         private ActivationHand activation;
         private int chargeUp;
         private int duration;
@@ -90,6 +95,7 @@ public final class AbilityInfo {
             name = info.name;
             origin = info.origin;
             description = info.description;
+            usage = info.usage;
             activation = info.activation;
             chargeUp = info.chargeUp;
             duration = info.duration;
@@ -116,6 +122,11 @@ public final class AbilityInfo {
             return this;
         }
 
+        public Builder usage(String usage) {
+            this.usage = usage;
+            return this;
+        }
+
         public Builder activation(ActivationHand activation) {
             this.activation = activation;
             return this;
@@ -137,7 +148,7 @@ public final class AbilityInfo {
         }
 
         public AbilityInfo build() {
-            return new AbilityInfo(codeName, name, origin, description, activation, chargeUp, duration, cooldown);
+            return new AbilityInfo(codeName, name, origin, description, usage, activation, chargeUp, duration, cooldown);
         }
     }
 }

@@ -54,6 +54,7 @@ public class PathfinderAbility extends Ability {
                 .name("Grappling Hook")
                 .origin("Apex - Pathfinder")
                 .description("Shoot a grappling hook to swing around, pull yourself up, or pull other entities close to you.\nPassive ability: Break your fall for a brief moment if the fall will be lethal.")
+                .usage("Right click to throw an ender pearl. The grapple anchors to where the ender pearl hits. Look at the anchor while grappling to pull yourself towards the anchor. Look sideways to swing. Right click again to cancel the grapple.")
                 .activation(ActivationHand.OffHand);
 
         if (config != null)

@@ -238,7 +238,7 @@ public class AbilityUtils {
      * @param ability The ability to describe.
      * @return A description of the ability, formatted with special format characters.
      */
-    public static String formatAbilityInfo(Ability ability) {
+    public static String formatAbilityInfo(Ability ability, boolean showUsage) {
         AbilityInfo info = ability.getInfo();
         String s;
         if (ability.ownerName != null)
@@ -247,8 +247,11 @@ public class AbilityUtils {
             s = String.format("%s%s%s - %s", ChatColor.LIGHT_PURPLE, ChatColor.BOLD, info.origin, info.name);
         s += "\n" +
                 ChatColor.RESET + ChatColor.WHITE + info.description +
-                "\n" +
-                String.format("%sActivation: %s", ChatColor.GRAY, info.activation == ActivationHand.MainHand ? "main hand" : "off hand") +
+                "\n";
+        if (showUsage)
+            s += ChatColor.BOLD + "Usage: " + ChatColor.RESET + info.usage +
+                    "\n";
+        s += String.format("%sActivation: %s", ChatColor.GRAY, info.activation == ActivationHand.MainHand ? "main hand" : "off hand") +
                 "\n" +
                 String.format("%sCharge up: %ss   Duration: %ss   Cool down: %ss", ChatColor.GRAY, friendlyNumber(info.chargeUp), friendlyNumber(info.duration), friendlyNumber(info.cooldown)) +
                 "\n";

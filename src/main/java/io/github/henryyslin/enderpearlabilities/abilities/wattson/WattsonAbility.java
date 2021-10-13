@@ -44,6 +44,7 @@ public class WattsonAbility extends Ability {
                 .name("Interception Pylon")
                 .origin("Apex - Wattson")
                 .description("Place an electrified pylon that destroys incoming projectiles and repairs damaged armors.")
+                .usage("Right click on a block to place down the pylon. It will then intercept all projectiles and primed explosives in range that are not fired by the player who owns the pylon. It will also regenerate armor durability for all players in range.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)

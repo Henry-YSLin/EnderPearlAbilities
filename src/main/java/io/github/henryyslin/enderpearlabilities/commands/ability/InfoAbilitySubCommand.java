@@ -30,7 +30,7 @@ public class InfoAbilitySubCommand extends SubCommand {
         for (Ability templateAbility : templateAbilities) {
             AbilityInfo info = templateAbility.getInfo();
             if (info.codeName.equals(args.get(0))) {
-                sender.sendMessage(AbilityUtils.formatAbilityInfo(templateAbility));
+                sender.sendMessage(AbilityUtils.formatAbilityInfo(templateAbility, true));
                 return true;
             }
         }

@@ -48,6 +48,7 @@ public class HorizonAbility extends Ability {
                 .name("Black Hole")
                 .origin("Apex - Horizon")
                 .description("Create an inescapable micro black hole that pulls all entities in towards it.\nPassive ability: Cushion your fall to reduce fall damage.")
+                .usage("Right click to throw an ender pearl. A black hole will be created where the pearl lands.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)

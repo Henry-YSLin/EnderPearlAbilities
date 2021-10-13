@@ -44,6 +44,7 @@ public class WorldShaperAbility extends Ability {
                 .name("World Shaper")
                 .origin("Create Mod")
                 .description("Fires an ender pearl which explodes on impact, instantly mining a 3x3 area of blocks using the tool held in main hand.")
+                .usage("Right click to fire an ender pearl. The tool held in main hand will be used to mine a 3x3 area where the pearl lands. Blocks inside this blast area will not be mined if the tool in main hand cannot produce block drops from those blocks. Tool durability is twice as efficient as manual mining and will not completely deplete while using this ability. The ender pearl has a high chance to drop as item after the blast.")
                 .activation(ActivationHand.OffHand);
 
         if (config != null)

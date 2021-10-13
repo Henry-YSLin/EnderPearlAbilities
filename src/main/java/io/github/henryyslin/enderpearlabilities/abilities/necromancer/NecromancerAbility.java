@@ -45,6 +45,7 @@ public class NecromancerAbility extends Ability {
                 .name("Skeleton Army")
                 .origin("Clash Royale")
                 .description("Summon skeletons to fight whatever the player is looking at. Summoned skeletons obey commands until death.\nPassive ability: No skeletons will ever actively attack the player.")
+                .usage("Right click to summon skeletons. They target the entity that is currently under the player's crosshair. If the skeletons are summoned during daytime, they have a higher chance of wearing helmets.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
@@ -118,7 +119,7 @@ public class NecromancerAbility extends Ability {
     }
 
     @EventHandler
-    public void onPlayerClicks(PlayerInteractEvent event) {
+    public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
         if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;

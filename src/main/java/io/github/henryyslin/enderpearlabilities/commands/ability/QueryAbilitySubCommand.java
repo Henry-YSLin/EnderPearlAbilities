@@ -40,7 +40,7 @@ public class QueryAbilitySubCommand extends SubCommand {
             sender.sendMessage(ChatColor.RED + "Cannot find " + finalLookupPlayer + "'s ability");
         } else {
             for (Ability ability : targetAbilities) {
-                sender.sendMessage(AbilityUtils.formatAbilityInfo(ability));
+                sender.sendMessage(AbilityUtils.formatAbilityInfo(ability, false));
             }
         }
 

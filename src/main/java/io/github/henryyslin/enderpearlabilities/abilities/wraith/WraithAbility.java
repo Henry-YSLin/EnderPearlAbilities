@@ -41,6 +41,7 @@ public class WraithAbility extends Ability {
                 .name("Into The Void")
                 .origin("Apex - Wraith")
                 .description("For a short duration, improve vision and switch to spectator mode for fast flying, leaving a particle trail behind. Cannot go through walls.\nPassive ability: run faster when you sprint, jump higher when you sneak.")
+                .usage("Right click to activate the ability. Teleporting with the spectator menu is not allowed when the ability is active. Triple click sneak to exit early.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
@@ -139,7 +140,7 @@ public class WraithAbility extends Ability {
     }
 
     @EventHandler
-    public void onPlayerClicks(PlayerInteractEvent event) {
+    public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
         if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
