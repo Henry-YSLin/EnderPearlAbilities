@@ -9,6 +9,7 @@ import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -29,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RampartAbility extends Ability {
 
-    static final double PROJECTILE_SPEED = 3;
+    static final double PROJECTILE_SPEED = 4;
 
     private final AbilityInfo info;
 
@@ -163,24 +164,25 @@ public class RampartAbility extends Ability {
                             return;
                         }
                         if (player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL) {
-                            player.setVelocity(player.getVelocity().multiply(0.8).setY(player.getVelocity().getY()));
+                            player.setVelocity(player.getVelocity().multiply(0.9).setY(player.getVelocity().getY()));
                         }
                         boolean firing = isSneaking.get();
-                        if (!firing) {
+                        if (!firing || player.getInventory().getItemInMainHand().getType() != Material.ENDER_PEARL) {
                             spinUpTicks = info.chargeUp;
                             displayMagazineBar();
                             return;
                         }
                         if (spinUpTicks > 0) {
                             spinUpTicks--;
+                            player.getWorld().spawnParticle(Particle.SMOKE_NORMAL, player.getLocation(), 2, 0.2, 0.2, 0.2, 0.05);
                             displaySpinUpBar();
                         } else {
                             magazine--;
                             displayMagazineBar();
-                            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.1f, 0);
+                            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.3f, 0);
                             Arrow arrow = player.launchProjectile(Arrow.class, randomizeVelocity(player.getLocation().getDirection().multiply(PROJECTILE_SPEED)));
                             arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
-                            arrow.setTicksLived(1160);
+                            arrow.setTicksLived(1180);
                             arrow.setPierceLevel(2);
                             arrow.setDamage(3);
                             arrow.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
