@@ -18,6 +18,7 @@ import java.util.List;
  * Construct this class with a null {@code ownerName} to read description without enabling the ability.
  */
 public abstract class Ability implements Listener {
+
     public final Plugin plugin;
     public final String ownerName;
     protected final ConfigurationSection config;

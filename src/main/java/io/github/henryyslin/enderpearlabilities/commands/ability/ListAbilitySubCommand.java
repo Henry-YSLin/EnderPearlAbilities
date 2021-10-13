@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import java.util.List;
 
 public class ListAbilitySubCommand extends SubCommand {
+
     protected ListAbilitySubCommand() {
         super("list");
     }

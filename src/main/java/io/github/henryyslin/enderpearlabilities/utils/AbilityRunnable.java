@@ -7,6 +7,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class AbilityRunnable extends BukkitRunnable {
+
     protected long count = Long.MIN_VALUE;
     protected Ability ability;
 

@@ -9,6 +9,7 @@ import org.bukkit.entity.Skeleton;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SlaveAI extends AbilityRunnable {
+
     final Player player;
     final Skeleton skeleton;
     final AtomicReference<LivingEntity> playerTarget;

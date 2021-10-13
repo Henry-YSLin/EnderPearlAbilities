@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MirageAbility extends Ability {
+
     private final AbilityInfo info;
 
     @Override

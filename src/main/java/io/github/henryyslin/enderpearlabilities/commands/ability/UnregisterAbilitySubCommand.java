@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class UnregisterAbilitySubCommand extends SubCommand {
+
     protected UnregisterAbilitySubCommand() {
         super("unregister");
     }

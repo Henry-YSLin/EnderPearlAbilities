@@ -22,6 +22,7 @@ import java.util.UUID;
 
 @TraitName("clonetrait")
 public class CloneTrait extends Trait {
+
     @Persist("active")
     private boolean enabled = false;
     private Flocker flock;

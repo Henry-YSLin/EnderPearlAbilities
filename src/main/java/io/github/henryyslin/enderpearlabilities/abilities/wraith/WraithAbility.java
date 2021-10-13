@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class WraithAbility extends Ability {
+
     private final AbilityInfo info;
 
     @Override

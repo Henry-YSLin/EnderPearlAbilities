@@ -11,6 +11,7 @@ import org.bukkit.entity.Skeleton;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SlaveSpawning extends AbilityRunnable {
+
     final Ability ability;
     final Player player;
     final Skeleton skeleton;

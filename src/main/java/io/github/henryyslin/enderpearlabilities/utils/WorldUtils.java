@@ -5,10 +5,25 @@ import org.bukkit.Particle;
 import org.bukkit.World;
 
 public class WorldUtils {
+
+    /**
+     * Check whether the world is in daytime.
+     *
+     * @param world The world to check.
+     * @return Whether the world is in daytime.
+     */
     public static boolean isDaytime(World world) {
         return world.getTime() < 12000;
     }
 
+    /**
+     * Display particles in a cuboid outline.
+     *
+     * @param corner1  The first corner of the cuboid.
+     * @param corner2  The opposite corner of the cuboid.
+     * @param particle The type of particle to display.
+     * @param density  The number of particles to display per meter.
+     */
     public static void spawnParticleRect(Location corner1, Location corner2, Particle particle, double density) {
         World world = corner1.getWorld();
         if (world == null) return;

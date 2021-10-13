@@ -19,6 +19,7 @@ import java.util.Set;
 import static org.reflections.scanners.Scanners.SubTypes;
 
 public final class EnderPearlAbilities extends JavaPlugin {
+
     final FileConfiguration config = getConfig();
     final List<Ability> internalTemplateAbilities = new ArrayList<>();
     final List<Ability> templateAbilities = Collections.unmodifiableList(internalTemplateAbilities);

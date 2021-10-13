@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class WattsonAbility extends Ability {
+
     private final AbilityInfo info;
 
     @Override

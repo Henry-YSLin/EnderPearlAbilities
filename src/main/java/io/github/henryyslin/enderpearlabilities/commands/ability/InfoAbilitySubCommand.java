@@ -12,6 +12,7 @@ import org.bukkit.command.CommandSender;
 import java.util.List;
 
 public class InfoAbilitySubCommand extends SubCommand {
+
     protected InfoAbilitySubCommand() {
         super("info");
     }

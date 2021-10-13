@@ -9,6 +9,7 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 public class SpacewalkRunnable extends AbilityRunnable {
+
     final Player player;
     boolean activated = false;
 

@@ -6,6 +6,7 @@ import java.util.function.Consumer;
  * Chain and execute functions sequentially to allow non-linear execution.
  */
 public class FunctionChain {
+
     final Consumer<Runnable>[] chain;
     int chainIndex = -1;
 

@@ -10,6 +10,7 @@ import java.util.function.Supplier;
  * Track the entity that is under the player's crosshair.
  */
 public class PlayerTargetTracker extends AbilityRunnable {
+
     final Player player;
     final Supplier<Boolean> shouldTrack;
     final AtomicReference<LivingEntity> playerTarget;

@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class QueryAbilitySubCommand extends SubCommand {
+
     protected QueryAbilitySubCommand() {
         super("query");
     }

@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Manages the timing, effects and UI of an ability cooldown.
  */
 public class AbilityCooldown {
+
     final Ability ability;
     final FileConfiguration config;
     final Player player;

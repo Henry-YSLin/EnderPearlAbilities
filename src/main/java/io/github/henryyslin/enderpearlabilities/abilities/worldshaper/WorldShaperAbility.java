@@ -23,6 +23,7 @@ import org.bukkit.projectiles.ProjectileSource;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorldShaperAbility extends Ability {
+
     static final int PROJECTILE_LIFETIME = 30;
     static final double PROJECTILE_SPEED = 4;
 

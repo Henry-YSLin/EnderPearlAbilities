@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class HorizonAbility extends Ability {
+
     static final int PROJECTILE_LIFETIME = 100;
     static final double PROJECTILE_SPEED = 2;
     static final boolean PROJECTILE_GRAVITY = true;

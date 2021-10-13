@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ValkyrieAbility extends Ability {
+
     static final int PROJECTILE_LIFETIME = 20;
     static final int ARROW_PER_TICK = 4;
     static final double PROJECTILE_SPEED = 5;

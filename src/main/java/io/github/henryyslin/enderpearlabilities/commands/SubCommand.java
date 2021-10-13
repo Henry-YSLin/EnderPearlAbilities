@@ -11,6 +11,7 @@ import java.util.List;
  * For example, {@code /ability} is a main command, and {@code /ability list} is a sub-command.
  */
 public abstract class SubCommand {
+
     protected final String subCommandName;
 
     /**

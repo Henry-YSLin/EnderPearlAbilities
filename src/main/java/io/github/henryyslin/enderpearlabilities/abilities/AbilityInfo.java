@@ -7,6 +7,7 @@ import java.util.Objects;
  * The {@code codeName} of {@link AbilityInfo} should be constant while other fields can be changed via config.
  */
 public final class AbilityInfo {
+
     public final String codeName;
     public final String name;
     public final String origin;

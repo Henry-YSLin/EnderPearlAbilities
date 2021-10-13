@@ -9,6 +9,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.util.List;
 
 public class ConfigAbilitySubCommand extends SubCommand {
+
     protected ConfigAbilitySubCommand() {
         super("config");
     }

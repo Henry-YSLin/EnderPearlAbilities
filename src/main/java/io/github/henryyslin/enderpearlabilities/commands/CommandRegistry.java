@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
  * Stores and executes {@link SubCommand}s that are from the same main command.
  */
 public class CommandRegistry {
+
     private final HashSet<SubCommand> registeredCommands = new HashSet<>();
 
     /**

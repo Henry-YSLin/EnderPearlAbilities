@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PathfinderAbility extends Ability {
+
     static final int PROJECTILE_LIFETIME = 20;
     static final double PROJECTILE_SPEED = 4;
 
