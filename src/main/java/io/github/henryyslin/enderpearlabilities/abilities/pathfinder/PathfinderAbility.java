@@ -7,10 +7,7 @@ import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -170,6 +167,8 @@ public class PathfinderAbility extends Ability {
             anchor = spawnAnchor(player.getWorld(), hitEntity.getLocation());
         }
 
+        anchor.getWorld().playSound(anchor.getLocation(), Sound.BLOCK_CHAIN_FALL, 1, 0);
+
         (grapple = new AbilityRunnable() {
             BossBar bossbar;
             Location anchorLocation;
@@ -214,6 +213,8 @@ public class PathfinderAbility extends Ability {
                 Vector finalVelocity = player.getVelocity().add(grapple);
                 double magnitude = Math.min(1, finalVelocity.length());
                 player.setVelocity(finalVelocity.normalize().multiply(magnitude));
+
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 0.1f, 1.2f);
             }
 
             @Override

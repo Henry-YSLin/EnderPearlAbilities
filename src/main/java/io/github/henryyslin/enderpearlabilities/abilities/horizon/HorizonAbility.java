@@ -4,10 +4,7 @@ import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.*;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.LivingEntity;
@@ -139,6 +136,7 @@ public class HorizonAbility extends Ability {
                 nextFunction -> new AbilityRunnable() {
                     @Override
                     protected void tick() {
+                        world.playSound(finalLocation, Sound.ENTITY_BLAZE_AMBIENT, 1, 0);
                         world.spawnParticle(Particle.EXPLOSION_NORMAL, finalLocation, 2, 0.5, 0.5, 0.5, 0.02);
                     }
 
@@ -154,6 +152,7 @@ public class HorizonAbility extends Ability {
                     @Override
                     protected void start() {
                         blackHoleLocation = finalLocation.clone();
+                        world.playSound(blackHoleLocation, Sound.BLOCK_END_PORTAL_SPAWN, 1, 0);
                     }
 
                     @Override

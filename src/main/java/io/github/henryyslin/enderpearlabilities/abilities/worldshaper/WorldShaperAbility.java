@@ -4,7 +4,10 @@ import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.*;
-import org.bukkit.*;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EnderPearl;
@@ -114,7 +117,6 @@ public class WorldShaperAbility extends Ability {
         event.setCancelled(true);
 
         projectile.remove();
-        cooldown.startCooldown(info.cooldown);
         enderPearlHitTime.set(player.getTicksLived());
 
         Entity hitEntity = event.getHitEntity();
@@ -133,10 +135,9 @@ public class WorldShaperAbility extends Ability {
         finalLocation.setZ(finalLocation.getBlockZ() + 0.5);
 
         WorldUtils.spawnParticleRect(finalLocation.clone().add(-1.5, -1.5, -1.5), finalLocation.clone().add(1.5, 1.5, 1.5), Particle.VILLAGER_HAPPY, 5);
+        projectile.getWorld().createExplosion(projectile.getLocation(), 1, false, false);
 
         int unbreaking = player.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.DURABILITY);
-
-        player.getWorld().playSound(finalLocation, Sound.ENTITY_DRAGON_FIREBALL_EXPLODE, 1, 0);
 
         BlockUtils.getBlocks(finalLocation, 1).forEach(block -> {
             Material type = block.getType();

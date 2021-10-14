@@ -8,6 +8,7 @@ import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -172,6 +173,7 @@ public class ValkyrieAbility extends Ability {
                     }
 
                     arrow.setVelocity(arrow.getVelocity().multiply(0.99).add(distance.normalize().multiply(propelStrength)).normalize().multiply(2));
+                    arrow.getWorld().playSound(arrow.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.1f, 1 - homing / 80f);
                 }
                 if (!valid) cancel();
             }
@@ -186,6 +188,8 @@ public class ValkyrieAbility extends Ability {
 
                     @Override
                     protected void tick() {
+                        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.3f, 0);
+
                         Vector facing = player.getLocation().getDirection();
                         Vector offset = facing.clone().add(new Vector(0, 1, 0)).crossProduct(facing).normalize();
                         for (int i = 0; i < ARROW_PER_TICK; i++) {

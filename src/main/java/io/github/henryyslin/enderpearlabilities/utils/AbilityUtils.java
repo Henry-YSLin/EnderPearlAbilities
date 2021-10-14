@@ -17,7 +17,9 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
+import org.bukkit.util.Consumer;
 import org.bukkit.util.RayTraceResult;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +38,19 @@ public class AbilityUtils {
      * @param next     The runnable to run when the charge-up is complete.
      */
     public static void chargeUpSequence(Ability ability, Player player, int chargeUp, Runnable next) {
+        chargeUpSequence(ability, player, chargeUp, next, null);
+    }
+
+    /**
+     * Display a standard charge-up effect to the player for a specified amount of time, then run the {@code next} runnable.
+     *
+     * @param ability  The {@link Ability} to register the charge-up runnable to.
+     * @param player   The player to display the charge-up effect to.
+     * @param chargeUp The duration of charge-up in ticks.
+     * @param next     The runnable to run when the charge-up is complete.
+     * @param onTick   Additional actions on charge up tick, given {@code count} as argument.
+     */
+    public static void chargeUpSequence(Ability ability, Player player, int chargeUp, Runnable next, @Nullable Consumer<Long> onTick) {
         if (chargeUp <= 0) {
             next.run();
             return;
@@ -54,6 +69,7 @@ public class AbilityUtils {
             protected synchronized void tick() {
                 bossbar.setProgress(count / (double) chargeUp);
                 player.getWorld().spawnParticle(Particle.WHITE_ASH, player.getLocation(), 5, 0.5, 0.5, 0.5, 0.02);
+                if (onTick != null) onTick.accept(count);
             }
 
             @Override
@@ -155,6 +171,8 @@ public class AbilityUtils {
         projectile.setMetadata("ability", new FixedMetadataValue(ability.plugin, new AbilityCouple(ability.getInfo().codeName, player.getName())));
 
         player.setCooldown(Material.ENDER_PEARL, 1);
+
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_PEARL_THROW, 1, 0);
 
         new AbilityRunnable() {
             @Override

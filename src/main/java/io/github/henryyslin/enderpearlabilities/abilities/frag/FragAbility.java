@@ -123,7 +123,7 @@ public class FragAbility extends Ability {
                             return;
                         }
                         pearl.setVelocity(pearl.getVelocity().add(new Vector(0, -0.05, 0)));
-                        pearl.getWorld().spawnParticle(Particle.END_ROD, pearl.getLocation(), 2, 0, 0, 0, 0);
+                        pearl.getWorld().spawnParticle(Particle.END_ROD, pearl.getLocation(), 1, 0, 0, 0, 0);
                     }
 
                     @Override
@@ -170,6 +170,8 @@ public class FragAbility extends Ability {
 
         event.setCancelled(true);
         enderPearlHitTime.set(player.getTicksLived());
+
+        projectile.getWorld().spawnParticle(Particle.SMOKE_NORMAL, projectile.getLocation(), 2, 0.1, 0.1, 0.1, 0.02);
 
         Location hitPosition = AbilityUtils.correctProjectileHitLocation(projectile);
         Vector newVelocity;

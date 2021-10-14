@@ -9,6 +9,7 @@ import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BloodhoundAbility extends Ability {
+    static final double SCAN_RADIUS = 75;
 
     private final AbilityInfo info;
 
@@ -113,12 +115,13 @@ public class BloodhoundAbility extends Ability {
         new FunctionChain(
                 next -> {
                     abilityActive.set(true);
-                    player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 200, 1, 1, 1, 3);
+                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1, 0);
+                    player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 5000, 1, 1, 1, 3);
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
                 next -> {
-                    entities.addAll(player.getWorld().getNearbyEntities(player.getLocation(), 75, 75, 75));
+                    entities.addAll(player.getWorld().getNearbyEntities(player.getLocation(), SCAN_RADIUS, SCAN_RADIUS, SCAN_RADIUS));
                     entities.removeIf(entity -> entity.getUniqueId().equals(player.getUniqueId()));
                     for (Entity entity : entities) {
                         entity.setGlowing(true);

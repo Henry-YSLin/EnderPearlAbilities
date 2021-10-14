@@ -1,6 +1,7 @@
 package io.github.henryyslin.enderpearlabilities.abilities.necromancer;
 
 import io.github.henryyslin.enderpearlabilities.abilities.Ability;
+import io.github.henryyslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.*;
@@ -134,7 +135,6 @@ public class NecromancerAbility extends Ability {
         new FunctionChain(
                 next -> {
                     cooldown.startCooldown(info.cooldown);
-                    player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_AMBIENT, 1, 0);
                     AbilityUtils.consumeEnderPearl(player);
                     next.run();
                 },
@@ -169,7 +169,7 @@ public class NecromancerAbility extends Ability {
                         Location spawnLocation = ListUtils.getRandom(spawnLocations).getLocation().add(0, -1, 0);
                         Skeleton skeleton = (Skeleton) player.getWorld().spawnEntity(spawnLocation, EntityType.SKELETON);
                         skeleton.setAI(false);
-                        skeleton.setMetadata("ability", new FixedMetadataValue(plugin, ownerName));
+                        skeleton.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
                         skeleton.setCustomName(ownerName + "'s slave");
                         skeleton.setCustomNameVisible(true);
                         skeleton.setPersistent(false);
@@ -181,6 +181,7 @@ public class NecromancerAbility extends Ability {
                             }
                         }
                         slaves.add(skeleton);
+                        skeleton.getWorld().playSound(skeleton.getLocation(), Sound.ENTITY_SKELETON_HORSE_AMBIENT, 1, 0);
                         new SlaveSpawning(self, player, skeleton, playerTarget).runTaskRepeated(self, 0, 2, 11);
                     }
 

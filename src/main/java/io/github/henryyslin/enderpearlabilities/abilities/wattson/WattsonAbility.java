@@ -164,7 +164,8 @@ public class WattsonAbility extends Ability {
                     crystal.setShowingBottom(true);
                     crystal.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
 
-                    WorldUtils.spawnParticleRect(location.clone().add(-8, -8, -8), location.clone().add(8, 8, 8), Particle.VILLAGER_HAPPY, 5);
+                    WorldUtils.spawnParticleRect(location.clone().add(-8, -8, -8), location.clone().add(8, 8, 8), Particle.END_ROD, 5);
+                    world.playSound(crystal.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.5f);
 
                     next.run();
                 },
@@ -200,6 +201,8 @@ public class WattsonAbility extends Ability {
                             return;
                         }
                         bossbar.setProgress(count / (double) info.duration);
+                        if (count % 40 == 0)
+                            world.playSound(crystal.getLocation(), Sound.BLOCK_BEACON_AMBIENT, 1, 0.5f);
                         if (count % 5 == 0)
                             world.spawnParticle(Particle.END_ROD, crystal.getLocation(), 2, 0.5, 0.5, 0.5, 0.02);
                         if (beamTick <= 0) crystal.setBeamTarget(null);

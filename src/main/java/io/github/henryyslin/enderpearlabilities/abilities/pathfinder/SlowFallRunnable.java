@@ -3,6 +3,7 @@ package io.github.henryyslin.enderpearlabilities.abilities.pathfinder;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.RayTraceResult;
@@ -51,6 +52,7 @@ public class SlowFallRunnable extends AbilityRunnable {
         }
         if (activated) return;
         if (shouldActivate(player)) {
+            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BELL_RESONATE, 1, 2);
             player.addPotionEffect(PotionEffectType.SLOW_FALLING.createEffect(DURATION * 10, 3));
             activated = true;
             lastActivation = DURATION;

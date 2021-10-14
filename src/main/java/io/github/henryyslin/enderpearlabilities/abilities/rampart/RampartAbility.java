@@ -168,17 +168,22 @@ public class RampartAbility extends Ability {
                         }
                         boolean firing = isSneaking.get();
                         if (!firing || player.getInventory().getItemInMainHand().getType() != Material.ENDER_PEARL) {
-                            spinUpTicks = info.chargeUp;
+                            if (spinUpTicks < info.chargeUp) {
+                                spinUpTicks += 2;
+                                player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, (info.chargeUp - spinUpTicks) / (float) info.chargeUp * 2);
+                            }
                             displayMagazineBar();
                             return;
                         }
                         if (spinUpTicks > 0) {
                             spinUpTicks--;
                             player.getWorld().spawnParticle(Particle.SMOKE_NORMAL, player.getLocation(), 2, 0.2, 0.2, 0.2, 0.05);
+                            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, (info.chargeUp - spinUpTicks) / (float) info.chargeUp * 2);
                             displaySpinUpBar();
                         } else {
                             magazine--;
                             displayMagazineBar();
+                            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, 2);
                             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.3f, 0);
                             Arrow arrow = player.launchProjectile(Arrow.class, randomizeVelocity(player.getLocation().getDirection().multiply(PROJECTILE_SPEED)));
                             arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
