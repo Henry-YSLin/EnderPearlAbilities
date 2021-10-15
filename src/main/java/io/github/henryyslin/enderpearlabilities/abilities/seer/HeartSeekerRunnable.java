@@ -5,14 +5,34 @@ import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class HeartSeekerRunnable extends AbilityRunnable {
 
     static final double SCAN_RANGE = 36;
     static final double RAY_SIZE = 1;
+
+    static final List<EntityType> UNDEAD_MOBS = Arrays.stream(new EntityType[]{
+            EntityType.DROWNED,
+            EntityType.HUSK,
+            EntityType.ZOMBIE_VILLAGER,
+            EntityType.PHANTOM,
+            EntityType.SKELETON,
+            EntityType.SKELETON_HORSE,
+            EntityType.STRAY,
+            EntityType.WITHER,
+            EntityType.WITHER_SKELETON,
+            EntityType.ZOGLIN,
+            EntityType.ZOMBIE,
+            EntityType.ZOMBIE_HORSE,
+            EntityType.ZOMBIFIED_PIGLIN
+    }).toList();
 
     Player player;
 
@@ -33,7 +53,7 @@ public class HeartSeekerRunnable extends AbilityRunnable {
             AttributeInstance attribute = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
             String heartbeat = "♥";
             int trackTick = livingEntity.getTicksLived() / 5;
-            if (livingEntity.isValid()) {
+            if (livingEntity.isValid() && !UNDEAD_MOBS.contains(livingEntity.getType())) {
                 if (attribute != null) {
                     if (livingEntity.getHealth() / attribute.getValue() > 0.5) {
                         if (trackTick % 4 == 0) {
