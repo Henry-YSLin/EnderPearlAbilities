@@ -3,10 +3,11 @@ package io.github.henryyslin.enderpearlabilities.abilities.seer;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.util.Vector;
 
-public class CylindricalParticleEffect extends AbilityRunnable {
+public class SeerTacticalEffect extends AbilityRunnable {
     Vector lastParticle;
     Vector forward;
     World world;
@@ -18,8 +19,9 @@ public class CylindricalParticleEffect extends AbilityRunnable {
     long duration;
     double range;
     Particle particle;
+    boolean playSound;
 
-    public CylindricalParticleEffect(Particle particle, Location origin, Vector direction, double range, double radius, double angleDelta, int particleCount) {
+    public SeerTacticalEffect(Particle particle, Location origin, Vector direction, double range, double radius, double angleDelta, int particleCount, boolean playSound) {
         this.particle = particle;
         this.origin = origin;
         this.world = origin.getWorld();
@@ -30,6 +32,7 @@ public class CylindricalParticleEffect extends AbilityRunnable {
         this.angleDelta = angleDelta;
         this.particleCount = particleCount;
         this.range = range;
+        this.playSound = playSound;
     }
 
     @Override
@@ -45,6 +48,10 @@ public class CylindricalParticleEffect extends AbilityRunnable {
 
     @Override
     protected void tick() {
+        if (playSound) {
+            Location newOrigin = origin.clone().add(forward.clone().multiply((duration - count - 1) * particlePerTick));
+            world.playSound(newOrigin, Sound.BLOCK_BEACON_DEACTIVATE, 0.5f, 2);
+        }
         for (int i = 0; i < particlePerTick; i++) {
             world.spawnParticle(particle, origin.clone().add(forward.clone().multiply((duration - count - 1) * particlePerTick + i)).add(lastParticle), 1, 0, 0, 0, 0, null, true);
             lastParticle.rotateAroundAxis(forward, angleDelta);

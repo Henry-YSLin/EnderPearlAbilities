@@ -7,10 +7,7 @@ import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henryyslin.enderpearlabilities.utils.StringUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Particle;
+import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -118,15 +115,19 @@ public class SeerAbility extends Ability {
 
         new FunctionChain(
                 next -> {
-                    new CylindricalParticleEffect(Particle.ELECTRIC_SPARK, origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, ANGLE_DELTA, PARTICLE_COUNT)
+                    new SeerTacticalEffect(Particle.ELECTRIC_SPARK, origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, ANGLE_DELTA, PARTICLE_COUNT, true)
                             .runTaskRepeated(this, 0, 1, SPREAD_TIME);
-                    new CylindricalParticleEffect(Particle.DRAGON_BREATH, origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, ANGLE_DELTA, PARTICLE_COUNT)
+                    new SeerTacticalEffect(Particle.DRAGON_BREATH, origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, ANGLE_DELTA, PARTICLE_COUNT, false)
                             .runTaskRepeated(this, 0, 1, SPREAD_TIME);
                     next.run();
                 },
                 next -> AbilityUtils.delay(this, info.chargeUp, () -> {
-                    new CylindricalParticleEffect(Particle.END_ROD, origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, ANGLE_DELTA, PARTICLE_COUNT)
+                    new SeerTacticalEffect(Particle.END_ROD, origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, ANGLE_DELTA, PARTICLE_COUNT, false)
                             .runTaskRepeated(this, 0, 1, 1);
+                    if (origin.getWorld() != null)
+                        for (double i = 0; i < SCAN_RANGE; i += SCAN_RANGE / SPREAD_TIME) {
+                            origin.getWorld().playSound(origin.clone().add(origin.getDirection().multiply(i)), Sound.BLOCK_CONDUIT_DEACTIVATE, 1, 0.5f);
+                        }
                     next.run();
                 }, false),
                 next -> {
@@ -159,11 +160,12 @@ public class SeerAbility extends Ability {
                         if (entity instanceof LivingEntity livingEntity) {
                             if (team != null)
                                 team.addEntry(entity.getUniqueId().toString());
-                            livingEntity.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(info.duration, 1));
+                            livingEntity.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(info.duration / 2, 1));
                             livingEntity.addPotionEffect(PotionEffectType.WEAKNESS.createEffect(info.duration, 1));
                             livingEntity.addPotionEffect(PotionEffectType.SLOW.createEffect(info.duration, 2));
                         }
                         if (entity instanceof Player p) {
+                            player.playSound(player.getLocation(), Sound.ENTITY_BEE_LOOP_AGGRESSIVE, 0.2f, 2);
                             player.sendTitle(" ", ChatColor.RED + "Micro-drones detected", 5, 30, 30);
                         }
                     }

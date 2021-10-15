@@ -2,6 +2,7 @@ package io.github.henryyslin.enderpearlabilities.abilities.seer;
 
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import org.bukkit.ChatColor;
+import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.LivingEntity;
@@ -19,6 +20,10 @@ public class HeartSeekerRunnable extends AbilityRunnable {
         this.player = player;
     }
 
+    private void playHeartbeat(Player player) {
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BIT, 0.3f, 1);
+    }
+
     @Override
     protected void tick() {
         if (!player.isSneaking()) return;
@@ -31,19 +36,28 @@ public class HeartSeekerRunnable extends AbilityRunnable {
             if (livingEntity.isValid()) {
                 if (attribute != null) {
                     if (livingEntity.getHealth() / attribute.getValue() > 0.5) {
-                        if (trackTick % 4 == 0)
+                        if (trackTick % 4 == 0) {
                             heartbeat = ChatColor.WHITE + heartbeat;
+                            playHeartbeat(player);
+                        }
                     } else if (livingEntity.getHealth() / attribute.getValue() > 0.25) {
-                        if (trackTick % 3 == 0)
+                        if (trackTick % 3 == 0) {
                             heartbeat = ChatColor.WHITE + heartbeat;
+                            playHeartbeat(player);
+                        }
                     } else {
-                        if (trackTick % 2 == 0)
+                        if (trackTick % 2 == 0) {
                             heartbeat = ChatColor.WHITE + heartbeat;
+                            playHeartbeat(player);
+                        }
                     }
-                } else if (trackTick % 4 == 0)
+                } else if (trackTick % 4 == 0) {
                     heartbeat = ChatColor.WHITE + heartbeat;
-            } else
+                    playHeartbeat(player);
+                }
+            } else {
                 heartbeat = ChatColor.GRAY + heartbeat;
+            }
             if (attribute != null)
                 player.sendTitle(" ", String.format(ChatColor.BLUE + "%.1fm %.1f/%.1f%s", livingEntity.getLocation().distance(player.getLocation()), livingEntity.getHealth(), attribute.getValue(), heartbeat), 0, 8, 10);
             else
