@@ -239,14 +239,11 @@ public class PathfinderAbility extends Ability {
     public void onUnleash(EntityUnleashEvent event) {
         Entity entity = event.getEntity();
         if (!AbilityUtils.verifyAbilityCouple(this, entity)) return;
-        new AbilityRunnable() {
-            @Override
-            public void tick() {
-                Collection<Entity> entities = entity.getWorld().getNearbyEntities(entity.getLocation(), 2, 2, 2, e -> e.getType() == EntityType.DROPPED_ITEM && ((Item) e).getItemStack().getType() == Material.LEAD);
-                for (Entity entity : entities) {
-                    entity.remove();
-                }
+        AbilityUtils.delay(this, 1, () -> {
+            Collection<Entity> entities = entity.getWorld().getNearbyEntities(entity.getLocation(), 2, 2, 2, e -> e.getType() == EntityType.DROPPED_ITEM && ((Item) e).getItemStack().getType() == Material.LEAD);
+            for (Entity e : entities) {
+                e.remove();
             }
-        }.runTaskLater(this, 1);
+        }, true);
     }
 }

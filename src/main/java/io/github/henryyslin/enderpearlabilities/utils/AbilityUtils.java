@@ -174,16 +174,13 @@ public class AbilityUtils {
 
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_PEARL_THROW, 1, 0);
 
-        new AbilityRunnable() {
-            @Override
-            public void tick() {
-                if (projectile.isValid()) {
-                    projectile.remove();
-                }
-                if (inFlight != null)
-                    inFlight.set(false);
+        delay(ability, projectileLifetime, () -> {
+            if (projectile.isValid()) {
+                projectile.remove();
             }
-        }.runTaskLater(ability, projectileLifetime);
+            if (inFlight != null)
+                inFlight.set(false);
+        }, true);
 
         return projectile;
     }
@@ -243,6 +240,28 @@ public class AbilityUtils {
         Optional<Object> couple = getMetadata(entity, "ability");
         if (couple.isEmpty()) return false;
         return verifyAbilityCouple(ability, (AbilityCouple) couple.get());
+    }
+
+    /**
+     * Execute a runnable after some delay.
+     *
+     * @param ability        The ability that owns the runnable.
+     * @param delay          The delay in ticks.
+     * @param next           The runnable to execute after the delay.
+     * @param runIfCancelled Whether to execute the runnable immediately if the delay is cancelled.
+     */
+    public static void delay(Ability ability, int delay, Runnable next, boolean runIfCancelled) {
+        new AbilityRunnable() {
+            @Override
+            protected void tick() {
+                if (!runIfCancelled) next.run();
+            }
+
+            @Override
+            protected void end() {
+                if (runIfCancelled) next.run();
+            }
+        }.runTaskLater(ability, delay);
     }
 
     private static String friendlyNumber(int number) {

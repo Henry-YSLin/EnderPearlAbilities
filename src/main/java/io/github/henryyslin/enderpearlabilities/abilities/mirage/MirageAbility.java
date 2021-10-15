@@ -206,31 +206,25 @@ public class MirageAbility extends Ability {
 
                     next.run();
                 },
-                next -> new AbilityRunnable() {
-                    @Override
-                    public void tick() {
-                        for (NPC npc : npcs) {
-                            npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HELMET, player.getInventory().getHelmet());
-                            npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.CHESTPLATE, player.getInventory().getChestplate());
-                            npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.LEGGINGS, player.getInventory().getLeggings());
-                            npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.BOOTS, player.getInventory().getBoots());
-                            npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HAND, player.getInventory().getItemInMainHand());
-                        }
-                        next.run();
+                next -> AbilityUtils.delay(this, 10, () -> {
+                    for (NPC npc : npcs) {
+                        npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HELMET, player.getInventory().getHelmet());
+                        npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.CHESTPLATE, player.getInventory().getChestplate());
+                        npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.LEGGINGS, player.getInventory().getLeggings());
+                        npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.BOOTS, player.getInventory().getBoots());
+                        npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HAND, player.getInventory().getItemInMainHand());
                     }
-                }.runTaskLater(this, 10),
-                next -> new AbilityRunnable() {
-                    @Override
-                    public void tick() {
-                        for (NPC npc : npcs) {
-                            npc.teleport(npc.getEntity().getLocation().add(0, -300, 0), PlayerTeleportEvent.TeleportCause.PLUGIN);
-                            npc.getEntity().setGravity(true);
-                            CloneTrait trait = npc.getOrAddTrait(CloneTrait.class);
-                            trait.toggle(player, true);
-                        }
-                        next.run();
+                    next.run();
+                }, true),
+                next -> AbilityUtils.delay(this, 5, () -> {
+                    for (NPC npc : npcs) {
+                        npc.teleport(npc.getEntity().getLocation().add(0, -300, 0), PlayerTeleportEvent.TeleportCause.PLUGIN);
+                        npc.getEntity().setGravity(true);
+                        CloneTrait trait = npc.getOrAddTrait(CloneTrait.class);
+                        trait.toggle(player, true);
                     }
-                }.runTaskLater(this, 5),
+                    next.run();
+                }, true),
                 next -> new AbilityRunnable() {
                     BossBar bossbar;
                     Score score;

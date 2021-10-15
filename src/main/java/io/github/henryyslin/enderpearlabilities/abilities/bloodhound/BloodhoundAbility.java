@@ -6,6 +6,7 @@ import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henryyslin.enderpearlabilities.utils.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Particle;
@@ -107,7 +108,7 @@ public class BloodhoundAbility extends Ability {
         Team tmp = null;
         if (manager != null) {
             Scoreboard scoreboard = manager.getMainScoreboard();
-            tmp = scoreboard.registerNewTeam("scanned_" + ownerName);
+            tmp = scoreboard.registerNewTeam(StringUtils.substring("bh_" + ownerName, 0, 16));
             tmp.setColor(ChatColor.RED);
         }
         final Team team = tmp;

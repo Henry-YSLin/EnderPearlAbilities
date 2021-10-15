@@ -113,14 +113,11 @@ public class WraithAbility extends Ability {
 
         int lastSneakCount = sneakCount;
         sneakCount++;
-        new AbilityRunnable() {
-            @Override
-            public void tick() {
-                if (sneakCount - lastSneakCount >= 6) {
-                    abilityActive.set(false);
-                }
+        AbilityUtils.delay(this, 10, () -> {
+            if (sneakCount - lastSneakCount >= 6) {
+                abilityActive.set(false);
             }
-        }.runTaskLater(this, 10);
+        }, false);
     }
 
     @EventHandler
@@ -191,7 +188,7 @@ public class WraithAbility extends Ability {
                             player.teleport(lastLocation);
                         }
                         lastLocation = player.getLocation();
-                        player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 10, 0.5, 1, 0.5, 0.02);
+                        player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 10, 0.5, 1, 0.5, 0.02, null, true);
                     }
 
                     @Override

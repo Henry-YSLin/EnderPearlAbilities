@@ -130,8 +130,6 @@ public class NecromancerAbility extends Ability {
         if (cooldown.getCoolingDown()) return;
         if (abilityActive.get()) return;
 
-        final Ability self = this;
-
         new FunctionChain(
                 next -> {
                     cooldown.startCooldown(info.cooldown);
@@ -182,7 +180,7 @@ public class NecromancerAbility extends Ability {
                         }
                         slaves.add(skeleton);
                         skeleton.getWorld().playSound(skeleton.getLocation(), Sound.ENTITY_SKELETON_HORSE_AMBIENT, 1, 0);
-                        new SlaveSpawning(self, player, skeleton, playerTarget).runTaskRepeated(self, 0, 2, 11);
+                        new SlaveSpawning(ability, player, skeleton, playerTarget).runTaskRepeated(ability, 0, 2, 11);
                     }
 
                     @Override

@@ -51,7 +51,7 @@ public class FragAbility extends Ability {
                 .origin("Apex")
                 .description("Throw frag grenades that bounce around and explode.")
                 .usage("Right click to throw.")
-                .activation(ActivationHand.MainHand);
+                .activation(ActivationHand.OffHand);
 
         if (config != null)
             builder
