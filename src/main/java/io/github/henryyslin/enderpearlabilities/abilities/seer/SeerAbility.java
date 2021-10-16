@@ -111,7 +111,7 @@ public class SeerAbility extends Ability {
 
         abilityActive.set(true);
 
-        Location origin = player.getLocation();
+        Location origin = player.getEyeLocation();
 
         new FunctionChain(
                 next -> {
@@ -135,7 +135,12 @@ public class SeerAbility extends Ability {
                     List<Entity> entities = new ArrayList<>();
                     RayTraceResult result;
                     do {
-                        result = origin.getWorld().rayTraceEntities(origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, entity -> !entities.contains(entity) && !entity.equals(player));
+                        result = origin.getWorld().rayTraceEntities(origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, entity -> {
+                            if (entity instanceof Player p) {
+                                if (p.getGameMode() == GameMode.SPECTATOR) return false;
+                            }
+                            return !entities.contains(entity) && !entity.equals(player);
+                        });
                         if (result != null && result.getHitEntity() != null)
                             entities.add(result.getHitEntity());
                     } while (result != null);

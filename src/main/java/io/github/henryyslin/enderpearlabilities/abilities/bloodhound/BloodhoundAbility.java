@@ -7,10 +7,7 @@ import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henryyslin.enderpearlabilities.utils.StringUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -123,7 +120,12 @@ public class BloodhoundAbility extends Ability {
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
                 next -> {
                     entities.addAll(player.getWorld().getNearbyEntities(player.getLocation(), SCAN_RADIUS, SCAN_RADIUS, SCAN_RADIUS));
-                    entities.removeIf(entity -> entity.getUniqueId().equals(player.getUniqueId()));
+                    entities.removeIf(entity -> {
+                        if (entity instanceof Player p) {
+                            if (p.getGameMode() == GameMode.SPECTATOR) return true;
+                        }
+                        return entity.getUniqueId().equals(player.getUniqueId());
+                    });
                     for (Entity entity : entities) {
                         entity.setGlowing(true);
                         if (team != null)
