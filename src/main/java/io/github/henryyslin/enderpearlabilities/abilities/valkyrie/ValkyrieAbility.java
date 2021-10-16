@@ -198,17 +198,19 @@ public class ValkyrieAbility extends Ability {
                                 side.multiply(-0.4);
                             else
                                 side.multiply(0.4);
-                            Arrow arrow = player.launchProjectile(Arrow.class, facing.clone().multiply(4).add(new Vector(random.nextDouble() * 2d - 1d, random.nextDouble() * 2d + 2d, random.nextDouble() * 2d - 1d)));
-
-                            arrow.teleport(arrow.getLocation().add(side));
-                            arrow.setTicksLived(1160);
-                            arrow.setCritical(true);
-                            arrow.setBounce(false);
-                            arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
-                            arrow.setBasePotionData(new PotionData(PotionType.SLOWNESS, false, true));
-                            arrow.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
-                            arrow.setMetadata("homing", new FixedMetadataValue(plugin, 0));
-                            arrow.setMetadata("target", new FixedMetadataValue(plugin, finalLocation.toVector().add(new Vector(random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d))));
+                            Arrow arrow = player.getWorld().spawn(player.getEyeLocation().add(side), Arrow.class, entity -> {
+                                Vector velocity = facing.clone().multiply(4).add(new Vector(random.nextDouble() * 2d - 1d, random.nextDouble() * 2d + 2d, random.nextDouble() * 2d - 1d));
+                                entity.setVelocity(velocity);
+                                entity.setShooter(player);
+                                entity.setTicksLived(1160);
+                                entity.setCritical(true);
+                                entity.setBounce(false);
+                                entity.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
+                                entity.setBasePotionData(new PotionData(PotionType.SLOWNESS, false, true));
+                                entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+                                entity.setMetadata("homing", new FixedMetadataValue(plugin, 0));
+                                entity.setMetadata("target", new FixedMetadataValue(plugin, finalLocation.toVector().add(new Vector(random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d))));
+                            });
                             arrows.add(arrow);
                         }
                     }

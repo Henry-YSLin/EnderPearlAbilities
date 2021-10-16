@@ -134,13 +134,17 @@ public class PathfinderAbility extends Ability {
     }
 
     private Mob spawnAnchor(World world, Location location) {
-        Mob anchor = (Mob) world.spawnEntity(location, EntityType.SQUID);
-        anchor.setAI(false);
-        anchor.setGravity(false);
-        anchor.setInvulnerable(true);
-        anchor.setInvisible(true);
-        anchor.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
-        return anchor;
+        return world.spawn(location, Slime.class, false, entity -> {
+            entity.setAI(false);
+            entity.setSilent(true);
+            entity.setAware(false);
+            entity.setCollidable(false);
+            entity.setGravity(false);
+            entity.setInvulnerable(true);
+            entity.setInvisible(true);
+            entity.setSize(0);
+            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+        });
     }
 
     @EventHandler
@@ -168,6 +172,7 @@ public class PathfinderAbility extends Ability {
         }
 
         anchor.getWorld().playSound(anchor.getLocation(), Sound.BLOCK_CHAIN_FALL, 1, 0);
+        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_CHAIN_FALL, 0.3f, 0);
 
         (grapple = new AbilityRunnable() {
             BossBar bossbar;
@@ -212,9 +217,11 @@ public class PathfinderAbility extends Ability {
 
                 Vector finalVelocity = player.getVelocity().add(grapple);
                 double magnitude = Math.min(1, finalVelocity.length());
-                player.setVelocity(finalVelocity.normalize().multiply(magnitude));
+                if (finalVelocity.length() > 0)
+                    player.setVelocity(finalVelocity.normalize().multiply(magnitude));
 
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 0.1f, 1.2f);
+                if (idealForce > 0.01)
+                    player.getWorld().playSound(player.getLocation(), Sound.ENTITY_LEASH_KNOT_PLACE, 0.1f, 1.2f);
             }
 
             @Override

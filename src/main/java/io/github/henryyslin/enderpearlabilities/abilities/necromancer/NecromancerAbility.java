@@ -11,7 +11,10 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Skeleton;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -165,19 +168,20 @@ public class NecromancerAbility extends Ability {
                         }
                         bossbar.setProgress(count / (double) info.duration * 10);
                         Location spawnLocation = ListUtils.getRandom(spawnLocations).getLocation().add(0, -1, 0);
-                        Skeleton skeleton = (Skeleton) player.getWorld().spawnEntity(spawnLocation, EntityType.SKELETON);
-                        skeleton.setAI(false);
-                        skeleton.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
-                        skeleton.setCustomName(ownerName + "'s slave");
-                        skeleton.setCustomNameVisible(true);
-                        skeleton.setPersistent(false);
-                        if (WorldUtils.isDaytime(skeleton.getWorld())) {
-                            if (Math.random() < 0.5) {
-                                EntityEquipment equipment = skeleton.getEquipment();
-                                if (equipment != null && (equipment.getHelmet() == null || equipment.getHelmet().getType() == Material.AIR))
-                                    equipment.setHelmet(new ItemStack(Material.IRON_HELMET, 1));
+                        Skeleton skeleton = player.getWorld().spawn(spawnLocation, Skeleton.class, true, entity -> {
+                            entity.setAI(false);
+                            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+                            entity.setCustomName(ownerName + "'s slave");
+                            entity.setCustomNameVisible(true);
+                            entity.setPersistent(false);
+                            if (WorldUtils.isDaytime(player.getWorld())) {
+                                if (Math.random() < 0.5) {
+                                    EntityEquipment equipment = entity.getEquipment();
+                                    if (equipment != null && (equipment.getHelmet() == null || equipment.getHelmet().getType() == Material.AIR))
+                                        equipment.setHelmet(new ItemStack(Material.IRON_HELMET, 1));
+                                }
                             }
-                        }
+                        });
                         slaves.add(skeleton);
                         skeleton.getWorld().playSound(skeleton.getLocation(), Sound.ENTITY_SKELETON_HORSE_AMBIENT, 1, 0);
                         new SlaveSpawning(ability, player, skeleton, playerTarget).runTaskRepeated(ability, 0, 2, 11);

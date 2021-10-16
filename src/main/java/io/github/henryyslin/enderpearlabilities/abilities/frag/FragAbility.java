@@ -182,10 +182,11 @@ public class FragAbility extends Ability {
         } else {
             newVelocity = projectile.getVelocity().setX(0).setZ(0);
         }
-        EnderPearl pearl = projectile.getWorld().spawn(hitPosition, EnderPearl.class);
-        pearl.setShooter(player);
-        pearl.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
-        pearl.setVelocity(newVelocity);
+        EnderPearl pearl = projectile.getWorld().spawn(hitPosition, EnderPearl.class, false, entity -> {
+            entity.setShooter(player);
+            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+            entity.setVelocity(newVelocity);
+        });
         Optional<Object> ref = AbilityUtils.getMetadata(projectile, "pearl");
         if (ref.isPresent()) {
             AtomicReference<Projectile> enderPearl = (AtomicReference<Projectile>) ref.get();

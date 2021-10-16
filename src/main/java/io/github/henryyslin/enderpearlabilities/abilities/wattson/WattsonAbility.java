@@ -157,12 +157,13 @@ public class WattsonAbility extends Ability {
 
         new FunctionChain(
                 next -> {
-                    EnderCrystal crystal = world.spawn(location, EnderCrystal.class);
+                    EnderCrystal crystal = world.spawn(location, EnderCrystal.class, false, entity -> {
+                        entity.setGravity(false);
+                        entity.setGlowing(true);
+                        entity.setShowingBottom(true);
+                        entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+                    });
                     pylon.set(crystal);
-                    crystal.setGravity(false);
-                    crystal.setGlowing(true);
-                    crystal.setShowingBottom(true);
-                    crystal.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
 
                     WorldUtils.spawnParticleRect(location.clone().add(-8, -8, -8), location.clone().add(8, 8, 8), Particle.END_ROD, 5);
                     world.playSound(crystal.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.5f);
