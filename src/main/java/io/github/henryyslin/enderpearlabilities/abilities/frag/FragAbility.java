@@ -182,7 +182,7 @@ public class FragAbility extends Ability {
         } else {
             newVelocity = projectile.getVelocity().setX(0).setZ(0);
         }
-        EnderPearl pearl = projectile.getWorld().spawn(hitPosition, EnderPearl.class, false, entity -> {
+        EnderPearl pearl = projectile.getWorld().spawn(hitPosition, EnderPearl.class, entity -> {
             entity.setShooter(player);
             entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
             entity.setVelocity(newVelocity);
