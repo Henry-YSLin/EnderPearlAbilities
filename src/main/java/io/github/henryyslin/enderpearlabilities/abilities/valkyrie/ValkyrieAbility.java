@@ -41,7 +41,7 @@ public class ValkyrieAbility extends Ability {
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 0);
-        config.addDefault("duration", 12);
+        config.addDefault("duration", 15);
         config.addDefault("cooldown", 400);
     }
 
