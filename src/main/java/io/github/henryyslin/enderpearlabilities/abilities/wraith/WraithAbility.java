@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class WraithAbility extends Ability {
+    static final int CANCEL_DELAY = 10;
 
     private final AbilityInfo info;
 
@@ -41,7 +42,7 @@ public class WraithAbility extends Ability {
                 .name("Into The Void")
                 .origin("Apex - Wraith")
                 .description("For a short duration, improve vision and switch to spectator mode for fast flying, leaving a particle trail behind. Cannot go through walls.\nPassive ability: run faster when you sprint, jump higher when you sneak.")
-                .usage("Right click to activate the ability. Teleporting with the spectator menu is not allowed when the ability is active. Triple click sneak to exit early.")
+                .usage("Right click to activate the ability. Teleporting with the spectator menu is not allowed when the ability is active. Right- and left-click at the same time to exit early.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
@@ -59,6 +60,7 @@ public class WraithAbility extends Ability {
     }
 
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+    final AtomicBoolean cancelAbility = new AtomicBoolean(false);
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -97,27 +99,14 @@ public class WraithAbility extends Ability {
         }
     }
 
-    int sneakCount = 0;
-
     @EventHandler
     public synchronized void onPlayerToggleSneak(PlayerToggleSneakEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
-
         if (event.isSneaking()) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 100000, 1, true, true));
         } else {
             player.removePotionEffect(PotionEffectType.JUMP);
         }
-
-        if (!abilityActive.get()) return;
-
-        int lastSneakCount = sneakCount;
-        sneakCount++;
-        AbilityUtils.delay(this, 10, () -> {
-            if (sneakCount - lastSneakCount >= 6) {
-                abilityActive.set(false);
-            }
-        }, false);
     }
 
     @EventHandler
@@ -141,6 +130,11 @@ public class WraithAbility extends Ability {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
+        if (player.getName().equals(ownerName) && abilityActive.get()) {
+            cancelAbility.set(true);
+            return;
+        }
+
         if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
 
         event.setCancelled(true);
@@ -157,6 +151,7 @@ public class WraithAbility extends Ability {
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
                 next -> {
+                    cancelAbility.set(false);
                     abilityActive.set(true);
                     prevGameMode.set(player.getGameMode());
                     player.setGameMode(GameMode.SPECTATOR);
@@ -168,10 +163,10 @@ public class WraithAbility extends Ability {
                 next -> new AbilityRunnable() {
                     BossBar bossbar;
                     Location lastLocation;
+                    int cancelTick = CANCEL_DELAY;
 
                     @Override
                     protected synchronized void start() {
-                        player.setCooldown(Material.ENDER_PEARL, info.duration);
                         bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                         lastLocation = player.getLocation();
@@ -182,7 +177,14 @@ public class WraithAbility extends Ability {
                         if (!abilityActive.get()) {
                             cancel();
                         }
+                        if (cancelAbility.get()) {
+                            cancelTick--;
+                            player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 5, 0.5, 1, 0.5, 0.02, null, true);
+                            if (cancelTick <= 0) abilityActive.set(false);
+                        }
                         bossbar.setProgress(count / (double) info.duration);
+                        if (count < CANCEL_DELAY)
+                            player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 5, 0.5, 1, 0.5, 0.02, null, true);
                         Block headBlock = player.getWorld().getBlockAt(player.getEyeLocation());
                         if (headBlock.getType().isOccluding()) {
                             player.teleport(lastLocation);
@@ -207,7 +209,7 @@ public class WraithAbility extends Ability {
                 next -> {
                     player.setGameMode(prevGameMode.get());
                     abilityActive.set(false);
-                    sneakCount = 0;
+                    cancelAbility.set(false);
                     player.removePotionEffect(PotionEffectType.CONDUIT_POWER);
                     player.removePotionEffect(PotionEffectType.NIGHT_VISION);
                     cooldown.startCooldown(info.cooldown);
