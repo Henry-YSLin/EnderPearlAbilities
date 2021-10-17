@@ -1,11 +1,10 @@
 package io.github.henryyslin.enderpearlabilities.abilities.seer;
 
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
+import io.github.henryyslin.enderpearlabilities.utils.EntityUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -62,18 +61,18 @@ public class HeartSeekerRunnable extends AbilityRunnable {
             result = rayTrace(RAY_SIZE);
         if (result != null && result.getHitEntity() != null) {
             LivingEntity livingEntity = (LivingEntity) result.getHitEntity();
-            AttributeInstance attribute = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+            double maxHealth = EntityUtils.getMaxHealth(livingEntity);
             String heartbeat = "♥";
             double distance = livingEntity.getLocation().distance(player.getLocation());
             int trackTick = livingEntity.getTicksLived() / 5;
             if (livingEntity.isValid() && !UNDEAD_MOBS.contains(livingEntity.getType())) {
-                if (attribute != null) {
-                    if (livingEntity.getHealth() / attribute.getValue() > 0.5) {
+                if (maxHealth == 0) {
+                    if (livingEntity.getHealth() / maxHealth > 0.5) {
                         if (trackTick % 4 == 0) {
                             heartbeat = ChatColor.WHITE + heartbeat;
                             playHeartbeat(player, distance);
                         }
-                    } else if (livingEntity.getHealth() / attribute.getValue() > 0.25) {
+                    } else if (livingEntity.getHealth() / maxHealth > 0.25) {
                         if (trackTick % 3 == 0) {
                             heartbeat = ChatColor.WHITE + heartbeat;
                             playHeartbeat(player, distance);
@@ -91,8 +90,8 @@ public class HeartSeekerRunnable extends AbilityRunnable {
             } else {
                 heartbeat = ChatColor.GRAY + heartbeat;
             }
-            if (attribute != null)
-                player.sendTitle(" ", String.format(ChatColor.BLUE + "%.1fm %.1f/%.1f%s", distance, livingEntity.getHealth(), attribute.getValue(), heartbeat), 0, 8, 10);
+            if (maxHealth == 0)
+                player.sendTitle(" ", String.format(ChatColor.BLUE + "%.1fm %.1f/%.1f%s", distance, livingEntity.getHealth(), maxHealth, heartbeat), 0, 8, 10);
             else
                 player.sendTitle(" ", String.format(ChatColor.BLUE + "%.1fm %.1f%s", distance, livingEntity.getHealth(), heartbeat), 0, 8, 10);
         }
