@@ -1,15 +1,59 @@
 package io.github.henryyslin.enderpearlabilities.utils;
 
+import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.RayTraceResult;
 
+import java.util.HashMap;
 import java.util.Optional;
 
 public class PlayerUtils {
+
+    /**
+     * Remove an ender pearl from the player's inventory as a result of ability activation.
+     * <p>
+     * Note: This method does not simply remove an ender pearl from the player's selected hot bar slot.
+     * Instead, it first attempts to remove a pearl from the player's backpack, only falling back to the player's
+     * main or off hand if there are no pearls in the backpack. This behavior is for the player's convenience,
+     * so that they don't need to refill their main/off hands very often.
+     *
+     * @param player The player to remove an ender pearl from.
+     * @return Whether the ender pearl is successfully removed.
+     */
+    public static boolean consumeEnderPearl(Player player) {
+        if (player.getGameMode() != GameMode.CREATIVE) {
+            HashMap<Integer, ItemStack> remainingItems = player.getInventory().removeItem(new ItemStack(Material.ENDER_PEARL, 1));
+            player.updateInventory();
+            if (!remainingItems.isEmpty()) {
+                ItemStack heldItem = player.getInventory().getItemInMainHand();
+                if (heldItem.getType() == Material.ENDER_PEARL) {
+                    heldItem.setAmount(heldItem.getAmount() - 1);
+                    if (heldItem.getAmount() == 0) {
+                        heldItem.setType(Material.AIR);
+                    }
+                    player.getInventory().setItemInMainHand(heldItem);
+                } else {
+                    heldItem = player.getInventory().getItemInOffHand();
+                    if (heldItem.getType() == Material.ENDER_PEARL) {
+                        heldItem.setAmount(heldItem.getAmount() - 1);
+                        if (heldItem.getAmount() == 0) {
+                            heldItem.setType(Material.AIR);
+                        }
+                        player.getInventory().setItemInOffHand(heldItem);
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
 
     /**
      * Get the entity currently under the given player's crosshair.
@@ -50,13 +94,13 @@ public class PlayerUtils {
 
     /**
      * Get the remaining durability of the tool in the player's main hand.
-     * Refer to {@link ItemUtils}{@code .getToolDurability} for details.
+     * Refer to {@link ItemStackUtils}{@code .getToolDurability} for details.
      *
      * @param player The player to check.
      * @return The durability of the player's main hand tool, if any.
      */
     public static Optional<Integer> getMainHandToolDurability(Player player) {
-        return ItemUtils.getToolDurability(player.getInventory().getItemInMainHand());
+        return ItemStackUtils.getToolDurability(player.getInventory().getItemInMainHand());
     }
 
     /**

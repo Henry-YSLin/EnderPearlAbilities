@@ -5,7 +5,7 @@ import org.bukkit.inventory.meta.Damageable;
 
 import java.util.Optional;
 
-public class ItemUtils {
+public class ItemStackUtils {
 
     /**
      * Check whether an {@link ItemStack} has durability.

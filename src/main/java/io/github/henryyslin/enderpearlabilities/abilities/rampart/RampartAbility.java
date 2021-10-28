@@ -7,6 +7,7 @@ import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henryyslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -115,7 +116,7 @@ public class RampartAbility extends Ability {
             return;
         }
 
-        AbilityUtils.consumeEnderPearl(player);
+        PlayerUtils.consumeEnderPearl(player);
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, 20, next),

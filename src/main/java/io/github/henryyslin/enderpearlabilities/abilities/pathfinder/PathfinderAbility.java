@@ -7,6 +7,7 @@ import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henryyslin.enderpearlabilities.utils.ProjectileUtils;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -165,7 +166,7 @@ public class PathfinderAbility extends Ability {
 
         if (hitEntity == null) {
             // improve accuracy of the hit location
-            Location fixedLocation = AbilityUtils.correctProjectileHitLocation(projectile);
+            Location fixedLocation = ProjectileUtils.correctProjectileHitLocation(projectile);
             anchor = spawnAnchor(player.getWorld(), fixedLocation);
         } else {
             anchor = spawnAnchor(player.getWorld(), hitEntity.getLocation());

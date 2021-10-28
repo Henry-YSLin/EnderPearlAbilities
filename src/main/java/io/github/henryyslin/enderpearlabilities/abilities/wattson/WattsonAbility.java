@@ -153,7 +153,7 @@ public class WattsonAbility extends Ability {
         if (location.getBlock().getType() != Material.AIR) return;
 
         abilityActive.set(true);
-        AbilityUtils.consumeEnderPearl(player);
+        PlayerUtils.consumeEnderPearl(player);
 
         new FunctionChain(
                 next -> {
@@ -219,10 +219,10 @@ public class WattsonAbility extends Ability {
                                 intercepted = true;
                             } else if (count % 5 == 1) {
                                 if (entity instanceof Player player) {
-                                    ItemUtils.damageTool(player.getInventory().getHelmet(), -1);
-                                    ItemUtils.damageTool(player.getInventory().getChestplate(), -1);
-                                    ItemUtils.damageTool(player.getInventory().getLeggings(), -1);
-                                    ItemUtils.damageTool(player.getInventory().getBoots(), -1);
+                                    ItemStackUtils.damageTool(player.getInventory().getHelmet(), -1);
+                                    ItemStackUtils.damageTool(player.getInventory().getChestplate(), -1);
+                                    ItemStackUtils.damageTool(player.getInventory().getLeggings(), -1);
+                                    ItemStackUtils.damageTool(player.getInventory().getBoots(), -1);
                                 }
                             }
                         }

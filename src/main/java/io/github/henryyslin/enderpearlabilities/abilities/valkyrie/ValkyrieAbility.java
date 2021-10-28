@@ -4,9 +4,7 @@ import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
-import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
-import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henryyslin.enderpearlabilities.utils.*;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
@@ -136,7 +134,7 @@ public class ValkyrieAbility extends Ability {
 
         if (hitEntity == null) {
             // improve accuracy of the hit location
-            finalLocation = AbilityUtils.correctProjectileHitLocation(projectile);
+            finalLocation = ProjectileUtils.correctProjectileHitLocation(projectile);
         } else {
             finalLocation = hitEntity.getLocation();
         }
@@ -152,7 +150,7 @@ public class ValkyrieAbility extends Ability {
                     if (arrow.isOnGround()) continue;
                     valid = true;
 
-                    Optional<Object> boxedVector = AbilityUtils.getMetadata(arrow, "target");
+                    Optional<Object> boxedVector = EntityUtils.getMetadata(arrow, "target");
                     if (boxedVector.isEmpty()) continue;
                     Vector target = (Vector) boxedVector.get();
                     Vector distance = target.clone().subtract(arrow.getLocation().toVector());
@@ -160,7 +158,7 @@ public class ValkyrieAbility extends Ability {
 
                     double propelStrength = 1;
 
-                    Optional<Object> boxedHoming = AbilityUtils.getMetadata(arrow, "homing");
+                    Optional<Object> boxedHoming = EntityUtils.getMetadata(arrow, "homing");
                     if (boxedHoming.isEmpty()) continue;
                     int homing = (int) boxedHoming.get();
                     arrow.removeMetadata("homing", plugin);

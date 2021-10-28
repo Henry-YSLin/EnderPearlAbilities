@@ -3,10 +3,7 @@ package io.github.henryyslin.enderpearlabilities.abilities.bloodhound;
 import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
-import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
-import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henryyslin.enderpearlabilities.utils.StringUtils;
+import io.github.henryyslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -98,7 +95,7 @@ public class BloodhoundAbility extends Ability {
         if (cooldown.getCoolingDown()) return;
         if (abilityActive.get()) return;
 
-        AbilityUtils.consumeEnderPearl(player);
+        PlayerUtils.consumeEnderPearl(player);
 
         List<Entity> entities = new ArrayList<>();
         ScoreboardManager manager = Bukkit.getScoreboardManager();

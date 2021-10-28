@@ -125,7 +125,7 @@ public class WorldShaperAbility extends Ability {
 
         if (hitEntity == null) {
             // improve accuracy of the hit location
-            finalLocation = AbilityUtils.correctProjectileHitLocation(projectile).add(projectile.getVelocity().normalize().multiply(0.1));
+            finalLocation = ProjectileUtils.correctProjectileHitLocation(projectile).add(projectile.getVelocity().normalize().multiply(0.1));
         } else {
             finalLocation = hitEntity.getLocation();
         }
@@ -149,7 +149,7 @@ public class WorldShaperAbility extends Ability {
                 if (player.getGameMode() != GameMode.CREATIVE) {
                     if (Math.random() * (unbreaking + 1) < 1) {
                         if (Math.random() < 0.5) {
-                            ItemUtils.damageTool(player.getInventory().getItemInMainHand(), 1);
+                            ItemStackUtils.damageTool(player.getInventory().getItemInMainHand(), 1);
                         }
                     }
                 }

@@ -6,6 +6,7 @@ import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henryyslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
@@ -146,7 +147,7 @@ public class WraithAbility extends Ability {
         new FunctionChain(
                 next -> {
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 1, 0);
-                    AbilityUtils.consumeEnderPearl(player);
+                    PlayerUtils.consumeEnderPearl(player);
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),

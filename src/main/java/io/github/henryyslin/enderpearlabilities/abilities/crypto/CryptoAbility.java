@@ -4,10 +4,7 @@ import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
-import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
-import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henryyslin.enderpearlabilities.utils.EntityUtils;
-import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henryyslin.enderpearlabilities.utils.*;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Equipment;
@@ -174,7 +171,7 @@ public class CryptoAbility extends Ability {
                 player.damage(event.getDamage());
                 player.setLastDamageCause(event);
                 LivingEntity livingNpc = (LivingEntity) npc.getEntity();
-                player.setHealth(livingNpc.getHealth());
+                player.setHealth(Math.ceil(livingNpc.getHealth()));
                 player.sendMessage(player.getHealth() + "");
             }
         }
@@ -230,7 +227,7 @@ public class CryptoAbility extends Ability {
                         bossbar = Bukkit.createBossBar("Charging up", BarColor.WHITE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
 
-                        AbilityUtils.consumeEnderPearl(player);
+                        PlayerUtils.consumeEnderPearl(player);
 
                         vex = player.getWorld().spawn(deployLocation, Vex.class, false, entity -> {
                             entity.setGravity(false);

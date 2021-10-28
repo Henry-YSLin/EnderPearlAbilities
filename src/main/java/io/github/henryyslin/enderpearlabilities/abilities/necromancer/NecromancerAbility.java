@@ -136,7 +136,7 @@ public class NecromancerAbility extends Ability {
         new FunctionChain(
                 next -> {
                     cooldown.startCooldown(info.cooldown);
-                    AbilityUtils.consumeEnderPearl(player);
+                    PlayerUtils.consumeEnderPearl(player);
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),

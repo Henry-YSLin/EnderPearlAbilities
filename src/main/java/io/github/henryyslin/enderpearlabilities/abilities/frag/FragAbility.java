@@ -4,9 +4,7 @@ import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
-import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
-import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henryyslin.enderpearlabilities.utils.*;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
@@ -173,7 +171,7 @@ public class FragAbility extends Ability {
 
         projectile.getWorld().spawnParticle(Particle.SMOKE_NORMAL, projectile.getLocation(), 2, 0.1, 0.1, 0.1, 0.02);
 
-        Location hitPosition = AbilityUtils.correctProjectileHitLocation(projectile);
+        Location hitPosition = ProjectileUtils.correctProjectileHitLocation(projectile);
         Vector newVelocity;
         if (event.getHitBlockFace() != null) {
             double hitMagnitude = Math.abs(projectile.getVelocity().dot(event.getHitBlockFace().getDirection()));
@@ -187,7 +185,7 @@ public class FragAbility extends Ability {
             entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
             entity.setVelocity(newVelocity);
         });
-        Optional<Object> ref = AbilityUtils.getMetadata(projectile, "pearl");
+        Optional<Object> ref = EntityUtils.getMetadata(projectile, "pearl");
         if (ref.isPresent()) {
             AtomicReference<Projectile> enderPearl = (AtomicReference<Projectile>) ref.get();
             enderPearl.set(pearl);

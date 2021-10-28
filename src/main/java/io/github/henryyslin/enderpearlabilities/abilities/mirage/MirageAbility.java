@@ -173,7 +173,7 @@ public class MirageAbility extends Ability {
         new FunctionChain(
                 next -> {
                     abilityActive.set(true);
-                    AbilityUtils.consumeEnderPearl(player);
+                    PlayerUtils.consumeEnderPearl(player);
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),

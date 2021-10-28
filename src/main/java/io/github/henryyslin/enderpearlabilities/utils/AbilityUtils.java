@@ -16,13 +16,9 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.metadata.MetadataValue;
 import org.bukkit.util.Consumer;
-import org.bukkit.util.RayTraceResult;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -107,46 +103,6 @@ public class AbilityUtils {
     }
 
     /**
-     * Remove an ender pearl from the player's inventory as a result of ability activation.
-     * <p>
-     * Note: This method does not simply remove an ender pearl from the player's selected hot bar slot.
-     * Instead, it first attempts to remove a pearl from the player's backpack, only falling back to the player's
-     * main or off hand if there are no pearls in the backpack. This behavior is for the player's convenience,
-     * so that they don't need to refill their main/off hands very often.
-     *
-     * @param player The player to remove an ender pearl from.
-     * @return Whether the ender pearl is successfully removed.
-     */
-    public static boolean consumeEnderPearl(Player player) {
-        if (player.getGameMode() != GameMode.CREATIVE) {
-            HashMap<Integer, ItemStack> remainingItems = player.getInventory().removeItem(new ItemStack(Material.ENDER_PEARL, 1));
-            player.updateInventory();
-            if (!remainingItems.isEmpty()) {
-                ItemStack heldItem = player.getInventory().getItemInMainHand();
-                if (heldItem.getType() == Material.ENDER_PEARL) {
-                    heldItem.setAmount(heldItem.getAmount() - 1);
-                    if (heldItem.getAmount() == 0) {
-                        heldItem.setType(Material.AIR);
-                    }
-                    player.getInventory().setItemInMainHand(heldItem);
-                } else {
-                    heldItem = player.getInventory().getItemInOffHand();
-                    if (heldItem.getType() == Material.ENDER_PEARL) {
-                        heldItem.setAmount(heldItem.getAmount() - 1);
-                        if (heldItem.getAmount() == 0) {
-                            heldItem.setType(Material.AIR);
-                        }
-                        player.getInventory().setItemInOffHand(heldItem);
-                    } else {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
      * Make a player fire an ender pearl as if they have thrown it themselves.
      *
      * @param ability            The ability responsible for this ender pearl.
@@ -163,7 +119,7 @@ public class AbilityUtils {
             inFlight.set(true);
         }
 
-        consumeEnderPearl(player);
+        PlayerUtils.consumeEnderPearl(player);
 
         Projectile projectile = player.launchProjectile(EnderPearl.class, player.getLocation().getDirection().clone().normalize().multiply(projectileSpeed));
         projectile.setGravity(gravity);
@@ -183,37 +139,6 @@ public class AbilityUtils {
         }, true);
 
         return projectile;
-    }
-
-    /**
-     * Improve the accuracy of projectile hit location by ray tracing.
-     *
-     * @param projectile The projectile to compute hit location for. The hit event should have already fired for this projectile.
-     * @return The accurate hit location of the projectile, ray traced from its current velocity.
-     */
-    public static Location correctProjectileHitLocation(Projectile projectile) {
-        RayTraceResult result = projectile.getWorld().rayTrace(projectile.getLocation(), projectile.getVelocity(), projectile.getVelocity().length(), FluidCollisionMode.NEVER, true, 0.1, entity -> !entity.equals(projectile));
-        if (result == null) {
-            return projectile.getLocation();
-        }
-
-        return result.getHitPosition().toLocation(projectile.getWorld());
-    }
-
-    /**
-     * Get the metadata value of a specified key from an entity.
-     *
-     * @param entity The entity that holds the metadata.
-     * @param key    The key for the metadata value.
-     * @return The optional metadata value, being empty if the metadata does not exist.
-     */
-    public static Optional<Object> getMetadata(Entity entity, String key) {
-        if (!entity.hasMetadata(key)) return Optional.empty();
-        List<MetadataValue> metadata = entity.getMetadata(key);
-        if (metadata.size() == 0) return Optional.empty();
-        Object value = metadata.get(metadata.size() - 1).value();
-        if (value == null) return Optional.empty();
-        return Optional.of(value);
     }
 
     /**
@@ -237,7 +162,7 @@ public class AbilityUtils {
      * @return Whether the entity belongs to the given {@link Ability} instance.
      */
     public static boolean verifyAbilityCouple(Ability ability, Entity entity) {
-        Optional<Object> couple = getMetadata(entity, "ability");
+        Optional<Object> couple = EntityUtils.getMetadata(entity, "ability");
         if (couple.isEmpty()) return false;
         return verifyAbilityCouple(ability, (AbilityCouple) couple.get());
     }
