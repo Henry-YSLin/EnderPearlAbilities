@@ -21,6 +21,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityDropItemEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -116,6 +117,10 @@ public class CryptoAbility extends Ability {
         }
         NPC n = dummy.get();
         if (n != null) {
+            if (player != null) {
+                player.setGameMode(GameMode.SURVIVAL);
+                player.teleport(n.getStoredLocation());
+            }
             n.getOwningRegistry().deregister(n);
         }
     }
@@ -178,6 +183,13 @@ public class CryptoAbility extends Ability {
     }
 
     @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        if (!event.getEntity().equals(player)) return;
+        if (!abilityActive.get()) return;
+        cleanUp();
+    }
+
+    @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
         if (event.getEntity().equals(drone.get())) {
             // TODO
@@ -223,6 +235,7 @@ public class CryptoAbility extends Ability {
 
                     @Override
                     protected synchronized void start() {
+                        abilityActive.set(true);
                         player.setCooldown(Material.ENDER_PEARL, info.chargeUp);
                         bossbar = Bukkit.createBossBar("Charging up", BarColor.WHITE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
@@ -309,12 +322,15 @@ public class CryptoAbility extends Ability {
                             bossbar.setProgress(d.getHealth() / maxHealth);
                         else
                             bossbar.setProgress(0);
-                        d.teleport(player.getEyeLocation());
+                        // d.teleport(player.getEyeLocation());
+                        player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 1, 0, 0, 0, 0);
                     }
 
                     @Override
                     protected void end() {
                         bossbar.removeAll();
+                        cleanUp();
+                        abilityActive.set(false);
                     }
                 }.runTaskTimer(this, 0, 1)
         ).execute();
