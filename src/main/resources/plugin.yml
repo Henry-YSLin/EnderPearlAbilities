@@ -2,7 +2,7 @@ name: EnderPearlAbilities
 version: '${project.version}'
 main: io.github.henryyslin.enderpearlabilities.EnderPearlAbilities
 api-version: 1.17
-depend: [Citizens]
+depend: [ Citizens, ProtocolLib ]
 commands:
   ability query:
     description: Check the abilities of a player

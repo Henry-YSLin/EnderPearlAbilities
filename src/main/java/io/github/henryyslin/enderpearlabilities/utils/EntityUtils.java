@@ -2,6 +2,7 @@ package io.github.henryyslin.enderpearlabilities.utils;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
+import io.github.henryyslin.enderpearlabilities.EnderPearlAbilities;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
@@ -9,6 +10,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.MetadataValue;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,7 +45,12 @@ public class EntityUtils {
     }
 
     public static void destroyEntityForPlayer(Entity entity, Player player) {
-        PacketContainer destroyPacket = new PacketContainer(PacketType.Play.Server.ENTITY_DESTROY);
-
+        PacketContainer destroyPacket = EnderPearlAbilities.getProtocolManager().createPacket(PacketType.Play.Server.ENTITY_DESTROY);
+        destroyPacket.getIntLists().write(0, List.of(entity.getEntityId()));
+        try {
+            EnderPearlAbilities.getProtocolManager().sendServerPacket(player, destroyPacket);
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
     }
 }

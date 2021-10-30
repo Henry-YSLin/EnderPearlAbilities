@@ -53,6 +53,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
     public void onEnable() {
         instance = this;
         protocolManager = ProtocolLibrary.getProtocolManager();
+        getLogger().info(protocolManager.toString());
 
         // Plugin startup logic
         Reflections reflections = new Reflections("io.github.henryyslin.enderpearlabilities");
