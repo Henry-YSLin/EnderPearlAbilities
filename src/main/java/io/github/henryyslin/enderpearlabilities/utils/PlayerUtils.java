@@ -130,6 +130,7 @@ public class PlayerUtils {
 
         BlockData data = block.getBlockData();
 
+        // TODO: no block update
         // TODO: bell, buttons
         if (data instanceof Bed bed) {
             if (bed.isOccupied())
@@ -197,7 +198,7 @@ public class PlayerUtils {
             }
         }
 
-        block.setBlockData(data);
+        block.setBlockData(data, true);
         return true;
     }
 }

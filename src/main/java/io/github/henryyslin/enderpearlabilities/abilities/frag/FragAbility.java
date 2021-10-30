@@ -147,9 +147,9 @@ public class FragAbility extends Ability {
 
                             world.createExplosion(pearl.getLocation().add(0, 0.1, 0), 6, false, false);
                             pearl.remove();
-                            abilityActive.set(false);
-                            cooldown.startCooldown(info.cooldown);
                         }
+                        abilityActive.set(false);
+                        cooldown.startCooldown(info.cooldown);
                     }
                 }.runTaskRepeated(this, 0, 1, info.duration)
         ).execute();

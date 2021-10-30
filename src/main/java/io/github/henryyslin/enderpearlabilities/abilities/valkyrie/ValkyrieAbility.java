@@ -148,6 +148,7 @@ public class ValkyrieAbility extends Ability {
                 boolean valid = false;
                 for (Arrow arrow : arrows) {
                     if (arrow.isOnGround()) continue;
+                    if (!arrow.isValid()) continue;
                     valid = true;
 
                     Optional<Object> boxedVector = EntityUtils.getMetadata(arrow, "target");
