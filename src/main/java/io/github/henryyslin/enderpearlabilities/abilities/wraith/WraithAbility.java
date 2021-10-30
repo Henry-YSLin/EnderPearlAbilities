@@ -118,14 +118,6 @@ public class WraithAbility extends Ability {
             player.removePotionEffect(PotionEffectType.SPEED);
     }
 
-//    @EventHandler
-//    public void onEntityDamage(EntityDamageEvent event) {
-//        if (!(event.getEntity() instanceof Player player)) return;
-//        if (!player.getName().equals(ownerName)) return;
-//        if (!abilityActive.get()) return;
-//        event.setCancelled(true);
-//    }
-
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
