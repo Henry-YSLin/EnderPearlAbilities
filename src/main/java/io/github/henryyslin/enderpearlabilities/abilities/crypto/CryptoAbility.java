@@ -60,8 +60,8 @@ public class CryptoAbility extends Ability {
                 .codeName("crypto")
                 .name("Surveillance Drone")
                 .origin("Apex - Crypto")
-                .description("Deploys an aerial drone. 40-second cooldown if destroyed.")
-                .usage("Right click to deploy the drone.")
+                .description("Deploys an aerial drone for various purposes. Cooldown is only active if the drone is destroyed or recalled.")
+                .usage("Right click to deploy a new drone or enter an existing one. Sneak while right-clicking to recall a deployed drone. Length of cooldown depends on the drone's heath. Right click while in the drone to interact with objects. Left click to exit drone view and leave the drone in place. Ramming the drone into entities will cause damage to both the drone and the entity. Driving the drone through walls will temporarily limit vision.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
@@ -154,7 +154,7 @@ public class CryptoAbility extends Ability {
         LivingEntity entity = (LivingEntity) npc.getEntity();
         entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
         entity.setHealth(player.getHealth());
-        npc.setProtected(player.getGameMode() == GameMode.CREATIVE);
+        npc.setProtected(false);
         dummy.set(npc);
         npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HELMET, player.getInventory().getHelmet());
         npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.CHESTPLATE, player.getInventory().getChestplate());
@@ -311,40 +311,44 @@ public class CryptoAbility extends Ability {
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
-        if (player.isSneaking() && isDroneValid()) {
-            new AbilityRunnable() {
-                BossBar bossbar;
+        if (player.isSneaking()) {
+            if (isDroneValid()) {
+                new AbilityRunnable() {
+                    BossBar bossbar;
 
-                @Override
-                protected synchronized void start() {
-                    chargingUp.set(true);
-                    player.setCooldown(Material.ENDER_PEARL, info.chargeUp);
-                    bossbar = Bukkit.createBossBar("Recalling drone", BarColor.WHITE, BarStyle.SOLID);
-                    bossbar.addPlayer(player);
-                }
-
-                @Override
-                protected synchronized void tick() {
-                    if (!isDroneValid()) {
-                        cancel();
-                        return;
+                    @Override
+                    protected synchronized void start() {
+                        chargingUp.set(true);
+                        player.setCooldown(Material.ENDER_PEARL, info.chargeUp);
+                        bossbar = Bukkit.createBossBar("Recalling drone", BarColor.WHITE, BarStyle.SOLID);
+                        bossbar.addPlayer(player);
                     }
-                    bossbar.setProgress(count / (double) info.chargeUp);
-                    drone.get().getWorld().spawnParticle(Particle.PORTAL, drone.get().getLocation(), 5, 0.5, 0.5, 0.5, 0.02);
-                }
 
-                @Override
-                protected synchronized void end() {
-                    bossbar.removeAll();
-                    chargingUp.set(false);
-                    if (isDroneValid()) {
-                        double maxHealth = EntityUtils.getMaxHealth(drone.get());
-                        double damage = maxHealth - drone.get().getHealth();
-                        cooldown.startCooldown((int) (info.cooldown / maxHealth * damage));
-                        removeDrone();
+                    @Override
+                    protected synchronized void tick() {
+                        if (!isDroneValid()) {
+                            cancel();
+                            return;
+                        }
+                        bossbar.setProgress(count / (double) info.chargeUp);
+                        drone.get().getWorld().spawnParticle(Particle.PORTAL, drone.get().getLocation(), 5, 0.5, 0.5, 0.5, 0.02);
                     }
-                }
-            }.runTaskRepeated(this, 0, 1, info.chargeUp);
+
+                    @Override
+                    protected synchronized void end() {
+                        bossbar.removeAll();
+                        chargingUp.set(false);
+                        if (isDroneValid()) {
+                            double maxHealth = EntityUtils.getMaxHealth(drone.get());
+                            double damage = maxHealth - drone.get().getHealth();
+                            cooldown.startCooldown((int) (info.cooldown / maxHealth * damage));
+                            removeDrone();
+                        }
+                    }
+                }.runTaskRepeated(this, 0, 1, info.chargeUp);
+            } else {
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("No existing drone to recall."));
+            }
             return;
         }
 

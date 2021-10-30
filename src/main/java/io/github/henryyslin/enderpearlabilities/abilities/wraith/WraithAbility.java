@@ -18,10 +18,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.event.player.PlayerToggleSprintEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -47,8 +45,8 @@ public class WraithAbility extends Ability {
                 .codeName("wraith")
                 .name("Into The Void")
                 .origin("Apex - Wraith")
-                .description("For a short duration, improve vision and switch to spectator mode for fast flying, leaving a particle trail behind. Cannot go through walls.\nPassive ability: run faster when you sprint, jump higher when you sneak.")
-                .usage("Right click to activate the ability. Teleporting with the spectator menu is not allowed when the ability is active. Right- and left-click at the same time to exit early.")
+                .description("Reposition quickly through the safety of void space, allowing you to fly and avoid all damage and interactions.\nPassive ability: run faster when you sprint, jump higher when you sneak.")
+                .usage("Right click to activate the ability. Double-tap space to fly like in creative mode. Right click with an ender pearl again to exit early. You may not interact with anything while the ability is active.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
@@ -123,6 +121,21 @@ public class WraithAbility extends Ability {
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
         if (!player.getName().equals(ownerName)) return;
+        if (!abilityActive.get()) return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onEntityPickupItem(EntityPickupItemEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (!player.getName().equals(ownerName)) return;
+        if (!abilityActive.get()) return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onPlayerPickupArrow(PlayerPickupArrowEvent event) {
+        if (!event.getPlayer().getName().equals(ownerName)) return;
         if (!abilityActive.get()) return;
         event.setCancelled(true);
     }
