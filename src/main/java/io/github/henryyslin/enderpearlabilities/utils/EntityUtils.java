@@ -1,9 +1,12 @@
 package io.github.henryyslin.enderpearlabilities.utils;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.events.PacketContainer;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.metadata.MetadataValue;
 
 import java.util.List;
@@ -37,5 +40,10 @@ public class EntityUtils {
         Object value = metadata.get(metadata.size() - 1).value();
         if (value == null) return Optional.empty();
         return Optional.of(value);
+    }
+
+    public static void destroyEntityForPlayer(Entity entity, Player player) {
+        PacketContainer destroyPacket = new PacketContainer(PacketType.Play.Server.ENTITY_DESTROY);
+
     }
 }

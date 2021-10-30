@@ -8,11 +8,10 @@ import io.github.henryyslin.enderpearlabilities.utils.*;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Equipment;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.type.Door;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -29,6 +28,7 @@ import org.bukkit.event.entity.EntityDropItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -87,7 +87,7 @@ public class CryptoAbility extends Ability {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
-        removeDrone();
+        exitDrone();
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             setUpPlayer(player);
@@ -146,27 +146,32 @@ public class CryptoAbility extends Ability {
         Location spawn = player.getLocation();
         NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, player.getName());
         npc.spawn(spawn);
-        npc.getEntity().setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
-        npc.setProtected(false);
+        LivingEntity entity = (LivingEntity) npc.getEntity();
+        entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+        entity.setHealth(player.getHealth());
+        npc.setProtected(player.getGameMode() == GameMode.CREATIVE);
         dummy.set(npc);
         npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HELMET, player.getInventory().getHelmet());
         npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.CHESTPLATE, player.getInventory().getChestplate());
         npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.LEGGINGS, player.getInventory().getLeggings());
         npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.BOOTS, player.getInventory().getBoots());
         npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HAND, player.getInventory().getItemInMainHand());
+        npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.OFF_HAND, player.getInventory().getItemInOffHand());
 
         //npc.teleport(player.getLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
         npc.getEntity().setGravity(true);
-        player.teleport(drone.get().getLocation());
+        player.teleport(drone.get().getLocation().add(0, -player.getEyeHeight(), 0));
         player.setGameMode(GameMode.SPECTATOR);
     }
 
     private void exitDrone() {
         removeAllNPCs();
 
-        LivingEntity d = drone.get();
-        if (d != null && d.isValid()) {
-            d.teleport(player.getEyeLocation());
+        if (player != null && player.getGameMode() == GameMode.SPECTATOR) {
+            LivingEntity d = drone.get();
+            if (d != null && d.isValid()) {
+                d.teleport(player.getEyeLocation().add(0, -d.getEyeHeight(), 0));
+            }
         }
 
         NPC n = dummy.get();
@@ -218,6 +223,13 @@ public class CryptoAbility extends Ability {
     }
 
     @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        if (!event.getPlayer().getName().equals(ownerName)) return;
+        if (abilityActive.get())
+            exitDrone();
+    }
+
+    @EventHandler
     public void onEntityDropItem(EntityDropItemEvent event) {
         if (!AbilityUtils.verifyAbilityCouple(this, event.getEntity())) return;
         event.getItemDrop().remove();
@@ -228,8 +240,8 @@ public class CryptoAbility extends Ability {
     }
 
     private void damageEffect(Player player) {
-        player.sendTitle(" ", ChatColor.RED + String.format("! %.0f❤ !", player.getHealth()), 5, 20, 20);
-        player.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(15, 1));
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.RED + String.format("! %.0f❤ !", player.getHealth())));
+        player.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(17, 1));
     }
 
     @EventHandler
@@ -268,7 +280,6 @@ public class CryptoAbility extends Ability {
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        player.sendMessage(event.getAction().toString());
 
         if (player.equals(this.player) && abilityActive.get()) {
             if (event.getAction() == Action.LEFT_CLICK_AIR) {
@@ -277,15 +288,8 @@ public class CryptoAbility extends Ability {
             } else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 rightClickCooldown.set(player.getTicksLived());
                 Block block = event.getClickedBlock();
-                if (block == null) return;
-                BlockFace face = event.getBlockFace();
-                BlockData data = block.getBlockData();
 
-                if (data instanceof Door door) {
-                    door.setOpen(!door.isOpen());
-                }
-
-                block.setBlockData(data);
+                PlayerUtils.rightClickBlock(player, block);
             }
             return;
         }
@@ -324,8 +328,12 @@ public class CryptoAbility extends Ability {
                 protected synchronized void end() {
                     bossbar.removeAll();
                     chargingUp.set(false);
-                    if (isDroneValid())
+                    if (isDroneValid()) {
+                        double maxHealth = EntityUtils.getMaxHealth(drone.get());
+                        double damage = maxHealth - drone.get().getHealth();
+                        cooldown.startCooldown((int) (info.cooldown / maxHealth * damage));
                         removeDrone();
+                    }
                 }
             }.runTaskRepeated(this, 0, 1, info.chargeUp);
             return;
@@ -396,6 +404,7 @@ public class CryptoAbility extends Ability {
                 next -> new AbilityRunnable() {
                     BossBar bossbar;
                     LivingEntity d;
+                    int crosshairInterval = 0;
 
                     @Override
                     protected void start() {
@@ -415,8 +424,26 @@ public class CryptoAbility extends Ability {
                             bossbar.setProgress(d.getHealth() / maxHealth);
                         else
                             bossbar.setProgress(0);
-                        // d.teleport(player.getEyeLocation());
-                        player.sendTitle(" ", "^", 0, 5, 5);
+                        // d.teleport(player.getEyeLocation().add(0, -d.getEyeHeight(), 0));
+                        if (crosshairInterval <= 0) {
+                            crosshairInterval = 10;
+                            player.sendTitle(" ", "^", 0, 10, 5);
+                        }
+                        crosshairInterval--;
+                        RayTraceResult result = player.getWorld().rayTraceBlocks(player.getEyeLocation(), player.getEyeLocation().getDirection(), 0.1, FluidCollisionMode.NEVER, true);
+                        if (result != null && result.getHitBlock() != null) {
+                            Material block = result.getHitBlock().getType();
+                            if (block.isSolid() && block.isOccluding())
+                                player.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(30, 1));
+                        }
+                        RayTraceResult result2 = player.getWorld().rayTraceEntities(player.getEyeLocation(), player.getEyeLocation().getDirection(), 0.1, entity -> entity instanceof LivingEntity && !entity.equals(player) && !entity.equals(d));
+                        if (result2 != null && result2.getHitEntity() != null) {
+                            LivingEntity victim = (LivingEntity) result2.getHitEntity();
+                            victim.damage(2, d);
+                            d.damage(1, victim);
+                            player.getWorld().playSound(player.getEyeLocation(), Sound.ENTITY_BEE_HURT, 0.5f, 2);
+                        }
+                        player.getWorld().playSound(player.getEyeLocation(), Sound.ENTITY_BEE_LOOP, 0.05f, 2);
                         player.getWorld().spawnParticle(Particle.END_ROD, player.getEyeLocation().add(0, -0.3, 0), 1, 0, 0, 0, 0);
                     }
 

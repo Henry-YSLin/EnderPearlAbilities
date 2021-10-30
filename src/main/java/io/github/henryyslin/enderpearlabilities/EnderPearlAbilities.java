@@ -1,5 +1,7 @@
 package io.github.henryyslin.enderpearlabilities;
 
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
 import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.commands.ability.AbilityCommand;
 import org.bukkit.command.PluginCommand;
@@ -25,9 +27,14 @@ public final class EnderPearlAbilities extends JavaPlugin {
     final List<Ability> templateAbilities = Collections.unmodifiableList(internalTemplateAbilities);
     final List<Ability> abilities = Collections.synchronizedList(new ArrayList<>());
     static EnderPearlAbilities instance;
+    static ProtocolManager protocolManager;
 
     public static EnderPearlAbilities getInstance() {
         return instance;
+    }
+
+    public static ProtocolManager getProtocolManager() {
+        return protocolManager;
     }
 
     public List<Ability> getTemplateAbilities() {
@@ -45,6 +52,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        protocolManager = ProtocolLibrary.getProtocolManager();
 
         // Plugin startup logic
         Reflections reflections = new Reflections("io.github.henryyslin.enderpearlabilities");

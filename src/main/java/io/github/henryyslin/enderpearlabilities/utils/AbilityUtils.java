@@ -164,7 +164,8 @@ public class AbilityUtils {
     public static boolean verifyAbilityCouple(Ability ability, Entity entity) {
         Optional<Object> couple = EntityUtils.getMetadata(entity, "ability");
         if (couple.isEmpty()) return false;
-        return verifyAbilityCouple(ability, (AbilityCouple) couple.get());
+        if (!(couple.get() instanceof AbilityCouple abilityCouple)) return false;
+        return verifyAbilityCouple(ability, abilityCouple);
     }
 
     /**
