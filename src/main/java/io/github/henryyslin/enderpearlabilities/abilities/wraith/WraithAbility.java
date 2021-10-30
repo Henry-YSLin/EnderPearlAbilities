@@ -7,10 +7,7 @@ import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henryyslin.enderpearlabilities.utils.PlayerUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -220,7 +217,7 @@ public class WraithAbility extends Ability {
                     }
                     abilityActive.set(false);
                     cancelAbility.set(false);
-                    player.setAllowFlight(false);
+                    player.setAllowFlight(player.getGameMode() == GameMode.CREATIVE);
                     player.setCollidable(true);
                     player.setInvulnerable(false);
                     player.setInvisible(false);

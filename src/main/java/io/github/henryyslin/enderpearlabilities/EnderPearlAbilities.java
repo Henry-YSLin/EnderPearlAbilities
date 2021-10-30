@@ -4,6 +4,7 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.commands.ability.AbilityCommand;
+import io.github.henryyslin.enderpearlabilities.commands.ability.AbilityTabCompleter;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -87,6 +88,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
         PluginCommand command = this.getCommand("ability");
         if (command != null) {
             command.setExecutor(new AbilityCommand());
+            command.setTabCompleter(new AbilityTabCompleter());
         } else {
             getServer().broadcastMessage("Failed to register /ability command. Please check plugin description file.");
         }
