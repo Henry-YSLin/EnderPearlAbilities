@@ -109,7 +109,8 @@ public class CloneTrait extends Trait {
             return;
         }
         if (!npc.getEntity().getWorld().equals(player.getWorld())) {
-            npc.teleport(player.getLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+            npc.teleport(player.getLocation().add(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5), PlayerTeleportEvent.TeleportCause.PLUGIN);
+            npc.getNavigator().setTarget(player, false);
         }
         if (!npc.getNavigator().isNavigating()) {
             npc.getNavigator().setTarget(player, false);

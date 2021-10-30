@@ -27,6 +27,7 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -195,6 +196,11 @@ public class PathfinderAbility extends Ability {
                     anchorLocation = hitEntity.getLocation();
                 anchor.teleport(anchorLocation);
                 anchor.setLeashHolder(player);
+
+                if (!Objects.equals(anchorLocation.getWorld(), player.getWorld())) {
+                    cancel();
+                    return;
+                }
 
                 Vector lookDirection = player.getLocation().getDirection().normalize();
 

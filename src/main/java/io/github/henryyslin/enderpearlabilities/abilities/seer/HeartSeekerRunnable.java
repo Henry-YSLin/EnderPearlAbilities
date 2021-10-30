@@ -66,7 +66,7 @@ public class HeartSeekerRunnable extends AbilityRunnable {
             double distance = livingEntity.getLocation().distance(player.getLocation());
             int trackTick = livingEntity.getTicksLived() / 5;
             if (livingEntity.isValid() && !UNDEAD_MOBS.contains(livingEntity.getType())) {
-                if (maxHealth == 0) {
+                if (maxHealth != 0) {
                     if (livingEntity.getHealth() / maxHealth > 0.5) {
                         if (trackTick % 4 == 0) {
                             heartbeat = ChatColor.WHITE + heartbeat;
@@ -90,7 +90,7 @@ public class HeartSeekerRunnable extends AbilityRunnable {
             } else {
                 heartbeat = ChatColor.GRAY + heartbeat;
             }
-            if (maxHealth == 0)
+            if (maxHealth != 0)
                 player.sendTitle(" ", String.format(ChatColor.BLUE + "%.1fm %.1f/%.1f%s", distance, livingEntity.getHealth(), maxHealth, heartbeat), 0, 8, 10);
             else
                 player.sendTitle(" ", String.format(ChatColor.BLUE + "%.1fm %.1f%s", distance, livingEntity.getHealth(), heartbeat), 0, 8, 10);

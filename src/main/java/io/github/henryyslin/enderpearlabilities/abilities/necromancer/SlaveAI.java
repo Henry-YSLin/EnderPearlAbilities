@@ -28,7 +28,8 @@ public class SlaveAI extends AbilityRunnable {
         }
 
         LivingEntity currentTarget = playerTarget.get();
-        if (currentTarget != null) skeleton.setTarget(currentTarget);
+        if (currentTarget != null && currentTarget.getWorld().equals(skeleton.getWorld()))
+            skeleton.setTarget(currentTarget);
         LivingEntity prevTarget = skeleton.getTarget();
         if (prevTarget != null) {
             if (prevTarget == player) skeleton.setTarget(null);

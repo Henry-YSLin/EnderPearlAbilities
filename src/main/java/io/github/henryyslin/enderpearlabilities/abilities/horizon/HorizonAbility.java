@@ -168,7 +168,7 @@ public class HorizonAbility extends Ability {
                             entity.setVelocity(MathUtils.clamp(velocity.add(blackHole), 0.6));
                             if (count % 10 == 0)
                                 if (entity instanceof LivingEntity livingEntity)
-                                    livingEntity.damage(0.7);
+                                    livingEntity.damage(0.7, player);
                         });
                         blackHoleLocation.add(0, 0.05, 0);
                         world.spawnParticle(Particle.SMOKE_LARGE, blackHoleLocation, 5, 0.5, 0.5, 0.5, 0.2);
