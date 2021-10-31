@@ -15,6 +15,7 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityUnleashEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -147,6 +148,15 @@ public class PathfinderAbility extends Ability {
             entity.setSize(0);
             entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
         });
+    }
+
+    @EventHandler
+    public void onEntityDamage(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (!player.getName().equals(ownerName)) return;
+        if (!abilityActive.get()) return;
+        if (event.getCause() == EntityDamageEvent.DamageCause.FALL)
+            event.setCancelled(true);
     }
 
     @EventHandler
