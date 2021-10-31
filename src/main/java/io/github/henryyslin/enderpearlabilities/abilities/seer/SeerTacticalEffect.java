@@ -37,9 +37,10 @@ public class SeerTacticalEffect extends AbilityRunnable {
 
     @Override
     protected void start() {
-        Vector temp = forward.clone().add(new Vector(0, 1, 0));
-        if (temp.getX() == 0 && temp.getZ() == 0)
-            temp.add(new Vector(1, 0, 0));
+        Vector temp = forward.clone().add(new Vector(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5));
+        if (temp.equals(forward)) {
+            temp.add(new Vector(1, 1, 1));
+        }
         lastParticle = forward.getCrossProduct(temp).normalize().multiply(radius);
         forward.multiply(range / particleCount);
         duration = count + 1;

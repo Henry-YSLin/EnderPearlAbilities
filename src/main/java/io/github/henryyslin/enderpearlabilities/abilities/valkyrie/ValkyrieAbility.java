@@ -5,20 +5,22 @@ import io.github.henryyslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henryyslin.enderpearlabilities.utils.*;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.*;
+import org.bukkit.entity.AbstractArrow;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
-import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -26,13 +28,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ValkyrieAbility extends Ability {
 
-    static final int PROJECTILE_LIFETIME = 20;
+    static final int TARGET_RANGE = 100;
     static final int ARROW_PER_TICK = 4;
-    static final double PROJECTILE_SPEED = 5;
 
     private final AbilityInfo info;
 
@@ -51,7 +51,7 @@ public class ValkyrieAbility extends Ability {
                 .name("Missile Swarm")
                 .origin("Apex - Valkyrie")
                 .description("Fire a swarm of missiles that damage and slow entities.")
-                .usage("Right click to fire an ender pearl. Homing missiles will then be fired towards the hit position of the ender pearl. Entities hit by missiles will be slowed for a brief moment.")
+                .usage("Right click to fire homing missiles towards your crosshair location. Entities hit by missiles will be slowed for a brief moment.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
@@ -68,10 +68,8 @@ public class ValkyrieAbility extends Ability {
         return info;
     }
 
-    final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final Random random = new Random();
-    final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -79,7 +77,6 @@ public class ValkyrieAbility extends Ability {
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             abilityActive.set(false);
-            blockShoot.set(false);
             cooldown.startCooldown(info.cooldown);
         }
     }
@@ -89,7 +86,6 @@ public class ValkyrieAbility extends Ability {
         super.onEnable();
         if (player != null) {
             abilityActive.set(false);
-            blockShoot.set(false);
             cooldown.startCooldown(info.cooldown);
         }
     }
@@ -106,39 +102,20 @@ public class ValkyrieAbility extends Ability {
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
-                next -> AbilityUtils.fireEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false)
+                next -> {
+                    RayTraceResult result = player.getWorld().rayTrace(player.getEyeLocation(), player.getEyeLocation().getDirection(), TARGET_RANGE, FluidCollisionMode.NEVER, true, 0, entity -> !entity.equals(player));
+                    Location targetLocation;
+                    if (result == null)
+                        targetLocation = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(TARGET_RANGE));
+                    else
+                        targetLocation = result.getHitPosition().toLocation(player.getWorld());
+                    WorldUtils.spawnParticleRect(targetLocation.clone().add(-2.5, -2.5, -2.5), targetLocation.clone().add(2.5, 2.5, 2.5), Particle.SMOKE_NORMAL, 5, true);
+                    fireMissiles(targetLocation);
+                }
         ).execute();
     }
 
-    @EventHandler
-    public void onProjectileHit(ProjectileHitEvent event) {
-        Projectile projectile = event.getEntity();
-        ProjectileSource shooter = projectile.getShooter();
-
-        if (!(shooter instanceof Player player)) return;
-        if (!AbilityUtils.verifyAbilityCouple(this, projectile)) return;
-        if (!player.getName().equals(ownerName)) return;
-
-        if (!(projectile instanceof EnderPearl)) return;
-
-        event.setCancelled(true);
-
-        projectile.remove();
-        abilityActive.set(true);
-        blockShoot.set(false);
-        enderPearlHitTime.set(player.getTicksLived());
-
-        Entity hitEntity = event.getHitEntity();
-
-        Location finalLocation;
-
-        if (hitEntity == null) {
-            // improve accuracy of the hit location
-            finalLocation = ProjectileUtils.correctProjectileHitLocation(projectile);
-        } else {
-            finalLocation = hitEntity.getLocation();
-        }
-
+    private void fireMissiles(Location targetLocation) {
         final List<Arrow> arrows = new ArrayList<>();
 
         new AbilityRunnable() {
@@ -178,59 +155,49 @@ public class ValkyrieAbility extends Ability {
             }
         }.runTaskTimer(this, 0, 1);
 
-        new FunctionChain(
-                nextFunction -> new AbilityRunnable() {
-                    @Override
-                    protected void start() {
-                        super.start();
-                    }
+        new AbilityRunnable() {
+            @Override
+            protected void start() {
+                super.start();
+                abilityActive.set(true);
+            }
 
-                    @Override
-                    protected void tick() {
-                        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.3f, 0);
+            @Override
+            protected void tick() {
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.3f, 0);
 
-                        Vector facing = player.getLocation().getDirection();
-                        Vector offset = facing.clone().add(new Vector(0, 1, 0)).crossProduct(facing).normalize();
-                        for (int i = 0; i < ARROW_PER_TICK; i++) {
-                            Vector side = offset.clone();
-                            if (i % 2 == 1)
-                                side.multiply(-0.4);
-                            else
-                                side.multiply(0.4);
-                            Arrow arrow = player.getWorld().spawn(player.getEyeLocation().add(side), Arrow.class, entity -> {
-                                Vector velocity = facing.clone().multiply(4).add(new Vector(random.nextDouble() * 2d - 1d, random.nextDouble() * 2d + 2d, random.nextDouble() * 2d - 1d));
-                                entity.setVelocity(velocity);
-                                entity.setShooter(player);
-                                entity.setTicksLived(1160);
-                                entity.setCritical(true);
-                                entity.setBounce(false);
-                                entity.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
-                                entity.setBasePotionData(new PotionData(PotionType.SLOWNESS, false, true));
-                                entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
-                                entity.setMetadata("homing", new FixedMetadataValue(plugin, 0));
-                                entity.setMetadata("target", new FixedMetadataValue(plugin, finalLocation.toVector().add(new Vector(random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d))));
-                            });
-                            arrows.add(arrow);
-                        }
-                    }
+                Vector facing = player.getLocation().getDirection();
+                Vector offset = facing.clone().add(new Vector(0, 1, 0)).crossProduct(facing).normalize();
+                for (int i = 0; i < ARROW_PER_TICK; i++) {
+                    Vector side = offset.clone();
+                    if (i % 2 == 1)
+                        side.multiply(-0.4);
+                    else
+                        side.multiply(0.4);
+                    Arrow arrow = player.getWorld().spawn(player.getEyeLocation().add(side), Arrow.class, entity -> {
+                        Vector velocity = facing.clone().multiply(4).add(new Vector(random.nextDouble() * 2d - 1d, random.nextDouble() * 2d + 2d, random.nextDouble() * 2d - 1d));
+                        entity.setVelocity(velocity);
+                        entity.setShooter(player);
+                        entity.setTicksLived(1160);
+                        entity.setCritical(true);
+                        entity.setBounce(false);
+                        entity.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
+                        entity.setBasePotionData(new PotionData(PotionType.SLOWNESS, false, true));
+                        entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+                        entity.setMetadata("homing", new FixedMetadataValue(plugin, 0));
+                        entity.setMetadata("target", new FixedMetadataValue(plugin, targetLocation.toVector().add(new Vector(random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d))));
+                    });
+                    arrows.add(arrow);
+                }
+            }
 
-                    @Override
-                    protected void end() {
-                        super.end();
-                        abilityActive.set(false);
-                        if (this.hasCompleted())
-                            cooldown.startCooldown(info.cooldown);
-                        nextFunction.run();
-                    }
-                }.runTaskRepeated(this, 0, 1, info.duration)
-        ).execute();
-    }
-
-    @EventHandler
-    public void onPlayerTeleport(PlayerTeleportEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
-        if (Math.abs(event.getPlayer().getTicksLived() - enderPearlHitTime.get()) > 1) return;
-        event.setCancelled(true);
+            @Override
+            protected void end() {
+                super.end();
+                abilityActive.set(false);
+                if (this.hasCompleted())
+                    cooldown.startCooldown(info.cooldown);
+            }
+        }.runTaskRepeated(this, 0, 1, info.duration);
     }
 }

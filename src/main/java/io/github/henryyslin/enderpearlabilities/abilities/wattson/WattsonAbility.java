@@ -165,7 +165,7 @@ public class WattsonAbility extends Ability {
                     });
                     pylon.set(crystal);
 
-                    WorldUtils.spawnParticleRect(location.clone().add(-8, -8, -8), location.clone().add(8, 8, 8), Particle.END_ROD, 5);
+                    WorldUtils.spawnParticleRect(location.clone().add(-8, -8, -8), location.clone().add(8, 8, 8), Particle.END_ROD, 5, true);
                     world.playSound(crystal.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.5f);
 
                     next.run();

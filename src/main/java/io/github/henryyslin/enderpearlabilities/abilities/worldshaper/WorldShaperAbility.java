@@ -134,7 +134,7 @@ public class WorldShaperAbility extends Ability {
         finalLocation.setY(finalLocation.getBlockY() + 0.5);
         finalLocation.setZ(finalLocation.getBlockZ() + 0.5);
 
-        WorldUtils.spawnParticleRect(finalLocation.clone().add(-1.5, -1.5, -1.5), finalLocation.clone().add(1.5, 1.5, 1.5), Particle.VILLAGER_HAPPY, 5);
+        WorldUtils.spawnParticleRect(finalLocation.clone().add(-1.5, -1.5, -1.5), finalLocation.clone().add(1.5, 1.5, 1.5), Particle.VILLAGER_HAPPY, 5, true);
         projectile.getWorld().createExplosion(projectile.getLocation(), 1, false, false);
 
         int unbreaking = player.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.DURABILITY);
