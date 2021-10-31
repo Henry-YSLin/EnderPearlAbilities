@@ -17,6 +17,7 @@ public class SwiftMendRunnable extends AbilityRunnable {
 
     @Override
     public void tick() {
-        player.setHealth(Math.min(maxHealth, player.getHealth() + 0.2));
+        if (player.isValid())
+            player.setHealth(Math.min(maxHealth, player.getHealth() + 0.2));
     }
 }
