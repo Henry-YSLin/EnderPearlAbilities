@@ -83,6 +83,7 @@ public class CryptoAbility extends Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicReference<LivingEntity> drone = new AtomicReference<>();
     final AtomicReference<NPC> dummy = new AtomicReference<>();
+    DroneStatusRunnable droneStatusRunnable;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -130,6 +131,8 @@ public class CryptoAbility extends Ability {
                 entity.getEquipment().setItemInMainHand(new ItemStack(Material.AIR, 0));
             entity.setAI(false);
             entity.setPersistent(true);
+            entity.setCustomName(ownerName + "'s drone");
+            entity.setCustomNameVisible(true);
             entity.setSilent(true);
             entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
         });
@@ -216,6 +219,11 @@ public class CryptoAbility extends Ability {
 
         abilityActive.set(false);
         cooldown.startCooldown(info.cooldown);
+
+        if (droneStatusRunnable != null && !droneStatusRunnable.isCancelled())
+            droneStatusRunnable.cancel();
+        droneStatusRunnable = new DroneStatusRunnable(player, drone, chargingUp, abilityActive);
+        droneStatusRunnable.runTaskTimer(this, 0, 5);
     }
 
     @Override

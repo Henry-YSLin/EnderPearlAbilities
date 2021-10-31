@@ -16,6 +16,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.scoreboard.Team;
@@ -124,10 +125,13 @@ public class BloodhoundAbility extends Ability {
                         return entity.getUniqueId().equals(player.getUniqueId());
                     });
                     for (Entity entity : entities) {
-                        entity.setGlowing(true);
-                        if (team != null)
-                            if (entity instanceof LivingEntity)
+                        if (entity instanceof LivingEntity livingEntity) {
+                            if (team != null)
                                 team.addEntry(entity.getUniqueId().toString());
+                            livingEntity.addPotionEffect(PotionEffectType.GLOWING.createEffect(info.duration, 1));
+                        } else {
+                            entity.setGlowing(true);
+                        }
                         if (entity instanceof Player p) {
                             player.sendTitle(" ", ChatColor.RED + "Sonar detected", 5, 30, 30);
                         }
@@ -155,7 +159,8 @@ public class BloodhoundAbility extends Ability {
                     protected synchronized void end() {
                         bossbar.removeAll();
                         for (Entity entity : entities) {
-                            entity.setGlowing(false);
+                            if (!(entity instanceof LivingEntity)) // LivingEntities will have their glow disabled through potion effect timeout
+                                entity.setGlowing(false);
                             if (team != null)
                                 team.removeEntry(entity.getUniqueId().toString());
                         }

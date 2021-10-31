@@ -161,13 +161,15 @@ public class SeerAbility extends Ability {
                     final Team team = tmp;
 
                     for (Entity entity : entities) {
-                        entity.setGlowing(true);
                         if (entity instanceof LivingEntity livingEntity) {
                             if (team != null)
                                 team.addEntry(entity.getUniqueId().toString());
                             livingEntity.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(info.duration / 2, 1));
                             livingEntity.addPotionEffect(PotionEffectType.WEAKNESS.createEffect(info.duration, 1));
                             livingEntity.addPotionEffect(PotionEffectType.SLOW.createEffect(info.duration, 2));
+                            livingEntity.addPotionEffect(PotionEffectType.GLOWING.createEffect(info.duration, 1));
+                        } else {
+                            entity.setGlowing(true);
                         }
                         if (entity instanceof Player p) {
                             player.playSound(player.getLocation(), Sound.ENTITY_BEE_LOOP_AGGRESSIVE, 0.2f, 2);
@@ -196,7 +198,8 @@ public class SeerAbility extends Ability {
                         protected synchronized void end() {
                             bossbar.removeAll();
                             for (Entity entity : entities) {
-                                entity.setGlowing(false);
+                                if (!(entity instanceof LivingEntity)) // LivingEntities will have their glow disabled through potion effect timeout
+                                    entity.setGlowing(false);
                                 if (team != null)
                                     team.removeEntry(entity.getUniqueId().toString());
                             }

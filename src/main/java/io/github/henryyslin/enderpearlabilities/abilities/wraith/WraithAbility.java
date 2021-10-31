@@ -81,7 +81,7 @@ public class WraithAbility extends Ability {
     }
 
     private void setUpPlayer(Player player) {
-        player.setAllowFlight(false);
+        player.setAllowFlight(player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR);
         abilityActive.set(false);
         cooldown.startCooldown(info.cooldown);
     }
@@ -217,7 +217,7 @@ public class WraithAbility extends Ability {
                     }
                     abilityActive.set(false);
                     cancelAbility.set(false);
-                    player.setAllowFlight(player.getGameMode() == GameMode.CREATIVE);
+                    player.setAllowFlight(player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR);
                     player.setCollidable(true);
                     player.setInvulnerable(false);
                     player.setInvisible(false);
