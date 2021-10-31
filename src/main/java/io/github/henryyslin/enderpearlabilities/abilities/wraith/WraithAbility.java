@@ -38,7 +38,7 @@ public class WraithAbility extends Ability {
     public void setConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 20);
         config.addDefault("duration", 200);
-        config.addDefault("cooldown", 160);
+        config.addDefault("cooldown", 300);
     }
 
     public WraithAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
