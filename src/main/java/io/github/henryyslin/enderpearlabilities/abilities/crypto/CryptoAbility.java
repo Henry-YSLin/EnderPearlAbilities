@@ -162,6 +162,7 @@ public class CryptoAbility extends Ability {
         npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.BOOTS, player.getInventory().getBoots());
         npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.HAND, player.getInventory().getItemInMainHand());
         npc.getOrAddTrait(Equipment.class).set(Equipment.EquipmentSlot.OFF_HAND, player.getInventory().getItemInOffHand());
+        entity.addPotionEffects(player.getActivePotionEffects());
 
         //npc.teleport(player.getLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
         npc.getEntity().setGravity(true);
@@ -170,8 +171,6 @@ public class CryptoAbility extends Ability {
     }
 
     private void exitDrone() {
-        removeAllNPCs();
-
         if (player != null && player.getGameMode() == GameMode.SPECTATOR) {
             LivingEntity d = drone.get();
             if (d != null && d.isValid()) {
@@ -188,6 +187,8 @@ public class CryptoAbility extends Ability {
             n.getOwningRegistry().deregister(n);
             dummy.set(null);
         }
+
+        removeAllNPCs();
 
         if (isDroneValid()) {
             spawnDrone(drone.get().getLocation());
@@ -352,6 +353,11 @@ public class CryptoAbility extends Ability {
             return;
         }
 
+        if (player.hasPotionEffect(PotionEffectType.BLINDNESS)) {
+            player.sendTitle(" ", ChatColor.LIGHT_PURPLE + "You are blinded", 5, 20, 10);
+            return;
+        }
+
         World world = player.getWorld();
 
         Location deployLocation = player.getEyeLocation();
@@ -443,12 +449,22 @@ public class CryptoAbility extends Ability {
                             player.sendTitle(" ", "^", 0, 10, 5);
                         }
                         crosshairInterval--;
+                        boolean blinded = false;
                         RayTraceResult result = player.getWorld().rayTraceBlocks(player.getEyeLocation(), player.getEyeLocation().getDirection(), 0.1, FluidCollisionMode.NEVER, true);
                         if (result != null && result.getHitBlock() != null) {
                             Material block = result.getHitBlock().getType();
-                            if (block.isSolid() && block.isOccluding())
+                            if (block.isSolid() && block.isOccluding()) {
                                 player.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(30, 1));
+                                blinded = true;
+                            }
                         }
+                        if (!blinded) {
+                            if (player.hasPotionEffect(PotionEffectType.BLINDNESS)) {
+                                player.removePotionEffect(PotionEffectType.BLINDNESS);
+                            }
+                        }
+                        if (dummy.get() != null && dummy.get().getEntity() instanceof LivingEntity entity)
+                            player.addPotionEffects(entity.getActivePotionEffects());
                         RayTraceResult result2 = player.getWorld().rayTraceEntities(player.getEyeLocation(), player.getEyeLocation().getDirection(), 0.1, entity -> entity instanceof LivingEntity && !entity.equals(player) && !entity.equals(d));
                         if (result2 != null && result2.getHitEntity() != null) {
                             LivingEntity victim = (LivingEntity) result2.getHitEntity();
