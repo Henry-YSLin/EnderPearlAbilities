@@ -69,6 +69,7 @@ public class MirageAbility extends Ability {
         return info;
     }
 
+    final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
 
     private void removeAllNPCs() {
@@ -102,6 +103,7 @@ public class MirageAbility extends Ability {
         super.onEnable();
         removeAllNPCs();
         if (player != null) {
+            chargingUp.set(false);
             abilityActive.set(false);
             cooldown.startCooldown(info.cooldown);
         }
@@ -124,6 +126,7 @@ public class MirageAbility extends Ability {
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             removeAllNPCs();
+            chargingUp.set(false);
             abilityActive.set(false);
             cooldown.startCooldown(info.cooldown);
         }
@@ -165,21 +168,20 @@ public class MirageAbility extends Ability {
         event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
-
+        if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
         ArrayList<NPC> npcs = new ArrayList<>();
 
+        PlayerUtils.consumeEnderPearl(player);
+
         new FunctionChain(
-                next -> {
-                    abilityActive.set(true);
-                    PlayerUtils.consumeEnderPearl(player);
-                    next.run();
-                },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> {
                     World world = player.getWorld();
                     world.playSound(player.getLocation(), Sound.ENTITY_ILLUSIONER_CAST_SPELL, 1, 0);
+
+                    abilityActive.set(true);
 
                     removeAllNPCs();
 
@@ -243,7 +245,7 @@ public class MirageAbility extends Ability {
 
                     @Override
                     protected synchronized void tick() {
-                        if (!abilityActive.get()) {
+                        if (!abilityActive.get() || !player.isValid()) {
                             cancel();
                             return;
                         }

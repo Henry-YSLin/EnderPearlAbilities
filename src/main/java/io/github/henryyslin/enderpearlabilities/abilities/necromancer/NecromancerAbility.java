@@ -66,6 +66,7 @@ public class NecromancerAbility extends Ability {
         return info;
     }
 
+    final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicReference<LivingEntity> playerTarget = new AtomicReference<>();
     final List<Skeleton> slaves = new ArrayList<>();
@@ -89,6 +90,7 @@ public class NecromancerAbility extends Ability {
     }
 
     private void setUpPlayer(Player player) {
+        chargingUp.set(false);
         abilityActive.set(false);
         cooldown.startCooldown(info.cooldown);
         if (playerTargetTracker != null && !playerTargetTracker.isCancelled())
@@ -131,6 +133,7 @@ public class NecromancerAbility extends Ability {
         event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
+        if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
         new FunctionChain(
@@ -139,7 +142,7 @@ public class NecromancerAbility extends Ability {
                     PlayerUtils.consumeEnderPearl(player);
                     next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> new AbilityRunnable() {
                     BossBar bossbar;
                     List<Block> spawnLocations;
@@ -163,7 +166,7 @@ public class NecromancerAbility extends Ability {
 
                     @Override
                     protected synchronized void tick() {
-                        if (!abilityActive.get()) {
+                        if (!abilityActive.get() || !player.isValid()) {
                             cancel();
                         }
                         bossbar.setProgress(count / (double) info.duration * 10);

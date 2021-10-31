@@ -4,10 +4,7 @@ import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
-import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
-import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henryyslin.enderpearlabilities.utils.ProjectileUtils;
+import io.github.henryyslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -72,6 +69,7 @@ public class PathfinderAbility extends Ability {
     }
 
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
+    final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityRunnable grapple;
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
@@ -95,6 +93,7 @@ public class PathfinderAbility extends Ability {
     }
 
     private void setUpPlayer(Player player) {
+        chargingUp.set(false);
         abilityActive.set(false);
         blockShoot.set(false);
         if (grapple != null)
@@ -122,8 +121,10 @@ public class PathfinderAbility extends Ability {
             return;
         }
 
+        PlayerUtils.consumeEnderPearl(player);
+
         new FunctionChain(
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> AbilityUtils.fireEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false)
         ).execute();
     }
@@ -201,6 +202,10 @@ public class PathfinderAbility extends Ability {
 
             @Override
             protected void tick() {
+                if (!player.isValid()) {
+                    cancel();
+                    return;
+                }
                 bossbar.setProgress(count / (double) info.duration);
                 if (hitEntity != null)
                     anchorLocation = hitEntity.getLocation();

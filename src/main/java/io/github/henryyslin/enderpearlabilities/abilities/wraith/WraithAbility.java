@@ -66,6 +66,7 @@ public class WraithAbility extends Ability {
         return info;
     }
 
+    final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicBoolean cancelAbility = new AtomicBoolean(false);
 
@@ -87,6 +88,7 @@ public class WraithAbility extends Ability {
     }
 
     private void setUpPlayer(Player player) {
+        chargingUp.set(false);
         abilityActive.set(false);
         cooldown.startCooldown(info.cooldown);
     }
@@ -146,15 +148,16 @@ public class WraithAbility extends Ability {
         }
 
         if (cooldown.getCoolingDown()) return;
+        if (chargingUp.get()) return;
 
         new FunctionChain(
                 next -> {
-                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 1, 0);
                     PlayerUtils.consumeEnderPearl(player);
                     next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> {
+                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 1, 0);
                     cancelAbility.set(false);
                     abilityActive.set(true);
                     player.setCollidable(false);
@@ -180,7 +183,7 @@ public class WraithAbility extends Ability {
 
                     @Override
                     protected synchronized void tick() {
-                        if (!abilityActive.get()) {
+                        if (!abilityActive.get() || !player.isValid()) {
                             cancel();
                         }
                         if (cancelAbility.get()) {

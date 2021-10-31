@@ -3,10 +3,7 @@ package io.github.henryyslin.enderpearlabilities.abilities.seer;
 import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henryyslin.enderpearlabilities.abilities.ActivationHand;
-import io.github.henryyslin.enderpearlabilities.utils.AbilityRunnable;
-import io.github.henryyslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henryyslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henryyslin.enderpearlabilities.utils.StringUtils;
+import io.github.henryyslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -115,6 +112,7 @@ public class SeerAbility extends Ability {
 
         new FunctionChain(
                 next -> {
+                    PlayerUtils.consumeEnderPearl(player);
                     new SeerTacticalEffect(Particle.ELECTRIC_SPARK, origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, ANGLE_DELTA, PARTICLE_COUNT, true)
                             .runTaskRepeated(this, 0, 1, SPREAD_TIME);
                     new SeerTacticalEffect(Particle.DRAGON_BREATH, origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, ANGLE_DELTA, PARTICLE_COUNT, false)
@@ -154,8 +152,12 @@ public class SeerAbility extends Ability {
                     ScoreboardManager manager = Bukkit.getScoreboardManager();
                     Team tmp = null;
                     if (manager != null) {
+                        String teamName = StringUtils.substring("se_" + ownerName, 0, 16);
                         Scoreboard scoreboard = manager.getMainScoreboard();
-                        tmp = scoreboard.registerNewTeam(StringUtils.substring("se_" + ownerName, 0, 16));
+                        tmp = scoreboard.getTeam(teamName);
+                        if (tmp != null)
+                            tmp.unregister();
+                        tmp = scoreboard.registerNewTeam(teamName);
                         tmp.setColor(ChatColor.BLUE);
                     }
                     final Team team = tmp;

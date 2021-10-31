@@ -62,6 +62,7 @@ public class BloodhoundAbility extends Ability {
         return info;
     }
 
+    final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
 
     @EventHandler
@@ -82,7 +83,9 @@ public class BloodhoundAbility extends Ability {
     }
 
     private void setUpPlayer(Player player) {
+        chargingUp.set(false);
         abilityActive.set(false);
+        cooldown.startCooldown(info.cooldown);
     }
 
     @EventHandler
@@ -94,6 +97,7 @@ public class BloodhoundAbility extends Ability {
         event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
+        if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
         PlayerUtils.consumeEnderPearl(player);
@@ -102,21 +106,22 @@ public class BloodhoundAbility extends Ability {
         ScoreboardManager manager = Bukkit.getScoreboardManager();
         Team tmp = null;
         if (manager != null) {
+            String teamName = StringUtils.substring("bh_" + ownerName, 0, 16);
             Scoreboard scoreboard = manager.getMainScoreboard();
-            tmp = scoreboard.registerNewTeam(StringUtils.substring("bh_" + ownerName, 0, 16));
+            tmp = scoreboard.getTeam(teamName);
+            if (tmp != null)
+                tmp.unregister();
+            tmp = scoreboard.registerNewTeam(teamName);
             tmp.setColor(ChatColor.RED);
         }
         final Team team = tmp;
 
         new FunctionChain(
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> {
                     abilityActive.set(true);
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1, 0);
                     player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 5000, 1, 1, 1, 3);
-                    next.run();
-                },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
-                next -> {
                     entities.addAll(player.getWorld().getNearbyEntities(player.getLocation(), SCAN_RADIUS, SCAN_RADIUS, SCAN_RADIUS));
                     entities.removeIf(entity -> {
                         if (entity instanceof Player p) {

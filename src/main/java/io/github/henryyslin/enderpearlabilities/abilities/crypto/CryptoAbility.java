@@ -394,7 +394,6 @@ public class CryptoAbility extends Ability {
                     @Override
                     protected synchronized void start() {
                         chargingUp.set(true);
-                        player.setCooldown(Material.ENDER_PEARL, info.chargeUp);
                         bossbar = Bukkit.createBossBar("Charging up", BarColor.WHITE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
 
@@ -416,7 +415,7 @@ public class CryptoAbility extends Ability {
                     protected synchronized void end() {
                         bossbar.removeAll();
                         chargingUp.set(false);
-                        if (this.hasCompleted() && vex.isValid())
+                        if (this.hasCompleted() && vex.isValid() && player.isValid())
                             next.run();
                         else {
                             removeDrone();

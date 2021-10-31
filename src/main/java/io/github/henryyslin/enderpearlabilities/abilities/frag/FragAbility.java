@@ -65,6 +65,7 @@ public class FragAbility extends Ability {
         return info;
     }
 
+    final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
@@ -73,6 +74,7 @@ public class FragAbility extends Ability {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
+            chargingUp.set(false);
             abilityActive.set(false);
             cooldown.startCooldown(info.cooldown);
         }
@@ -82,6 +84,7 @@ public class FragAbility extends Ability {
     public void onEnable() {
         super.onEnable();
         if (player != null) {
+            chargingUp.set(false);
             abilityActive.set(false);
             cooldown.startCooldown(info.cooldown);
         }
@@ -96,14 +99,16 @@ public class FragAbility extends Ability {
         event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
+        if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
         abilityActive.set(true);
 
         AtomicReference<Projectile> enderPearl = new AtomicReference<>();
 
+        PlayerUtils.consumeEnderPearl(player);
         new FunctionChain(
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> {
                     Projectile projectile = AbilityUtils.fireEnderPearl(this, player, null, info.duration, PROJECTILE_SPEED, true);
                     if (projectile != null) {

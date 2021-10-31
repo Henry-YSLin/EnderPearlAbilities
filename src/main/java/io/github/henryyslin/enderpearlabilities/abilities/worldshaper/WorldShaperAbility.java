@@ -23,6 +23,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.projectiles.ProjectileSource;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorldShaperAbility extends Ability {
@@ -64,6 +65,7 @@ public class WorldShaperAbility extends Ability {
         return info;
     }
 
+    final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     @EventHandler
@@ -71,6 +73,7 @@ public class WorldShaperAbility extends Ability {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
+            chargingUp.set(false);
             cooldown.startCooldown(info.cooldown);
         }
     }
@@ -79,6 +82,7 @@ public class WorldShaperAbility extends Ability {
     public void onEnable() {
         super.onEnable();
         if (player != null) {
+            chargingUp.set(false);
             cooldown.startCooldown(info.cooldown);
         }
     }
@@ -95,7 +99,11 @@ public class WorldShaperAbility extends Ability {
         if (PlayerUtils.getMainHandToolDurability(player).orElse(2) <= 1) return;
 
         new FunctionChain(
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
+                next -> {
+                    PlayerUtils.consumeEnderPearl(player);
+                    next.run();
+                },
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> {
                     AbilityUtils.fireEnderPearl(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false);
                     cooldown.startCooldown(info.cooldown);

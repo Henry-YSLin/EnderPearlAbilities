@@ -68,6 +68,7 @@ public class ValkyrieAbility extends Ability {
         return info;
     }
 
+    final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final Random random = new Random();
 
@@ -76,6 +77,7 @@ public class ValkyrieAbility extends Ability {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
+            chargingUp.set(false);
             abilityActive.set(false);
             cooldown.startCooldown(info.cooldown);
         }
@@ -85,6 +87,7 @@ public class ValkyrieAbility extends Ability {
     public void onEnable() {
         super.onEnable();
         if (player != null) {
+            chargingUp.set(false);
             abilityActive.set(false);
             cooldown.startCooldown(info.cooldown);
         }
@@ -99,9 +102,15 @@ public class ValkyrieAbility extends Ability {
         event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
+        if (chargingUp.get()) return;
+        if (abilityActive.get()) return;
 
         new FunctionChain(
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, next),
+                next -> {
+                    PlayerUtils.consumeEnderPearl(player);
+                    next.run();
+                },
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> {
                     RayTraceResult result = player.getWorld().rayTrace(player.getEyeLocation(), player.getEyeLocation().getDirection(), TARGET_RANGE, FluidCollisionMode.NEVER, true, 0, entity -> !entity.equals(player));
                     Location targetLocation;
@@ -164,6 +173,10 @@ public class ValkyrieAbility extends Ability {
 
             @Override
             protected void tick() {
+                if (!player.isValid()) {
+                    cancel();
+                    return;
+                }
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.3f, 0);
 
                 Vector facing = player.getLocation().getDirection();
@@ -195,8 +208,7 @@ public class ValkyrieAbility extends Ability {
             protected void end() {
                 super.end();
                 abilityActive.set(false);
-                if (this.hasCompleted())
-                    cooldown.startCooldown(info.cooldown);
+                cooldown.startCooldown(info.cooldown);
             }
         }.runTaskRepeated(this, 0, 1, info.duration);
     }

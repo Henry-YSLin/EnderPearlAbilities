@@ -67,6 +67,7 @@ public class RampartAbility extends Ability {
         return info;
     }
 
+    final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicBoolean isSneaking = new AtomicBoolean(false);
     AbilityRunnable minigun;
@@ -89,6 +90,7 @@ public class RampartAbility extends Ability {
     }
 
     private void setUpPlayer(Player player) {
+        chargingUp.set(false);
         abilityActive.set(false);
         cooldown.startCooldown(info.cooldown);
         if (minigun != null)
@@ -111,6 +113,7 @@ public class RampartAbility extends Ability {
         event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
+        if (chargingUp.get()) return;
         if (abilityActive.get() && minigun != null && !minigun.isCancelled()) {
             minigun.cancel();
             return;
@@ -119,7 +122,7 @@ public class RampartAbility extends Ability {
         PlayerUtils.consumeEnderPearl(player);
 
         new FunctionChain(
-                next -> AbilityUtils.chargeUpSequence(this, player, 20, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, 20, chargingUp, next),
                 next -> (minigun = new AbilityRunnable() {
                     BossBar spinUpBossBar;
                     BossBar magazineBossBar;
@@ -160,7 +163,7 @@ public class RampartAbility extends Ability {
 
                     @Override
                     protected void tick() {
-                        if (magazine <= 0) {
+                        if (magazine <= 0 || !player.isValid()) {
                             cancel();
                             return;
                         }

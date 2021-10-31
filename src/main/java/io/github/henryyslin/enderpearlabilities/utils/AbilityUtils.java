@@ -33,36 +33,42 @@ public class AbilityUtils {
      * @param chargeUp The duration of charge-up in ticks.
      * @param next     The runnable to run when the charge-up is complete.
      */
-    public static void chargeUpSequence(Ability ability, Player player, int chargeUp, Runnable next) {
-        chargeUpSequence(ability, player, chargeUp, next, null);
+    public static void chargeUpSequence(Ability ability, Player player, int chargeUp, AtomicBoolean chargingUp, Runnable next) {
+        chargeUpSequence(ability, player, chargeUp, chargingUp, next, null);
     }
 
     /**
      * Display a standard charge-up effect to the player for a specified amount of time, then run the {@code next} runnable.
      *
-     * @param ability  The {@link Ability} to register the charge-up runnable to.
-     * @param player   The player to display the charge-up effect to.
-     * @param chargeUp The duration of charge-up in ticks.
-     * @param next     The runnable to run when the charge-up is complete.
-     * @param onTick   Additional actions on charge up tick, given {@code count} as argument.
+     * @param ability    The {@link Ability} to register the charge-up runnable to.
+     * @param player     The player to display the charge-up effect to.
+     * @param chargeUp   The duration of charge-up in ticks.
+     * @param chargingUp The flag for an in-progress charge-up sequence.
+     * @param next       The runnable to run when the charge-up is complete.
+     * @param onTick     Additional actions on charge up tick, given {@code count} as argument.
      */
-    public static void chargeUpSequence(Ability ability, Player player, int chargeUp, Runnable next, @Nullable Consumer<Long> onTick) {
+    public static void chargeUpSequence(Ability ability, Player player, int chargeUp, AtomicBoolean chargingUp, Runnable next, @Nullable Consumer<Long> onTick) {
         if (chargeUp <= 0) {
             next.run();
             return;
         }
+        chargingUp.set(true);
         new AbilityRunnable() {
             BossBar bossbar;
 
             @Override
             protected synchronized void start() {
-                player.setCooldown(Material.ENDER_PEARL, chargeUp);
+                // player.setCooldown(Material.ENDER_PEARL, chargeUp);
                 bossbar = Bukkit.createBossBar("Charging up", BarColor.WHITE, BarStyle.SOLID);
                 bossbar.addPlayer(player);
             }
 
             @Override
             protected synchronized void tick() {
+                if (!player.isValid()) {
+                    cancel();
+                    return;
+                }
                 bossbar.setProgress(count / (double) chargeUp);
                 player.getWorld().spawnParticle(Particle.WHITE_ASH, player.getLocation(), 5, 0.5, 0.5, 0.5, 0.02);
                 if (onTick != null) onTick.accept(count);
@@ -71,6 +77,7 @@ public class AbilityUtils {
             @Override
             protected synchronized void end() {
                 bossbar.removeAll();
+                chargingUp.set(false);
                 if (this.hasCompleted())
                     next.run();
             }
@@ -118,8 +125,6 @@ public class AbilityUtils {
             if (inFlight.get()) return null;
             inFlight.set(true);
         }
-
-        PlayerUtils.consumeEnderPearl(player);
 
         Projectile projectile = player.launchProjectile(EnderPearl.class, player.getLocation().getDirection().clone().normalize().multiply(projectileSpeed));
         projectile.setGravity(gravity);
