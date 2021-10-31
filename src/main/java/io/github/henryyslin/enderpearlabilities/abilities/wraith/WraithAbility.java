@@ -16,9 +16,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPickupArrowEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,7 +43,7 @@ public class WraithAbility extends Ability {
                 .codeName("wraith")
                 .name("Into The Void")
                 .origin("Apex - Wraith")
-                .description("Reposition quickly through the safety of void space, allowing you to fly and avoid all damage and interactions.\nPassive ability: run faster when you sprint, jump higher when you sneak.")
+                .description("Reposition quickly through the safety of void space, allowing you to fly and avoid all damage and interactions.")
                 .usage("Right click to activate the ability. Double-tap space to fly like in creative mode. Right click with an ender pearl again to exit early. You may not interact with anything while the ability is active.")
                 .activation(ActivationHand.MainHand);
 
@@ -89,29 +90,6 @@ public class WraithAbility extends Ability {
     @Override
     public void onDisable() {
         super.onDisable();
-        if (player != null) {
-            player.removePotionEffect(PotionEffectType.SPEED);
-            player.removePotionEffect(PotionEffectType.JUMP);
-        }
-    }
-
-    @EventHandler
-    public synchronized void onPlayerToggleSneak(PlayerToggleSneakEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (event.isSneaking()) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 100000, 1, true, true));
-        } else {
-            player.removePotionEffect(PotionEffectType.JUMP);
-        }
-    }
-
-    @EventHandler
-    public void onPlayerToggleSprint(PlayerToggleSprintEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (event.isSprinting())
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100000, 1, true, true));
-        else
-            player.removePotionEffect(PotionEffectType.SPEED);
     }
 
     @EventHandler
@@ -173,8 +151,10 @@ public class WraithAbility extends Ability {
                     for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
                         onlinePlayer.hidePlayer(plugin, player);
                     }
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, info.duration, 1));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, info.duration, 1));
+                    player.addPotionEffect(PotionEffectType.CONDUIT_POWER.createEffect(info.duration, 1));
+                    player.addPotionEffect(PotionEffectType.NIGHT_VISION.createEffect(info.duration, 1));
+                    player.addPotionEffect(PotionEffectType.SPEED.createEffect(info.duration, 1));
+                    player.addPotionEffect(PotionEffectType.JUMP.createEffect(info.duration, 1));
                     next.run();
                 },
                 next -> new AbilityRunnable() {
@@ -225,6 +205,8 @@ public class WraithAbility extends Ability {
                     player.setFlying(false);
                     player.removePotionEffect(PotionEffectType.CONDUIT_POWER);
                     player.removePotionEffect(PotionEffectType.NIGHT_VISION);
+                    player.removePotionEffect(PotionEffectType.SPEED);
+                    player.removePotionEffect(PotionEffectType.JUMP);
                     cooldown.startCooldown(info.cooldown);
                     next.run();
                 }
