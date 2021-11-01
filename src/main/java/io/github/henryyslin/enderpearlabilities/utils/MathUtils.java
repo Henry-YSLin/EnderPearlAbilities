@@ -28,4 +28,12 @@ public class MathUtils {
         if (Double.isInfinite(vector.length())) return replacement;
         return vector;
     }
+
+    public static boolean almostEqual(double val1, double val2) {
+        return almostEqual(val1, val2, 0.000001);
+    }
+
+    public static boolean almostEqual(double val1, double val2, double epsilon) {
+        return Math.abs(val1 - val2) < epsilon;
+    }
 }
