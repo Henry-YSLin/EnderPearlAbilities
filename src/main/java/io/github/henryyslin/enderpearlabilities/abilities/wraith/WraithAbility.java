@@ -19,10 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerPickupArrowEvent;
-import org.bukkit.event.player.PlayerToggleSprintEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -116,6 +113,13 @@ public class WraithAbility extends Ability {
 
     @EventHandler
     public void onPlayerPickupArrow(PlayerPickupArrowEvent event) {
+        if (!event.getPlayer().getName().equals(ownerName)) return;
+        if (!abilityActive.get()) return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onPlayerDropItem(PlayerDropItemEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (!abilityActive.get()) return;
         event.setCancelled(true);

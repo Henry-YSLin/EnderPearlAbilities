@@ -3,6 +3,7 @@ package io.github.henryyslin.enderpearlabilities.utils;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
+import org.bukkit.util.Vector;
 
 public class WorldUtils {
 
@@ -14,6 +15,30 @@ public class WorldUtils {
      */
     public static boolean isDaytime(World world) {
         return world.getTime() < 12000;
+    }
+
+    /**
+     * Display particles in a line.
+     *
+     * @param start    The start position of the line.
+     * @param end      The end position of the line.
+     * @param particle The type of particle to display.
+     * @param density  The number of particles to display per meter.
+     * @param force    Whether to send the particle to players within an extended
+     *                 range and encourage their client to render it regardless of
+     *                 settings
+     */
+    public static void spawnParticleLine(Location start, Location end, Particle particle, double density, boolean force) {
+        World world = start.getWorld();
+        if (world == null) return;
+
+        Vector offset = end.clone().subtract(start).toVector().normalize().multiply(1 / density);
+        Location current = start.clone();
+        int count = (int) (end.distance(start) * density);
+        for (int i = 0; i < count; i++) {
+            world.spawnParticle(particle, current, 1, 0, 0, 0, 0, null, force);
+            current.add(offset);
+        }
     }
 
     /**
