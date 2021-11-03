@@ -52,7 +52,7 @@ public class AshAbility extends Ability {
                 .name("Phase Breach")
                 .origin("Apex - Ash")
                 .description("Tear open a one-way portal to a targeted location.")
-                .usage("Right click.")
+                .usage("Right click to show targeting UI. Right click again to activate. Switch away from ender pearl or click an invalid location to cancel.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
