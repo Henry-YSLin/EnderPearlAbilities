@@ -57,7 +57,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
         getLogger().info(protocolManager.toString());
 
         // Plugin startup logic
-        Reflections reflections = new Reflections("io.github.henryyslin.enderpearlabilities");
+        Reflections reflections = new Reflections("io.github.henry_yslin.enderpearlabilities");
         Set<Class<?>> subTypes =
                 reflections.get(SubTypes.of(Ability.class).asClass());
         for (Class<?> subType : subTypes) {

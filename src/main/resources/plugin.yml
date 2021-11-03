@@ -1,6 +1,6 @@
 name: EnderPearlAbilities
 version: '${project.version}'
-main: io.github.henryyslin.enderpearlabilities.EnderPearlAbilities
+main: io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities
 api-version: 1.17
 depend: [ Citizens, ProtocolLib ]
 commands:
