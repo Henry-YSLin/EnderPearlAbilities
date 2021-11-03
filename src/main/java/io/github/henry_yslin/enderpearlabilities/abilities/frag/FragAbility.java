@@ -160,6 +160,7 @@ public class FragAbility extends Ability {
         ).execute();
     }
 
+    @SuppressWarnings("unchecked")
     @EventHandler
     public void onProjectileHit(ProjectileHitEvent event) {
         Projectile projectile = event.getEntity();
