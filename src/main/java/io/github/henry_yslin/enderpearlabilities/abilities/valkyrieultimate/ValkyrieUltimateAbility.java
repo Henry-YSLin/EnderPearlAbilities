@@ -7,9 +7,10 @@ import io.github.henry_yslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -27,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ValkyrieUltimateAbility extends Ability {
 
-    static final int MAX_LAUNCH_HEIGHT = 100;
+    static final int MAX_LAUNCH_HEIGHT = 64;
     static final int MIN_LAUNCH_HEIGHT = 10;
     static final int INITIAL_BURN_DURATION = 30;
 
@@ -37,7 +38,7 @@ public class ValkyrieUltimateAbility extends Ability {
     public void setConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 40);
         config.addDefault("duration", 200);
-        config.addDefault("cooldown", 400);
+        config.addDefault("cooldown", 1200);
     }
 
     public ValkyrieUltimateAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
@@ -47,9 +48,9 @@ public class ValkyrieUltimateAbility extends Ability {
                 .codeName("valkyrie-ultimate")
                 .name("Skyward Dive")
                 .origin("Apex - Valkyrie")
-                .description("Press once to prepare for launch. Other players can join the launch. Press again to launch into the air and skydive.")
+                .description("Press once to prepare for launch. Press again to launch into the air and skydive.")
                 .usage("Right click to prepare for launch. Right click again to launch. Switch away from ender pearl to cancel.")
-                .activation(ActivationHand.OffHand);
+                .activation(ActivationHand.MainHand);
 
         if (config != null)
             builder
@@ -111,10 +112,13 @@ public class ValkyrieUltimateAbility extends Ability {
         } else {
             new FunctionChain(
                     next -> new AbilityRunnable() {
+                        BossBar bossbar;
                         Location groundLocation;
 
                         @Override
                         protected void start() {
+                            bossbar = Bukkit.createBossBar("Charging up", BarColor.WHITE, BarStyle.SOLID);
+                            bossbar.addPlayer(player);
                             chargingUp.set(true);
                             chargeUpDuration.set(0);
                             groundLocation = player.getLocation();
@@ -126,7 +130,7 @@ public class ValkyrieUltimateAbility extends Ability {
                                 cancel();
                                 return;
                             }
-                            chargeUpDuration.incrementAndGet();
+                            bossbar.setProgress(Math.min(1, chargeUpDuration.incrementAndGet() / (double) info.chargeUp));
                             boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
                             boolean offHandPearl = player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
                             boolean shouldContinue = ability.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
@@ -138,11 +142,14 @@ public class ValkyrieUltimateAbility extends Ability {
                             if (shouldContinue) {
                                 RayTraceResult result = player.getWorld().rayTraceBlocks(player.getEyeLocation(), new Vector(0, 1, 0), MIN_LAUNCH_HEIGHT, FluidCollisionMode.NEVER, true);
                                 if (result != null) {
-                                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.RED + "Need vertical clearance"));
+                                    player.sendTitle(" ", ChatColor.RED + "Need vertical clearance", 5, 20, 20);
                                     shouldContinue = false;
                                 }
                             }
                             if (shouldContinue) {
+                                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 0.05f, 0.3f);
+                                double y = player.getVelocity().getY();
+                                player.setVelocity(player.getVelocity().multiply(0.8).setY(y));
                                 if (player.getLocation().getY() < groundLocation.getY()) {
                                     groundLocation.setY(player.getLocation().getY());
                                 }
@@ -156,12 +163,14 @@ public class ValkyrieUltimateAbility extends Ability {
                             } else {
                                 chargingUp.set(false);
                                 abilityActive.set(false);
+                                cooldown.startCooldown(100);
                                 cancel();
                             }
                         }
 
                         @Override
                         protected void end() {
+                            bossbar.removeAll();
                             player.setGravity(true);
                             if (abilityActive.get()) {
                                 next.run();
@@ -205,6 +214,7 @@ public class ValkyrieUltimateAbility extends Ability {
                                 if (result != null) shouldPropel = false;
                             }
                             if (shouldPropel) {
+                                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_AMBIENT, 0.2f, 2);
                                 player.setVelocity(player.getVelocity().add(new Vector(0, propulsion, 0)));
                                 player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 2, 0.1, 0.1, 0.1, 0.05);
                                 lastLocation = player.getLocation();
@@ -245,6 +255,7 @@ public class ValkyrieUltimateAbility extends Ability {
                                 cancel();
                                 return;
                             }
+                            player.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation(), 2, 0.1, 0.1, 0.1, 0, null, true);
                             RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), 1, FluidCollisionMode.ALWAYS, true);
                             if (result != null) {
                                 cancel();
@@ -255,6 +266,7 @@ public class ValkyrieUltimateAbility extends Ability {
                         protected void end() {
                             player.getInventory().setChestplate(chestplate);
                             abilityActive.set(false);
+                            cooldown.startCooldown(info.cooldown);
                         }
                     }.runTaskTimer(this, 0, 1)
             ).execute();

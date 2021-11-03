@@ -52,7 +52,7 @@ public class ValkyrieTacticalAbility extends Ability {
                 .origin("Apex - Valkyrie")
                 .description("Fire a swarm of missiles that damage and slow entities.")
                 .usage("Right click to fire homing missiles towards your crosshair location. Entities hit by missiles will be slowed for a brief moment.")
-                .activation(ActivationHand.MainHand);
+                .activation(ActivationHand.OffHand);
 
         if (config != null)
             builder
