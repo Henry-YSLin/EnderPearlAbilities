@@ -1,4 +1,4 @@
-package io.github.henryyslin.enderpearlabilities.abilities.valkyrie;
+package io.github.henryyslin.enderpearlabilities.abilities.valkyrietactical;
 
 import io.github.henryyslin.enderpearlabilities.abilities.Ability;
 import io.github.henryyslin.enderpearlabilities.abilities.AbilityCouple;
@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ValkyrieAbility extends Ability {
+public class ValkyrieTacticalAbility extends Ability {
 
     static final int TARGET_RANGE = 100;
     static final int ARROW_PER_TICK = 4;
@@ -43,11 +43,11 @@ public class ValkyrieAbility extends Ability {
         config.addDefault("cooldown", 400);
     }
 
-    public ValkyrieAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
+    public ValkyrieTacticalAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
         super(plugin, ownerName, config);
 
         AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("valkyrie")
+                .codeName("valkyrie-tactical")
                 .name("Missile Swarm")
                 .origin("Apex - Valkyrie")
                 .description("Fire a swarm of missiles that damage and slow entities.")

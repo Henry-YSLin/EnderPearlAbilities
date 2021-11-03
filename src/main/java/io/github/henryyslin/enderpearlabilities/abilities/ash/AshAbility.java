@@ -186,13 +186,10 @@ public class AshAbility extends Ability {
             final Location[] startLocation = new Location[1];
 
             new FunctionChain(
-                    next -> {
-                        chargingUp.set(true);
-                        next.run();
-                    },
                     next -> new AbilityRunnable() {
                         @Override
                         protected void start() {
+                            chargingUp.set(true);
                         }
 
                         @Override
@@ -233,7 +230,7 @@ public class AshAbility extends Ability {
                                     next.run();
                             }
                         }
-                    }.runTaskRepeated(this, 0, 1, 600),
+                    }.runTaskTimer(this, 0, 1),
                     next -> new AbilityRunnable() {
                         Location location;
 
