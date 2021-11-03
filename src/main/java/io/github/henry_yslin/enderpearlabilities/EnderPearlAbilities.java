@@ -14,10 +14,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.reflections.Reflections;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.reflections.scanners.Scanners.SubTypes;
 
@@ -75,6 +72,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
                 e.printStackTrace();
             }
         }
+        internalTemplateAbilities.sort(Comparator.comparing(ability -> ability.getInfo().codeName));
 
         getLogger().info("Saving config");
 
