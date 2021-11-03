@@ -15,10 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerPickupArrowEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.RayTraceResult;
@@ -126,6 +123,13 @@ public class AshAbility extends Ability {
         event.setCancelled(true);
     }
 
+    @EventHandler
+    public void onPlayerPortal(PlayerPortalEvent event) {
+        if (!event.getPlayer().getName().equals(ownerName)) return;
+        if (!abilityActive.get()) return;
+        event.setCancelled(true);
+    }
+
     private Vector rotateVectorDownwards(Vector vector, double angle) {
         double horizontalDist = vector.clone().setY(0).length();
         vector.setY(Math.max(vector.getY() - vector.length(), horizontalDist * Math.tan(Math.max(Math.toRadians(-89.99999), Math.atan2(vector.getY(), horizontalDist) - angle))));
@@ -140,7 +144,7 @@ public class AshAbility extends Ability {
         if (MathUtils.almostEqual(direction.getX(), 0) && MathUtils.almostEqual(direction.getZ(), 0) && direction.getY() > 0)
             return Optional.empty();
 
-        RayTraceResult eyeRay = world.rayTraceBlocks(eyeLocation, direction, TARGET_RANGE, FluidCollisionMode.NEVER);
+        RayTraceResult eyeRay = world.rayTraceBlocks(eyeLocation, direction, TARGET_RANGE, FluidCollisionMode.NEVER, true);
 
         Vector eyeHitPosition;
         if (eyeRay != null) {
@@ -213,14 +217,13 @@ public class AshAbility extends Ability {
                             } else {
                                 chargingUp.set(false);
                                 abilityActive.set(false);
-                                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(" "));
                                 cancel();
                             }
                         }
 
                         @Override
                         protected void end() {
-                            if (lastLocation[0].distance(player.getLocation()) < 1)
+                            if (lastLocation[0] != null && lastLocation[0].distance(player.getLocation()) < 1)
                                 lastLocation[0] = null;
 
                             if (abilityActive.get()) {
@@ -229,6 +232,8 @@ public class AshAbility extends Ability {
                                 else
                                     next.run();
                             }
+                            if (!abilityActive.get())
+                                cooldown.startCooldown(20);
                         }
                     }.runTaskTimer(this, 0, 1),
                     next -> new AbilityRunnable() {
@@ -295,6 +300,8 @@ public class AshAbility extends Ability {
                             currentLocation.add(velocity);
                             player.teleport(currentLocation);
                             player.setVelocity(velocity);
+                            player.setRemainingAir(player.getMaximumAir());
+                            player.setFireTicks(0);
                             player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 10, 0.5, 1, 0.5, 0.02, null, true);
                             player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, lastLocation[0].clone().add(0, 1, 0), 20, 0.05, 1, 0.05, 0, null, true);
 

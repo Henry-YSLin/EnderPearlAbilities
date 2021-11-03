@@ -20,6 +20,7 @@ public class ListAbilitySubCommand extends SubCommand {
         List<Ability> abilities;
         synchronized (abilities = EnderPearlAbilities.getInstance().getAbilities()) {
             List<Ability> templateAbilities = EnderPearlAbilities.getInstance().getTemplateAbilities();
+            int totalCount = 0;
             for (Ability templateAbility : templateAbilities) {
                 AbilityInfo info = templateAbility.getInfo();
                 int count = 0;
@@ -32,7 +33,9 @@ public class ListAbilitySubCommand extends SubCommand {
                     sender.sendMessage(info.codeName + " - " + count + " active");
                 else
                     sender.sendMessage(info.codeName);
+                totalCount += count;
             }
+            sender.sendMessage("Total: " + templateAbilities.size() + " abilities, " + totalCount + " active instances");
         }
 
         return true;
