@@ -68,7 +68,7 @@ public class WorldShaperAbility extends Ability {
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -87,7 +87,7 @@ public class WorldShaperAbility extends Ability {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
@@ -111,7 +111,7 @@ public class WorldShaperAbility extends Ability {
         ).execute();
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onProjectileHit(ProjectileHitEvent event) {
         Projectile projectile = event.getEntity();
         ProjectileSource shooter = projectile.getShooter();
@@ -171,7 +171,7 @@ public class WorldShaperAbility extends Ability {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;

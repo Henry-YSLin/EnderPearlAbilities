@@ -4,6 +4,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
+import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
@@ -17,7 +18,6 @@ import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -69,7 +69,7 @@ public class WraithAbility extends Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicBoolean cancelAbility = new AtomicBoolean(false);
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -97,7 +97,7 @@ public class WraithAbility extends Ability {
         super.onDisable();
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerToggleSprint(PlayerToggleSprintEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (abilityActive.get()) return;
@@ -111,17 +111,14 @@ public class WraithAbility extends Ability {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) {
-            if (player.getName().equals(ownerName) && abilityActive.get()) event.setCancelled(true);
-            return;
-        }
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation, true)) return;
 
         if (player.getName().equals(ownerName) && abilityActive.get()) {
             cancelAbility.set(true);
             return;
         }
 
-        if (event.useInteractedBlock() == Event.Result.DENY && event.useItemInHand() == Event.Result.DENY) return;
+        if (InteractionLockManager.getInstance().isInteractionLocked(player)) return;
 
         event.setCancelled(true);
 

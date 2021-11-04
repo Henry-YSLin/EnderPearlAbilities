@@ -1,6 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.pathfinder;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
@@ -75,7 +76,11 @@ public class PathfinderAbility extends Ability {
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
     SlowFallRunnable slowFallRunnable;
 
-    @EventHandler(ignoreCancelled = true)
+    public boolean isAbilityActive() {
+        return abilityActive.get();
+    }
+
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -106,11 +111,11 @@ public class PathfinderAbility extends Ability {
         slowFallRunnable.runTaskTimer(this, 0, 5);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation, true)) return;
 
         event.setCancelled(true);
 
@@ -121,6 +126,8 @@ public class PathfinderAbility extends Ability {
             return;
         }
 
+        if (InteractionLockManager.getInstance().isInteractionLocked(player)) return;
+
         PlayerUtils.consumeEnderPearl(player);
 
         new FunctionChain(
@@ -129,7 +136,7 @@ public class PathfinderAbility extends Ability {
         ).execute();
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public synchronized void onPlayerToggleSneak(PlayerToggleSneakEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (!abilityActive.get()) return;
@@ -151,7 +158,7 @@ public class PathfinderAbility extends Ability {
         });
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!player.getName().equals(ownerName)) return;
@@ -160,7 +167,7 @@ public class PathfinderAbility extends Ability {
             event.setCancelled(true);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onProjectileHit(ProjectileHitEvent event) {
         Projectile projectile = event.getEntity();
         ProjectileSource shooter = projectile.getShooter();
@@ -195,6 +202,7 @@ public class PathfinderAbility extends Ability {
             protected void start() {
                 abilityActive.set(true);
                 blockShoot.set(false);
+                InteractionLockManager.getInstance().lockInteraction(player);
                 bossbar = Bukkit.createBossBar(info.name, BarColor.PURPLE, BarStyle.SOLID);
                 bossbar.addPlayer(player);
                 anchorLocation = anchor.getLocation();
@@ -250,13 +258,14 @@ public class PathfinderAbility extends Ability {
             protected void end() {
                 bossbar.removeAll();
                 anchor.remove();
+                InteractionLockManager.getInstance().unlockInteraction(player);
                 abilityActive.set(false);
                 cooldown.startCooldown(info.cooldown);
             }
         }).runTaskRepeated(this, 0, 1, info.duration);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
@@ -264,7 +273,7 @@ public class PathfinderAbility extends Ability {
         event.setCancelled(true);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onUnleash(EntityUnleashEvent event) {
         Entity entity = event.getEntity();
         if (!AbilityUtils.verifyAbilityCouple(this, entity)) return;

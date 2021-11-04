@@ -11,6 +11,7 @@ import org.bukkit.util.Vector;
 
 public class SlowFallRunnable extends AbilityRunnable {
 
+    PathfinderAbility ability;
     final Player player;
     boolean activated = false;
     Vector prevVelocity;
@@ -35,6 +36,8 @@ public class SlowFallRunnable extends AbilityRunnable {
 
     @Override
     public void tick() {
+        if (ability == null)
+            ability = (PathfinderAbility) executor;
         //noinspection deprecation
         if (player.isOnGround()) {
             activated = false;
@@ -51,7 +54,7 @@ public class SlowFallRunnable extends AbilityRunnable {
             lastActivation = -1;
         }
         if (activated) return;
-        if (shouldActivate(player)) {
+        if (!ability.isAbilityActive() && shouldActivate(player)) {
             player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BELL_RESONATE, 1, 2);
             player.addPotionEffect(PotionEffectType.SLOW_FALLING.createEffect(DURATION * 10, 3));
             activated = true;

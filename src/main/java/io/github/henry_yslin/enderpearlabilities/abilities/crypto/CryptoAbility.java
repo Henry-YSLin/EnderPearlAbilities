@@ -85,7 +85,7 @@ public class CryptoAbility extends Ability {
     final AtomicReference<NPC> dummy = new AtomicReference<>();
     DroneStatusRunnable droneStatusRunnable;
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         exitDrone();
@@ -232,7 +232,7 @@ public class CryptoAbility extends Ability {
         removeDrone();
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (event.getCause() != PlayerTeleportEvent.TeleportCause.SPECTATE) return;
@@ -240,14 +240,14 @@ public class CryptoAbility extends Ability {
         event.setCancelled(true);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (abilityActive.get())
             exitDrone();
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onEntityDropItem(EntityDropItemEvent event) {
         if (!AbilityUtils.verifyAbilityCouple(this, event.getEntity())) return;
         event.getItemDrop().remove();
@@ -262,7 +262,7 @@ public class CryptoAbility extends Ability {
         player.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(17, 1));
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
         NPC npc = dummy.get();
         if (npc != null && event.getEntity().equals(npc.getEntity())) {
@@ -274,14 +274,14 @@ public class CryptoAbility extends Ability {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         if (!event.getEntity().equals(player)) return;
         if (!abilityActive.get()) return;
         removeDrone();
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
         if (event.getEntity().equals(drone.get())) {
             cooldown.startCooldown(info.cooldown);
@@ -295,7 +295,7 @@ public class CryptoAbility extends Ability {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 

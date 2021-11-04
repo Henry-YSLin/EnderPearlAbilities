@@ -69,7 +69,7 @@ public class NecromancerAbility extends Ability {
     final List<Skeleton> slaves = new ArrayList<>();
     PlayerTargetTracker playerTargetTracker;
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -99,7 +99,7 @@ public class NecromancerAbility extends Ability {
         playerTargetTracker.runTaskTimer(this, 0, 10);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onEntityTarget(EntityTargetEvent event) {
         Entity entity = event.getEntity();
         if (entity instanceof Skeleton skeleton) {
@@ -114,14 +114,14 @@ public class NecromancerAbility extends Ability {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onProjectileHit(ProjectileHitEvent event) {
         if (!(event.getEntity().getShooter() instanceof Skeleton skeleton)) return;
         if (AbilityUtils.verifyAbilityCouple(this, skeleton))
             event.getEntity().setTicksLived(1000);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 

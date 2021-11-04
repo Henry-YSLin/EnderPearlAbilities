@@ -1,6 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.rampart;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
@@ -68,7 +69,7 @@ public class RampartAbility extends Ability {
     final AtomicBoolean isSneaking = new AtomicBoolean(false);
     AbilityRunnable minigun;
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -94,13 +95,13 @@ public class RampartAbility extends Ability {
                 minigun.cancel();
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public synchronized void onPlayerToggleSneak(PlayerToggleSneakEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         isSneaking.set(event.isSneaking());
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
@@ -167,6 +168,10 @@ public class RampartAbility extends Ability {
                             player.setVelocity(player.getVelocity().multiply(0.9).setY(player.getVelocity().getY()));
                         }
                         boolean firing = isSneaking.get();
+                        if (firing)
+                            InteractionLockManager.getInstance().lockInteraction(player);
+                        else
+                            InteractionLockManager.getInstance().unlockInteraction(player);
                         if (!firing || player.getInventory().getItemInMainHand().getType() != Material.ENDER_PEARL) {
                             if (spinUpTicks < info.chargeUp) {
                                 spinUpTicks += 2;
@@ -199,6 +204,7 @@ public class RampartAbility extends Ability {
                         magazineBossBar.removeAll();
                         spinUpBossBar.removeAll();
                         abilityActive.set(false);
+                        InteractionLockManager.getInstance().unlockInteraction(player);
                         if (magazine == info.duration)
                             cooldown.startCooldown(20);
                         else

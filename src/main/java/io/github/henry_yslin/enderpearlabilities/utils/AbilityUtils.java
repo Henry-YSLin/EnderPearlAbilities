@@ -1,6 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.utils;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -91,10 +92,25 @@ public class AbilityUtils {
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean abilityShouldActivate(PlayerInteractEvent event, String ownerName, ActivationHand activationHand) {
+        return abilityShouldActivate(event, ownerName, activationHand, false);
+    }
+
+    /**
+     * Check whether a given {@link PlayerInteractEvent} should activate an ability.
+     *
+     * @param event                 The related {@link PlayerInteractEvent}.
+     * @param ownerName             The name of the player that possesses the ability.
+     * @param activationHand        The activation hand of the ability.
+     * @param ignoreInteractionLock Whether to still return true if interaction is locked.
+     * @return Whether the ability should activate.
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public static boolean abilityShouldActivate(PlayerInteractEvent event, String ownerName, ActivationHand activationHand, boolean ignoreInteractionLock) {
         Player player = event.getPlayer();
         Action action = event.getAction();
         ItemStack item = event.getItem();
 
+        if (!ignoreInteractionLock && InteractionLockManager.getInstance().isInteractionLocked(player)) return false;
         if (!player.getName().equals(ownerName)) return false;
         if (activationHand == ActivationHand.MainHand) {
             if (player.getInventory().getItemInMainHand().getType() != Material.ENDER_PEARL) return false;

@@ -71,7 +71,7 @@ public class AshAbility extends Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityRunnable portal;
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -94,7 +94,7 @@ public class AshAbility extends Ability {
         cooldown.startCooldown(info.cooldown);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerPortal(PlayerPortalEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (!abilityActive.get()) return;
@@ -142,7 +142,7 @@ public class AshAbility extends Ability {
         return Optional.empty();
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 

@@ -56,7 +56,7 @@ public class CloneTrait extends Trait {
         flock = null;
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     private void onEntityDamage(EntityDamageByEntityEvent event) {
         if (isActive() && protect && event.getEntity().getName().equals(player.getName())) {
             Entity damager = event.getDamager();
@@ -73,7 +73,7 @@ public class CloneTrait extends Trait {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onEntityTargetLivingEntity(EntityTargetLivingEntityEvent event) {
         if (!isActive() || !protect) return;
         LivingEntity target = event.getTarget();

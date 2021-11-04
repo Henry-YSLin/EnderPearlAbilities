@@ -69,7 +69,7 @@ public class BloodhoundAbility extends Ability {
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -92,7 +92,7 @@ public class BloodhoundAbility extends Ability {
         cooldown.startCooldown(info.cooldown);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 

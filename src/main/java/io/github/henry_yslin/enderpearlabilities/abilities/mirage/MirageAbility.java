@@ -117,7 +117,7 @@ public class MirageAbility extends Ability {
             CitizensAPI.getTraitFactory().deregisterTrait(TraitInfo.create(CloneTrait.class).withName("clonetrait"));
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -129,7 +129,7 @@ public class MirageAbility extends Ability {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onEntityTargetLivingEntity(EntityTargetLivingEntityEvent event) {
         Entity target = event.getTarget();
         Entity entity = event.getEntity();
@@ -149,14 +149,14 @@ public class MirageAbility extends Ability {
         mob.setTarget(ListUtils.getRandom(candidates));
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         Entity damager = event.getDamager();
         if (!AbilityUtils.verifyAbilityCouple(this, damager)) return;
         event.setDamage(event.getDamage() * 3);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 

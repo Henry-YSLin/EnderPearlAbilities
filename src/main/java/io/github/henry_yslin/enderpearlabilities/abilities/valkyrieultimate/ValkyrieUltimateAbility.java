@@ -4,6 +4,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
+import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
@@ -70,7 +71,7 @@ public class ValkyrieUltimateAbility extends Ability {
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -93,11 +94,11 @@ public class ValkyrieUltimateAbility extends Ability {
         cooldown.startCooldown(info.cooldown);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation, true)) return;
 
         event.setCancelled(true);
 
@@ -109,7 +110,7 @@ public class ValkyrieUltimateAbility extends Ability {
                 chargingUp.set(false);
                 abilityActive.set(true);
             }
-        } else {
+        } else if (!InteractionLockManager.getInstance().isInteractionLocked(player)) {
             new FunctionChain(
                     next -> new AbilityRunnable() {
                         BossBar bossbar;
@@ -119,6 +120,7 @@ public class ValkyrieUltimateAbility extends Ability {
                         protected void start() {
                             bossbar = Bukkit.createBossBar("Charging up", BarColor.WHITE, BarStyle.SOLID);
                             bossbar.addPlayer(player);
+                            InteractionLockManager.getInstance().lockInteraction(player);
                             chargingUp.set(true);
                             chargeUpDuration.set(0);
                             groundLocation = player.getLocation();
@@ -174,6 +176,8 @@ public class ValkyrieUltimateAbility extends Ability {
                             player.setGravity(true);
                             if (abilityActive.get()) {
                                 next.run();
+                            } else {
+                                InteractionLockManager.getInstance().unlockInteraction(player);
                             }
                         }
                     }.runTaskTimer(this, 0, 1),
@@ -226,6 +230,7 @@ public class ValkyrieUltimateAbility extends Ability {
 
                         @Override
                         protected void end() {
+                            InteractionLockManager.getInstance().unlockInteraction(player);
                             if (allowGlide)
                                 next.run();
                             else
@@ -251,7 +256,8 @@ public class ValkyrieUltimateAbility extends Ability {
 
                         @Override
                         protected void tick() {
-                            if (!player.isValid()) {
+                            //noinspection deprecation
+                            if (!player.isValid() || player.isOnGround()) {
                                 cancel();
                                 return;
                             }

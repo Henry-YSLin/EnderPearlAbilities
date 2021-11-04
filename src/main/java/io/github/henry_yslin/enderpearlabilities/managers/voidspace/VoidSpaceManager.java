@@ -1,6 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.managers.voidspace;
 
 import io.github.henry_yslin.enderpearlabilities.managers.Manager;
+import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -8,7 +9,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupArrowEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffectType;
@@ -84,15 +84,10 @@ public class VoidSpaceManager extends Manager {
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        if (!isInVoid(event.getPlayer())) return;
-        event.setCancelled(true);
-    }
-
     public void enterVoid(Player player) {
         if (isInVoid(player)) return;
 
+        InteractionLockManager.getInstance().lockInteraction(player);
         player.setCollidable(false);
         player.setInvulnerable(true);
         player.setInvisible(true);
@@ -120,6 +115,7 @@ public class VoidSpaceManager extends Manager {
         for (Player voidPlayer : playersInVoid) {
             player.hidePlayer(plugin, voidPlayer);
         }
+        InteractionLockManager.getInstance().unlockInteraction(player);
         player.setCollidable(true);
         player.setInvulnerable(false);
         player.setInvisible(false);

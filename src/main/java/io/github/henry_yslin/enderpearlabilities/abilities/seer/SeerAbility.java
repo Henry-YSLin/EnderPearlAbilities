@@ -74,7 +74,7 @@ public class SeerAbility extends Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     HeartSeekerRunnable heartSeekerRunnable;
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -99,7 +99,7 @@ public class SeerAbility extends Ability {
         heartSeekerRunnable.runTaskTimer(this, 0, 5);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
