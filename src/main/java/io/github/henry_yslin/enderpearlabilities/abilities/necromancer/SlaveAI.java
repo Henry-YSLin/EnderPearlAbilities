@@ -1,6 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.necromancer;
 
-import io.github.henry_yslin.enderpearlabilities.utils.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -47,7 +47,7 @@ public class SlaveAI extends AbilityRunnable {
         if (skeleton.isValid()) {
             skeleton.setCustomName(null);
             skeleton.setCustomNameVisible(false);
-            skeleton.removeMetadata("ability", ability.plugin);
+            skeleton.removeMetadata("ability", executor.plugin);
             skeleton.setAI(true);
         }
     }

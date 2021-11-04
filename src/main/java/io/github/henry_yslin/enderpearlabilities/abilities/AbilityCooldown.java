@@ -1,6 +1,5 @@
 package io.github.henry_yslin.enderpearlabilities.abilities;
 
-import io.github.henry_yslin.enderpearlabilities.utils.AbilityRunnable;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Material;

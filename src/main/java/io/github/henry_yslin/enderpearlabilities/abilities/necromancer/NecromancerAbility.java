@@ -1,9 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.necromancer;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
+import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -187,7 +184,7 @@ public class NecromancerAbility extends Ability {
                         });
                         slaves.add(skeleton);
                         skeleton.getWorld().playSound(skeleton.getLocation(), Sound.ENTITY_SKELETON_HORSE_AMBIENT, 1, 0);
-                        new SlaveSpawning(ability, player, skeleton, playerTarget).runTaskRepeated(ability, 0, 2, 11);
+                        new SlaveSpawning(executor, player, skeleton, playerTarget).runTaskRepeated(executor, 0, 2, 11);
                     }
 
                     @Override
@@ -201,7 +198,7 @@ public class NecromancerAbility extends Ability {
                                 for (Skeleton skeleton : slaves) {
                                     skeleton.setCustomName(null);
                                     skeleton.setCustomNameVisible(false);
-                                    skeleton.removeMetadata("ability", ability.plugin);
+                                    skeleton.removeMetadata("ability", executor.plugin);
                                     skeleton.setAI(true);
                                 }
                             }

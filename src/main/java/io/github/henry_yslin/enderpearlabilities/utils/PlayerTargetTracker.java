@@ -1,5 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.utils;
 
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 

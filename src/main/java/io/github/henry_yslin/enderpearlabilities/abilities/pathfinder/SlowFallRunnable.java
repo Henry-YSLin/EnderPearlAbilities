@@ -1,6 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.pathfinder;
 
-import io.github.henry_yslin.enderpearlabilities.utils.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;

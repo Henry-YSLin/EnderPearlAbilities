@@ -1,6 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.octane;
 
-import io.github.henry_yslin.enderpearlabilities.utils.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
 import org.bukkit.entity.Player;
 

@@ -1,15 +1,15 @@
-package io.github.henry_yslin.enderpearlabilities.utils;
+package io.github.henry_yslin.enderpearlabilities;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class AbilityRunnable extends BukkitRunnable {
+@SuppressWarnings("rawtypes")
+public abstract class ExtendedRunnable<TListener extends ExtendedListener> extends BukkitRunnable {
 
     protected long count = Long.MIN_VALUE;
-    protected Ability ability;
+    protected TListener executor;
 
     /**
      * Whether this runnable has completed all its iterations as scheduled by {@code runTaskRepeated}.
@@ -18,14 +18,15 @@ public abstract class AbilityRunnable extends BukkitRunnable {
         return count < 0;
     }
 
-    private void internalStart(Ability ability) {
-        this.ability = ability;
-        ability.runnables.add(this);
+    @SuppressWarnings("unchecked")
+    private void internalStart(TListener executor) {
+        this.executor = executor;
+        executor.runnables.add(this);
         start();
     }
 
     private void internalEnd() {
-        ability.runnables.remove(this);
+        executor.runnables.remove(this);
         end();
     }
 
@@ -71,20 +72,20 @@ public abstract class AbilityRunnable extends BukkitRunnable {
         return super.runTaskTimer(plugin, delay, period);
     }
 
-    public final synchronized BukkitTask runTaskRepeated(Ability ability, long delay, long period, long repeat) throws IllegalArgumentException, IllegalStateException {
+    public final synchronized BukkitTask runTaskRepeated(TListener executor, long delay, long period, long repeat) throws IllegalArgumentException, IllegalStateException {
         count = repeat - 1;
-        return runTaskTimer(ability, delay, period);
+        return runTaskTimer(executor, delay, period);
     }
 
-    public final synchronized BukkitTask runTaskTimer(Ability ability, long delay, long period) throws IllegalArgumentException, IllegalStateException {
-        internalStart(ability);
-        return super.runTaskTimer(ability.plugin, delay, period);
+    public final synchronized BukkitTask runTaskTimer(TListener executor, long delay, long period) throws IllegalArgumentException, IllegalStateException {
+        internalStart(executor);
+        return super.runTaskTimer(executor.plugin, delay, period);
     }
 
-    public final synchronized BukkitTask runTaskLater(Ability ability, long delay) throws IllegalArgumentException, IllegalStateException {
+    public final synchronized BukkitTask runTaskLater(TListener executor, long delay) throws IllegalArgumentException, IllegalStateException {
         count = 0;
-        internalStart(ability);
-        return super.runTaskLater(ability.plugin, delay);
+        internalStart(executor);
+        return super.runTaskLater(executor.plugin, delay);
     }
 
     @Override

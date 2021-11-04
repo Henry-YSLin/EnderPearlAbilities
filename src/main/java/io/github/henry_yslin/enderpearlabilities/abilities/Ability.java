@@ -1,28 +1,20 @@
 package io.github.henry_yslin.enderpearlabilities.abilities;
 
-import io.github.henry_yslin.enderpearlabilities.utils.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.ExtendedListener;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Controls the behavior and description of a specific ability for one specified player.
  * Construct this class with a null {@code ownerName} to read description without enabling the ability.
  */
-public abstract class Ability implements Listener {
+public abstract class Ability extends ExtendedListener<AbilityRunnable> {
 
-    public final Plugin plugin;
     public final String ownerName;
-    protected final ConfigurationSection config;
-    public final List<AbilityRunnable> runnables = Collections.synchronizedList(new ArrayList<>());
     public Player player;
     public AbilityCooldown cooldown;
 
@@ -34,9 +26,8 @@ public abstract class Ability implements Listener {
      * @param config    The {@link ConfigurationSection} to read {@link AbilityInfo} from, null if this instance is created to read constants only.
      */
     public Ability(Plugin plugin, @Nullable String ownerName, @Nullable ConfigurationSection config) {
-        this.plugin = plugin;
+        super(plugin, config);
         this.ownerName = ownerName;
-        this.config = config;
     }
 
     @EventHandler
@@ -50,14 +41,6 @@ public abstract class Ability implements Listener {
     }
 
     /**
-     * Populate a given {@link ConfigurationSection} with default values.
-     * Works with a template instance.
-     *
-     * @param config The {@link ConfigurationSection} to be populated.
-     */
-    public abstract void setConfigDefaults(ConfigurationSection config);
-
-    /**
      * Get an {@link AbilityInfo} containing descriptions of this ability.
      * Some parts of the description are not constant and change according to the configs supplied.
      *
@@ -66,18 +49,11 @@ public abstract class Ability implements Listener {
     public abstract AbilityInfo getInfo();
 
     public void onEnable() {
+        super.onEnable();
         if (ownerName == null) return;
         player = plugin.getServer().getPlayer(ownerName);
         if (player != null) {
             cooldown = new AbilityCooldown(this, player);
-        }
-    }
-
-    public void onDisable() {
-        synchronized (runnables) {
-            for (int i = runnables.size() - 1; i >= 0; i--) {
-                runnables.get(i).cancel();
-            }
         }
     }
 }

@@ -2,6 +2,7 @@ package io.github.henry_yslin.enderpearlabilities.abilities.ash;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import net.md_5.bungee.api.ChatMessageType;
@@ -204,8 +205,8 @@ public class AshAbility extends Ability {
                             }
                             boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
                             boolean offHandPearl = player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
-                            boolean shouldContinue = ability.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
-                                    ability.getInfo().activation == ActivationHand.OffHand && offHandPearl;
+                            boolean shouldContinue = executor.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
+                                    executor.getInfo().activation == ActivationHand.OffHand && offHandPearl;
                             if (!player.isValid()) shouldContinue = false;
                             if (shouldContinue) {
                                 Optional<Location> targetLocation = getTargetLocation(player);

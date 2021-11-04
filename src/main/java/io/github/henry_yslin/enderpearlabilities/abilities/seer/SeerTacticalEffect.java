@@ -1,6 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.seer;
 
-import io.github.henry_yslin.enderpearlabilities.utils.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;

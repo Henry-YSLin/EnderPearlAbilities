@@ -2,8 +2,8 @@ package io.github.henry_yslin.enderpearlabilities.abilities.valkyrieultimate;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
-import io.github.henry_yslin.enderpearlabilities.utils.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
@@ -133,8 +133,8 @@ public class ValkyrieUltimateAbility extends Ability {
                             bossbar.setProgress(Math.min(1, chargeUpDuration.incrementAndGet() / (double) info.chargeUp));
                             boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
                             boolean offHandPearl = player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
-                            boolean shouldContinue = ability.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
-                                    ability.getInfo().activation == ActivationHand.OffHand && offHandPearl;
+                            boolean shouldContinue = executor.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
+                                    executor.getInfo().activation == ActivationHand.OffHand && offHandPearl;
                             if (!player.isValid()) shouldContinue = false;
                             if (!player.getWorld().equals(groundLocation.getWorld())) shouldContinue = false;
                             if (groundLocation.toVector().setY(0).distance(player.getLocation().toVector().setY(0)) > 1)

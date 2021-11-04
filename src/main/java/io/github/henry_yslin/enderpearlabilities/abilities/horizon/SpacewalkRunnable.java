@@ -1,6 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.horizon;
 
-import io.github.henry_yslin.enderpearlabilities.utils.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
