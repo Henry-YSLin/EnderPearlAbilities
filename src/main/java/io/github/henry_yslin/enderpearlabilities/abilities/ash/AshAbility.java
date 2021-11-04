@@ -4,6 +4,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
+import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -14,11 +15,10 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
@@ -92,36 +92,6 @@ public class AshAbility extends Ability {
         chargingUp.set(false);
         abilityActive.set(false);
         cooldown.startCooldown(info.cooldown);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) return;
-        if (!player.getName().equals(ownerName)) return;
-        if (!abilityActive.get()) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onEntityPickupItem(EntityPickupItemEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-        if (!player.getName().equals(ownerName)) return;
-        if (!abilityActive.get()) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerPickupArrow(PlayerPickupArrowEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (!abilityActive.get()) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerDropItem(PlayerDropItemEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (!abilityActive.get()) return;
-        event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -277,15 +247,8 @@ public class AshAbility extends Ability {
                             startLocation[0] = player.getLocation();
                             player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 1, 2);
                             abilityActive.set(true);
-                            player.setCollidable(false);
-                            player.setInvulnerable(true);
-                            player.setInvisible(true);
-                            for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
-                                onlinePlayer.hidePlayer(plugin, player);
-                            }
-                            player.addPotionEffect(PotionEffectType.CONDUIT_POWER.createEffect(1000000, 1));
-                            player.addPotionEffect(PotionEffectType.NIGHT_VISION.createEffect(1000000, 1));
-                            player.addPotionEffect(PotionEffectType.SPEED.createEffect(1000000, 1));
+
+                            VoidSpaceManager.getInstance().enterVoid(player);
 
                             currentLocation = player.getLocation();
                             velocity = lastLocation[0].clone().subtract(player.getLocation()).toVector().normalize().multiply(PHASE_VELOCITY);
@@ -301,9 +264,6 @@ public class AshAbility extends Ability {
                             currentLocation.add(velocity);
                             player.teleport(currentLocation);
                             player.setVelocity(velocity);
-                            player.setRemainingAir(player.getMaximumAir());
-                            player.setFireTicks(0);
-                            player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 10, 0.5, 1, 0.5, 0.02, null, true);
                             player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, lastLocation[0].clone().add(0, 1, 0), 20, 0.05, 1, 0.05, 0, null, true);
 
                             if (currentLocation.distance(lastLocation[0]) < PHASE_VELOCITY * 1.5)
@@ -315,19 +275,13 @@ public class AshAbility extends Ability {
                             boolean completed = currentLocation.distance(lastLocation[0]) < PHASE_VELOCITY * 1.5;
                             if (completed)
                                 player.teleport(lastLocation[0].setDirection(player.getLocation().getDirection()));
-                            for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
-                                onlinePlayer.showPlayer(plugin, player);
-                            }
+
                             abilityActive.set(false);
                             player.setVelocity(new Vector());
-                            player.setCollidable(true);
-                            player.setInvulnerable(false);
-                            player.setInvisible(false);
-                            player.setFireTicks(0);
                             player.setFallDistance(0);
-                            player.removePotionEffect(PotionEffectType.CONDUIT_POWER);
-                            player.removePotionEffect(PotionEffectType.NIGHT_VISION);
-                            player.removePotionEffect(PotionEffectType.SPEED);
+
+                            VoidSpaceManager.getInstance().exitVoid(player);
+
                             cooldown.startCooldown(info.cooldown);
                             if (completed)
                                 next.run();

@@ -102,7 +102,7 @@ public class WraithAbility extends Ability {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (abilityActive.get()) return;
         if (event.isSprinting())
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 1000000, 0, true, true));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, true, true));
         else
             player.removePotionEffect(PotionEffectType.SPEED);
     }
