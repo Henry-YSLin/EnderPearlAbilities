@@ -35,6 +35,7 @@ public class WraithAbility extends Ability {
 
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
+        super.setConfigDefaults(config);
         config.addDefault("charge-up", 20);
         config.addDefault("duration", 200);
         config.addDefault("cooldown", 300);
@@ -58,6 +59,8 @@ public class WraithAbility extends Ability {
                     .cooldown(config.getInt("cooldown"));
 
         info = builder.build();
+
+        subListeners.add(new VoicesFromTheVoidListener(plugin, this, config));
     }
 
     @Override

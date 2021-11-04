@@ -37,6 +37,7 @@ public class AshAbility extends Ability {
 
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
+        super.setConfigDefaults(config);
         config.addDefault("charge-up", 0);
         config.addDefault("duration", 15);
         config.addDefault("cooldown", 400);

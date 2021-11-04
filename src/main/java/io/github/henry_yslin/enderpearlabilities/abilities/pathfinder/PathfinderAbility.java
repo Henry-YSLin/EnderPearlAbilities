@@ -39,6 +39,7 @@ public class PathfinderAbility extends Ability {
 
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
+        super.setConfigDefaults(config);
         config.addDefault("charge-up", 0);
         config.addDefault("duration", 100);
         config.addDefault("cooldown", 20);

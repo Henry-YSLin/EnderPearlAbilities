@@ -27,6 +27,7 @@ public class InteractionLockManager extends Manager {
 
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
+        super.setConfigDefaults(config);
     }
 
     public InteractionLockManager(Plugin plugin, ConfigurationSection config) {

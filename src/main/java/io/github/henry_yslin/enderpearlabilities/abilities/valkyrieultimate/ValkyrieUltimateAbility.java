@@ -37,6 +37,7 @@ public class ValkyrieUltimateAbility extends Ability {
 
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
+        super.setConfigDefaults(config);
         config.addDefault("charge-up", 40);
         config.addDefault("duration", 200);
         config.addDefault("cooldown", 1200);

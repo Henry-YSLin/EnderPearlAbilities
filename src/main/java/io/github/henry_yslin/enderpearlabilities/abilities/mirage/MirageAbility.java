@@ -36,6 +36,7 @@ public class MirageAbility extends Ability {
 
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
+        super.setConfigDefaults(config);
         config.addDefault("charge-up", 40);
         config.addDefault("duration", 1000);
         config.addDefault("cooldown", 800);

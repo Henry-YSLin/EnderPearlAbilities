@@ -1,6 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
@@ -18,6 +19,7 @@ public abstract class ExtendedListener<TRunnable extends ExtendedRunnable> imple
     public final Plugin plugin;
     protected final ConfigurationSection config;
     public final List<TRunnable> runnables = Collections.synchronizedList(new ArrayList<>());
+    public final List<ExtendedListener<ExtendedRunnable>> subListeners = Collections.synchronizedList(new ArrayList<>());
 
     /**
      * Create an {@link ExtendedListener} instance.
@@ -36,12 +38,24 @@ public abstract class ExtendedListener<TRunnable extends ExtendedRunnable> imple
      *
      * @param config The {@link ConfigurationSection} to be populated.
      */
-    public abstract void setConfigDefaults(ConfigurationSection config);
+    public void setConfigDefaults(ConfigurationSection config) {
+        for (ExtendedListener<ExtendedRunnable> subListener : subListeners) {
+            subListener.setConfigDefaults(config);
+        }
+    }
 
     public void onEnable() {
+        for (ExtendedListener<ExtendedRunnable> subListener : subListeners) {
+            plugin.getServer().getPluginManager().registerEvents(subListener, plugin);
+            subListener.onEnable();
+        }
     }
 
     public void onDisable() {
+        for (ExtendedListener<ExtendedRunnable> subListener : subListeners) {
+            subListener.onDisable();
+            HandlerList.unregisterAll(subListener);
+        }
         synchronized (runnables) {
             for (int i = runnables.size() - 1; runnables.size() > 0; i = runnables.size() - 1) {
                 runnables.get(i).cancel();

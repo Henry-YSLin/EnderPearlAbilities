@@ -41,6 +41,7 @@ public class SeerAbility extends Ability {
 
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
+        super.setConfigDefaults(config);
         config.addDefault("charge-up", 30);
         config.addDefault("duration", 200);
         config.addDefault("cooldown", 500);

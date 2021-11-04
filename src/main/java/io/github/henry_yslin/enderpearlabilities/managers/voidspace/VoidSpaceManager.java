@@ -32,6 +32,7 @@ public class VoidSpaceManager extends Manager {
 
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
+        super.setConfigDefaults(config);
     }
 
     public VoidSpaceManager(Plugin plugin, ConfigurationSection config) {
