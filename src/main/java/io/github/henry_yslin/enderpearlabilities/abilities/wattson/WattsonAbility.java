@@ -96,7 +96,7 @@ public class WattsonAbility extends Ability {
         super.onDisable();
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -106,14 +106,14 @@ public class WattsonAbility extends Ability {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onExplosionPrime(ExplosionPrimeEvent event) {
         if (!AbilityUtils.verifyAbilityCouple(this, event.getEntity())) return;
         event.setCancelled(true);
         event.getEntity().remove();
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!AbilityUtils.verifyAbilityCouple(this, event.getEntity())) return;
         Player damager = null;
@@ -127,7 +127,7 @@ public class WattsonAbility extends Ability {
         event.getEntity().getWorld().createExplosion(event.getEntity().getLocation(), 3, false, false);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 

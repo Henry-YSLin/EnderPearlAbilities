@@ -66,7 +66,7 @@ public class OctaneAbility extends Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     SwiftMendRunnable swiftMendRunnable;
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -99,7 +99,7 @@ public class OctaneAbility extends Ability {
         super.onDisable();
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerToggleSprint(PlayerToggleSprintEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (!abilityActive.get()) return;
@@ -109,7 +109,7 @@ public class OctaneAbility extends Ability {
             player.removePotionEffect(PotionEffectType.SPEED);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 

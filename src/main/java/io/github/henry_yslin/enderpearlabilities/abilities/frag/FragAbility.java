@@ -66,7 +66,7 @@ public class FragAbility extends Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -87,7 +87,7 @@ public class FragAbility extends Ability {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
@@ -158,7 +158,7 @@ public class FragAbility extends Ability {
     }
 
     @SuppressWarnings("unchecked")
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onProjectileHit(ProjectileHitEvent event) {
         Projectile projectile = event.getEntity();
         ProjectileSource shooter = projectile.getShooter();
@@ -197,7 +197,7 @@ public class FragAbility extends Ability {
         projectile.remove();
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;

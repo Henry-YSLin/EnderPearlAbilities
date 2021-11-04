@@ -30,7 +30,7 @@ public abstract class Ability extends ExtendedListener<AbilityRunnable> {
         this.ownerName = ownerName;
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (ownerName == null) return;
         Player player = event.getPlayer();

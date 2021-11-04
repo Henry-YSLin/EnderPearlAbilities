@@ -70,7 +70,7 @@ public class ValkyrieUltimateAbility extends Ability {
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -93,7 +93,7 @@ public class ValkyrieUltimateAbility extends Ability {
         cooldown.startCooldown(info.cooldown);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 

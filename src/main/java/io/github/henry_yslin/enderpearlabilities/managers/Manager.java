@@ -9,7 +9,9 @@ import org.bukkit.plugin.Plugin;
  */
 public abstract class Manager extends ExtendedListener<ManagerRunnable> {
 
-    public Manager(Plugin plugin, ConfigurationSection config) {
+    protected Manager(Plugin plugin, ConfigurationSection config) {
         super(plugin, config);
     }
+
+    public abstract String getName();
 }

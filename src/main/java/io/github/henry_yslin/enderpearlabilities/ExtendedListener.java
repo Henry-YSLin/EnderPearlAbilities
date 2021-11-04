@@ -43,7 +43,7 @@ public abstract class ExtendedListener<TRunnable extends ExtendedRunnable> imple
 
     public void onDisable() {
         synchronized (runnables) {
-            for (int i = runnables.size() - 1; i >= 0; i--) {
+            for (int i = runnables.size() - 1; runnables.size() > 0; i = runnables.size() - 1) {
                 runnables.get(i).cancel();
             }
         }

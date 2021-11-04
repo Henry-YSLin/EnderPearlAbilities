@@ -5,6 +5,7 @@ import com.comphenix.protocol.ProtocolManager;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.commands.ability.AbilityCommand;
 import io.github.henry_yslin.enderpearlabilities.commands.ability.AbilityTabCompleter;
+import io.github.henry_yslin.enderpearlabilities.managers.Manager;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -21,9 +22,14 @@ import static org.reflections.scanners.Scanners.SubTypes;
 public final class EnderPearlAbilities extends JavaPlugin {
 
     final FileConfiguration config = getConfig();
+
     final List<Ability> internalTemplateAbilities = new ArrayList<>();
     final List<Ability> templateAbilities = Collections.unmodifiableList(internalTemplateAbilities);
     final List<Ability> abilities = Collections.synchronizedList(new ArrayList<>());
+
+    final List<Manager> internalManagers = new ArrayList<>();
+    final List<Manager> managers = Collections.unmodifiableList(internalManagers);
+
     static EnderPearlAbilities instance;
     static ProtocolManager protocolManager;
 
@@ -43,6 +49,10 @@ public final class EnderPearlAbilities extends JavaPlugin {
         return abilities;
     }
 
+    public List<Manager> getManagers() {
+        return managers;
+    }
+
     public FileConfiguration getLoadedConfig() {
         return config;
     }
@@ -55,13 +65,30 @@ public final class EnderPearlAbilities extends JavaPlugin {
 
         // Plugin startup logic
         Reflections reflections = new Reflections("io.github.henry_yslin.enderpearlabilities");
-        Set<Class<?>> subTypes =
+        Set<Class<?>> managerSubTypes =
+                reflections.get(SubTypes.of(Manager.class).asClass());
+        for (Class<?> subType : managerSubTypes) {
+            try {
+                Manager manager = (Manager) subType.getDeclaredConstructor(Plugin.class, ConfigurationSection.class).newInstance(this, null);
+                String name = manager.getName();
+                getLogger().info("Setting config defaults for " + name + " manager");
+                ConfigurationSection section = config.getConfigurationSection(name);
+                if (section == null) section = config.createSection(name);
+                manager.setConfigDefaults(section);
+                Manager instance = manager.getClass().getDeclaredConstructor(Plugin.class, ConfigurationSection.class).newInstance(this, section);
+                internalManagers.add(instance);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        Set<Class<?>> abilitySubTypes =
                 reflections.get(SubTypes.of(Ability.class).asClass());
-        for (Class<?> subType : subTypes) {
+        for (Class<?> subType : abilitySubTypes) {
             try {
                 Ability ability = (Ability) subType.getDeclaredConstructor(Plugin.class, String.class, ConfigurationSection.class).newInstance(this, null, null);
                 String codeName = ability.getInfo().codeName;
-                getLogger().info("Setting config defaults for " + codeName);
+                getLogger().info("Setting config defaults for " + codeName + " ability");
                 ConfigurationSection section = config.getConfigurationSection(codeName);
                 if (section == null) section = config.createSection(codeName);
                 ability.setConfigDefaults(section);
@@ -80,6 +107,17 @@ public final class EnderPearlAbilities extends JavaPlugin {
         config.addDefault("dynamic", false);
         config.options().copyDefaults(true);
         saveConfig();
+
+        getLogger().info("Setting up managers");
+
+        for (Manager manager : managers) {
+            try {
+                getServer().getPluginManager().registerEvents(manager, this);
+                getLogger().info("Setting up \"" + manager.getName() + "\"");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         getLogger().info("Setting up abilities");
 
@@ -116,8 +154,12 @@ public final class EnderPearlAbilities extends JavaPlugin {
             @Override
             public void run() {
                 synchronized (abilities) {
+                    for (Manager manager : managers) {
+                        getLogger().info("Calling onEnable for \"" + manager.getName() + "\"");
+                        manager.onEnable();
+                    }
                     for (Ability ability : abilities) {
-                        getLogger().info("Calling onEnable for \"" + ability.getInfo().codeName + "\"");
+                        getLogger().info("Calling onEnable for \"" + ability.getInfo().codeName + "\" for " + ability.ownerName);
                         ability.onEnable();
                     }
                 }
@@ -132,8 +174,15 @@ public final class EnderPearlAbilities extends JavaPlugin {
         // Plugin shutdown logic
         synchronized (abilities) {
             for (Ability ability : abilities) {
-                getLogger().info("Calling onDisable for \"" + ability.getInfo().codeName + "\"");
+                getLogger().info("Calling onDisable for \"" + ability.getInfo().codeName + "\" for " + ability.ownerName);
                 ability.onDisable();
+            }
+        }
+
+        synchronized (managers) {
+            for (Manager manager : managers) {
+                getLogger().info("Calling onDisable for \"" + manager.getName() + "\"");
+                manager.onDisable();
             }
         }
         getLogger().info("Plugin onDisable completed");

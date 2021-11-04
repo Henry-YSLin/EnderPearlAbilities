@@ -75,7 +75,7 @@ public class PathfinderAbility extends Ability {
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
     SlowFallRunnable slowFallRunnable;
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -106,7 +106,7 @@ public class PathfinderAbility extends Ability {
         slowFallRunnable.runTaskTimer(this, 0, 5);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
@@ -129,7 +129,7 @@ public class PathfinderAbility extends Ability {
         ).execute();
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public synchronized void onPlayerToggleSneak(PlayerToggleSneakEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (!abilityActive.get()) return;
@@ -151,7 +151,7 @@ public class PathfinderAbility extends Ability {
         });
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onEntityDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!player.getName().equals(ownerName)) return;
@@ -160,7 +160,7 @@ public class PathfinderAbility extends Ability {
             event.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onProjectileHit(ProjectileHitEvent event) {
         Projectile projectile = event.getEntity();
         ProjectileSource shooter = projectile.getShooter();
@@ -256,7 +256,7 @@ public class PathfinderAbility extends Ability {
         }).runTaskRepeated(this, 0, 1, info.duration);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
@@ -264,7 +264,7 @@ public class PathfinderAbility extends Ability {
         event.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onUnleash(EntityUnleashEvent event) {
         Entity entity = event.getEntity();
         if (!AbilityUtils.verifyAbilityCouple(this, entity)) return;

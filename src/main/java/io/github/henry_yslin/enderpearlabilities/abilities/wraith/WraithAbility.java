@@ -4,6 +4,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
+import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
@@ -16,10 +17,11 @@ import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerToggleSprintEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -67,7 +69,7 @@ public class WraithAbility extends Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicBoolean cancelAbility = new AtomicBoolean(false);
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -95,37 +97,7 @@ public class WraithAbility extends Ability {
         super.onDisable();
     }
 
-    @EventHandler
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) return;
-        if (!player.getName().equals(ownerName)) return;
-        if (!abilityActive.get()) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onEntityPickupItem(EntityPickupItemEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-        if (!player.getName().equals(ownerName)) return;
-        if (!abilityActive.get()) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onPlayerPickupArrow(PlayerPickupArrowEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (!abilityActive.get()) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onPlayerDropItem(PlayerDropItemEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (!abilityActive.get()) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerToggleSprint(PlayerToggleSprintEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (abilityActive.get()) return;
@@ -144,12 +116,14 @@ public class WraithAbility extends Ability {
             return;
         }
 
-        event.setCancelled(true);
-
         if (player.getName().equals(ownerName) && abilityActive.get()) {
             cancelAbility.set(true);
             return;
         }
+
+        if (event.useInteractedBlock() == Event.Result.DENY && event.useItemInHand() == Event.Result.DENY) return;
+
+        event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
         if (chargingUp.get()) return;
@@ -164,15 +138,9 @@ public class WraithAbility extends Ability {
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 1, 0);
                     cancelAbility.set(false);
                     abilityActive.set(true);
-                    player.setCollidable(false);
-                    player.setInvulnerable(true);
-                    player.setInvisible(true);
-                    for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
-                        onlinePlayer.hidePlayer(plugin, player);
-                    }
-                    player.addPotionEffect(PotionEffectType.CONDUIT_POWER.createEffect(info.duration, 1));
-                    player.addPotionEffect(PotionEffectType.NIGHT_VISION.createEffect(info.duration, 1));
-                    player.addPotionEffect(PotionEffectType.SPEED.createEffect(info.duration, 1));
+
+                    VoidSpaceManager.getInstance().enterVoid(player);
+
                     next.run();
                 },
                 next -> new AbilityRunnable() {
@@ -196,11 +164,8 @@ public class WraithAbility extends Ability {
                             if (cancelTick <= 0) abilityActive.set(false);
                         }
                         bossbar.setProgress(count / (double) info.duration);
-                        player.setRemainingAir(player.getMaximumAir());
-                        player.setFireTicks(0);
                         if (count < CANCEL_DELAY)
                             player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 5, 0.5, 1, 0.5, 0.02, null, true);
-                        player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 10, 0.5, 1, 0.5, 0.02, null, true);
                     }
 
                     @Override
@@ -210,18 +175,11 @@ public class WraithAbility extends Ability {
                     }
                 }.runTaskRepeated(this, 0, 1, info.duration),
                 next -> {
-                    for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
-                        onlinePlayer.showPlayer(plugin, player);
-                    }
                     abilityActive.set(false);
                     cancelAbility.set(false);
-                    player.setCollidable(true);
-                    player.setInvulnerable(false);
-                    player.setInvisible(false);
-                    player.setFireTicks(0);
-                    player.removePotionEffect(PotionEffectType.CONDUIT_POWER);
-                    player.removePotionEffect(PotionEffectType.NIGHT_VISION);
-                    player.removePotionEffect(PotionEffectType.SPEED);
+
+                    VoidSpaceManager.getInstance().exitVoid(player);
+
                     if (player.isSprinting())
                         player.addPotionEffect(PotionEffectType.SPEED.createEffect(1000000, 0));
                     cooldown.startCooldown(info.cooldown);

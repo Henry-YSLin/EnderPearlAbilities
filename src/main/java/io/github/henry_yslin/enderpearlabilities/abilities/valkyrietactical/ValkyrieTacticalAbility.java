@@ -69,7 +69,7 @@ public class ValkyrieTacticalAbility extends Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final Random random = new Random();
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -90,7 +90,7 @@ public class ValkyrieTacticalAbility extends Ability {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 

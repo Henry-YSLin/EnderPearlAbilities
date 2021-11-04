@@ -68,7 +68,7 @@ public class HorizonAbility extends Ability {
     final AtomicInteger enderPearlHitTime = new AtomicInteger();
     SpacewalkRunnable spacewalkRunnable;
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -95,7 +95,7 @@ public class HorizonAbility extends Ability {
         spacewalkRunnable.runTaskTimer(this, 0, 1);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
@@ -110,7 +110,7 @@ public class HorizonAbility extends Ability {
         AbilityUtils.fireEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onProjectileHit(ProjectileHitEvent event) {
         Projectile projectile = event.getEntity();
         ProjectileSource shooter = projectile.getShooter();
@@ -190,7 +190,7 @@ public class HorizonAbility extends Ability {
         ).execute();
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;

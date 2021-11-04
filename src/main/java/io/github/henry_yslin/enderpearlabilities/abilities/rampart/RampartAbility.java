@@ -68,7 +68,7 @@ public class RampartAbility extends Ability {
     final AtomicBoolean isSneaking = new AtomicBoolean(false);
     AbilityRunnable minigun;
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -94,13 +94,13 @@ public class RampartAbility extends Ability {
                 minigun.cancel();
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public synchronized void onPlayerToggleSneak(PlayerToggleSneakEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         isSneaking.set(event.isSneaking());
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 

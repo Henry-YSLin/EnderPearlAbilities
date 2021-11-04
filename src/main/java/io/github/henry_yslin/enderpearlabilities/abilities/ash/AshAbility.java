@@ -71,7 +71,7 @@ public class AshAbility extends Ability {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityRunnable portal;
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
@@ -94,7 +94,7 @@ public class AshAbility extends Ability {
         cooldown.startCooldown(info.cooldown);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
         if (!player.getName().equals(ownerName)) return;
@@ -102,7 +102,7 @@ public class AshAbility extends Ability {
         event.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onEntityPickupItem(EntityPickupItemEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!player.getName().equals(ownerName)) return;
@@ -110,21 +110,21 @@ public class AshAbility extends Ability {
         event.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerPickupArrow(PlayerPickupArrowEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (!abilityActive.get()) return;
         event.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerDropItem(PlayerDropItemEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (!abilityActive.get()) return;
         event.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
         if (!event.getPlayer().getName().equals(ownerName)) return;
         if (!abilityActive.get()) return;
@@ -172,7 +172,7 @@ public class AshAbility extends Ability {
         return Optional.empty();
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
