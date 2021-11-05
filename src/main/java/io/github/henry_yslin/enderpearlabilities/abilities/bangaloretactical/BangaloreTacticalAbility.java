@@ -4,6 +4,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
@@ -26,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BangaloreTacticalAbility extends Ability {
 
     static final int PROJECTILE_LIFETIME = 100;
-    static final int SMOKE_PELLET_LIFETIME = 40;
+    static final int SMOKE_PELLET_LIFETIME = 20;
     static final double PROJECTILE_SPEED = 3;
     static final boolean PROJECTILE_GRAVITY = true;
     static final double SMOKE_RADIUS = 4;
@@ -48,8 +49,8 @@ public class BangaloreTacticalAbility extends Ability {
                 .codeName("bangalore-tactical")
                 .name("Smoke Launcher")
                 .origin("Apex - Bangalore")
-                .description("Fire a high-velocity smoke canister that explodes into a smoke wall on impact.")
-                .usage("Right click to fire a smoke canister. The smoke generated will deal small damage and protect players from mob targeting.")
+                .description("Fire a high-velocity smoke canister that explodes into a smoke wall on impact.\nPassive ability: Taking fire or damage while sprinting makes you move faster for a brief time.")
+                .usage("Right click to fire a smoke canister. The smoke wall will deal small damage and protect players from mob targeting.")
                 .activation(ActivationHand.OffHand);
 
         if (config != null)
@@ -59,6 +60,8 @@ public class BangaloreTacticalAbility extends Ability {
                     .cooldown(config.getInt("cooldown"));
 
         info = builder.build();
+
+        subListeners.add(new DoubleTimeListener(plugin, this, config));
     }
 
     @Override
@@ -120,8 +123,10 @@ public class BangaloreTacticalAbility extends Ability {
                 for (int i = smokeSpots.size() - 1; i >= 0; i--) {
                     SmokeSpot smokeSpot = smokeSpots.get(i);
                     World world = Objects.requireNonNull(smokeSpot.location.getWorld());
+                    if (smokeSpot.lifetime == info.duration)
+                        world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, smokeSpot.location, 50, 2, 2, 2, 0.003, null, true);
                     if (smokeSpot.lifetime > 200)
-                        world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, smokeSpot.location, 5, 2, 2, 2, 0.005, null, true);
+                        world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, smokeSpot.location, 5, 2, 2, 2, 0.003, null, true);
                     for (Entity entity : world.getNearbyEntities(smokeSpot.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS)) {
                         if (entity instanceof Player p) {
                             if (!p.hasPotionEffect(PotionEffectType.INVISIBILITY))
@@ -225,6 +230,7 @@ public class BangaloreTacticalAbility extends Ability {
                 projectiles.add(pearl);
                 pearl.setMetadata("smoke", new FixedMetadataValue(plugin, SMOKE_PELLET_LIFETIME));
             }
+            projectile.getWorld().playSound(hitPosition, Sound.ENTITY_FIREWORK_ROCKET_LARGE_BLAST, 1, 1);
         } else {
             int lifetime = (int) ref.get();
             lifetime -= projectile.getTicksLived();
@@ -235,6 +241,7 @@ public class BangaloreTacticalAbility extends Ability {
                 for (Entity nearbyEntity : world.getNearbyEntities(spot.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, entity -> entity instanceof LivingEntity && entity != player)) {
                     ((LivingEntity) nearbyEntity).damage(2, player);
                 }
+                projectile.getWorld().playSound(hitPosition, Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 0.5f, 0);
             } else {
                 Vector newVelocity;
                 if (event.getHitBlockFace() != null) {

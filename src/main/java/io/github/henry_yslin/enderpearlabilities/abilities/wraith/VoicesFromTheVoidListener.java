@@ -161,6 +161,7 @@ public class VoicesFromTheVoidListener extends BasicExtendedListener {
             @Override
             protected void tick() {
                 super.tick();
+                if (!player.isValid()) return;
                 if (player.getTicksLived() - lastWarningTick.get() < COOLDOWN) return;
                 Block block = player.getTargetBlockExact(5, FluidCollisionMode.NEVER);
                 if (block == null) return;
