@@ -1,5 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.utils;
 
+import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
 public class MathUtils {
@@ -35,5 +36,19 @@ public class MathUtils {
 
     public static boolean almostEqual(double val1, double val2, double epsilon) {
         return Math.abs(val1 - val2) < epsilon;
+    }
+
+    /**
+     * Check if a given Location is within a cube described by its center and x, y, z half-lengths
+     *
+     * @param center The center of the cube.
+     * @param x      Half-length of the cube along the x-axis.
+     * @param y      Half-length of the cube along the y-axis.
+     * @param z      Half-length of the cube along the z-axis.
+     * @param loc    The location to check.
+     * @return True if the location is within the cube.
+     */
+    public static boolean isInCube(Location center, double x, double y, double z, Location loc) {
+        return Math.abs(loc.getX() - center.getX()) <= x && Math.abs(loc.getY() - center.getY()) <= y && Math.abs(loc.getZ() - center.getZ()) <= z;
     }
 }

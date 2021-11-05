@@ -132,7 +132,7 @@ public class FragAbility extends Ability {
                         Projectile pearl = enderPearl.get();
                         if (pearl != null && pearl.isValid()) {
                             World world = pearl.getWorld();
-                            Location pearlLocation = pearl.getLocation();
+//                            Location pearlLocation = pearl.getLocation();
 //                            // Flash bang
 //                            world.spawnParticle(Particle.FLASH, pearlLocation, 3, 1, 1, 1, 1);
 //                            world.spawnParticle(Particle.FIREWORKS_SPARK, pearlLocation, 10, 0.05, 0.05, 0.05, 0.3);
@@ -147,8 +147,8 @@ public class FragAbility extends Ability {
 //                                livingEntity.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(duration, 1));
 //                                livingEntity.addPotionEffect(PotionEffectType.CONFUSION.createEffect(duration * 2, 1));
 //                            });
-
-                            world.createExplosion(pearl.getLocation().add(0, 0.1, 0), 6, false, false);
+                            if (hasCompleted())
+                                world.createExplosion(pearl.getLocation().add(0, 0.1, 0), 6, false, false);
                             pearl.remove();
                         }
                         abilityActive.set(false);
