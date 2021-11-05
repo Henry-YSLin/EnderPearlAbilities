@@ -7,9 +7,33 @@ import org.bukkit.block.Block;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public class BlockUtils {
+
+    /**
+     * Get the 6 blocks touching a block at the given location.
+     *
+     * @param center The target block.
+     * @return A list of all 6 blocks surrounding the target block.
+     */
+    public static List<Block> getTouchingBlocks(Location center) {
+        World world = Objects.requireNonNull(center.getWorld());
+
+        int x = center.getBlockX();
+        int y = center.getBlockY();
+        int z = center.getBlockZ();
+
+        ArrayList<Block> blocks = new ArrayList<>();
+        blocks.add(world.getBlockAt(x + 1, y, z));
+        blocks.add(world.getBlockAt(x - 1, y, z));
+        blocks.add(world.getBlockAt(x, y + 1, z));
+        blocks.add(world.getBlockAt(x, y - 1, z));
+        blocks.add(world.getBlockAt(x, y, z + 1));
+        blocks.add(world.getBlockAt(x, y, z - 1));
+        return blocks;
+    }
 
     /**
      * Get a cube of blocks within a given center and radius.

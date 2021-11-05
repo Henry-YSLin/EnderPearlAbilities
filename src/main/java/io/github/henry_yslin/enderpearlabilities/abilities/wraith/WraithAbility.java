@@ -21,10 +21,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerToggleSprintEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -48,7 +45,7 @@ public class WraithAbility extends Ability {
                 .codeName("wraith")
                 .name("Into The Void")
                 .origin("Apex - Wraith")
-                .description("Reposition quickly through the safety of void space, avoiding all damage and interactions.\nPassive ability: You have faster sprint speed.")
+                .description("Reposition quickly through the safety of void space, avoiding all damage and interactions.\nPassive ability: A voice warns you when danger approaches.")
                 .usage("Right click with an ender pearl to activate the ability. Right click again to exit early. You may not interact with anything while the ability is active.")
                 .activation(ActivationHand.MainHand);
 
@@ -98,16 +95,6 @@ public class WraithAbility extends Ability {
     @Override
     public void onDisable() {
         super.onDisable();
-    }
-
-    @EventHandler
-    public void onPlayerToggleSprint(PlayerToggleSprintEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (abilityActive.get()) return;
-        if (event.isSprinting())
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, true, true));
-        else
-            player.removePotionEffect(PotionEffectType.SPEED);
     }
 
     @EventHandler
@@ -180,8 +167,6 @@ public class WraithAbility extends Ability {
 
                     VoidSpaceManager.getInstance().exitVoid(player);
 
-                    if (player.isSprinting())
-                        player.addPotionEffect(PotionEffectType.SPEED.createEffect(1000000, 0));
                     cooldown.startCooldown(info.cooldown);
                     next.run();
                 }

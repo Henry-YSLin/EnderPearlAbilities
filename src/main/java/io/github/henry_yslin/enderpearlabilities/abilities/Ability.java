@@ -49,11 +49,11 @@ public abstract class Ability extends ExtendedListener<AbilityRunnable> {
     public abstract AbilityInfo getInfo();
 
     public void onEnable() {
-        super.onEnable();
         if (ownerName == null) return;
         player = plugin.getServer().getPlayer(ownerName);
         if (player != null) {
             cooldown = new AbilityCooldown(this, player);
         }
+        super.onEnable();
     }
 }

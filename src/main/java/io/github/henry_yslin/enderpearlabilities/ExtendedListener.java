@@ -19,7 +19,7 @@ public abstract class ExtendedListener<TRunnable extends ExtendedRunnable> imple
     public final Plugin plugin;
     protected final ConfigurationSection config;
     public final List<TRunnable> runnables = Collections.synchronizedList(new ArrayList<>());
-    public final List<ExtendedListener<ExtendedRunnable>> subListeners = Collections.synchronizedList(new ArrayList<>());
+    public final List<BasicExtendedListener> subListeners = Collections.synchronizedList(new ArrayList<>());
 
     /**
      * Create an {@link ExtendedListener} instance.
@@ -39,20 +39,20 @@ public abstract class ExtendedListener<TRunnable extends ExtendedRunnable> imple
      * @param config The {@link ConfigurationSection} to be populated.
      */
     public void setConfigDefaults(ConfigurationSection config) {
-        for (ExtendedListener<ExtendedRunnable> subListener : subListeners) {
+        for (BasicExtendedListener subListener : subListeners) {
             subListener.setConfigDefaults(config);
         }
     }
 
     public void onEnable() {
-        for (ExtendedListener<ExtendedRunnable> subListener : subListeners) {
+        for (BasicExtendedListener subListener : subListeners) {
             plugin.getServer().getPluginManager().registerEvents(subListener, plugin);
             subListener.onEnable();
         }
     }
 
     public void onDisable() {
-        for (ExtendedListener<ExtendedRunnable> subListener : subListeners) {
+        for (BasicExtendedListener subListener : subListeners) {
             subListener.onDisable();
             HandlerList.unregisterAll(subListener);
         }
