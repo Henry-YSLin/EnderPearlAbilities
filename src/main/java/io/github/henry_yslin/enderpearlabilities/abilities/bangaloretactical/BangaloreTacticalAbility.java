@@ -126,10 +126,10 @@ public class BangaloreTacticalAbility extends Ability {
                     World world = Objects.requireNonNull(smokeSpot.location.getWorld());
                     if (smokeSpot.lifetime == info.duration) {
                         recalculateLineOfSight = true;
-                        world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, smokeSpot.location, 5, 2, 2, 2, 0.003, null, true);
+                        world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, smokeSpot.location, 50, 2, 2, 2, 0.003, null, true);
                     }
                     if (smokeSpot.lifetime > 200)
-                        world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, smokeSpot.location, 1, 2, 2, 2, 0.003, null, true);
+                        world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, smokeSpot.location, 5, 2, 2, 2, 0.003, null, true);
                     for (Entity entity : world.getNearbyEntities(smokeSpot.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS)) {
                         if (entity instanceof Player p) {
                             if (!p.hasPotionEffect(PotionEffectType.INVISIBILITY))

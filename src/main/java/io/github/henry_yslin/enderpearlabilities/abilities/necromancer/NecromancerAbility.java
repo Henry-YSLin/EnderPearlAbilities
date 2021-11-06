@@ -168,7 +168,7 @@ public class NecromancerAbility extends Ability {
                             cancel();
                         }
                         bossbar.setProgress(count / (double) info.duration * 10);
-                        Location spawnLocation = ListUtils.getRandom(spawnLocations).getLocation().add(0, -1, 0);
+                        Location spawnLocation = ListUtils.getRandom(spawnLocations).getLocation().add(0.5, -1, 0.5);
                         Skeleton skeleton = player.getWorld().spawn(spawnLocation, Skeleton.class, true, entity -> {
                             entity.setAI(false);
                             entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
