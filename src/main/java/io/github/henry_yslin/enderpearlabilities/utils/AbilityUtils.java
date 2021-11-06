@@ -6,10 +6,10 @@ import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Snowball;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -123,23 +123,23 @@ public class AbilityUtils {
     }
 
     /**
-     * Make a player fire an ender pearl as if they have thrown it themselves.
+     * Make a player fire a projectile as if they have thrown it themselves.
      *
-     * @param ability            The ability responsible for this ender pearl.
-     * @param player             The player to fire this ender pearl from.
-     * @param inFlight           An {@link AtomicBoolean} to track whether the ender pearl is still in flight.
-     * @param projectileLifetime The maximum flight duration allowed (in ticks) before the ender pearl is killed.
-     * @param projectileSpeed    The initial speed of the ender pearl.
-     * @param gravity            Whether the ender pearl is affected by gravity.
-     * @return The ender pearl that is fired.
+     * @param ability            The ability responsible for this projectile.
+     * @param player             The player to fire this projectile from.
+     * @param inFlight           An {@link AtomicBoolean} to track whether the projectile is still in flight.
+     * @param projectileLifetime The maximum flight duration allowed (in ticks) before the projectile is killed.
+     * @param projectileSpeed    The initial speed of the projectile.
+     * @param gravity            Whether the projectile is affected by gravity.
+     * @return The projectile that is fired.
      */
-    public static Projectile fireEnderPearl(Ability ability, Player player, AtomicBoolean inFlight, int projectileLifetime, double projectileSpeed, boolean gravity) {
+    public static Projectile fireProjectile(Ability ability, Player player, AtomicBoolean inFlight, int projectileLifetime, double projectileSpeed, boolean gravity) {
         if (inFlight != null) {
             if (inFlight.get()) return null;
             inFlight.set(true);
         }
 
-        Projectile projectile = player.launchProjectile(EnderPearl.class, player.getLocation().getDirection().clone().normalize().multiply(projectileSpeed));
+        Projectile projectile = player.launchProjectile(Snowball.class, player.getLocation().getDirection().clone().normalize().multiply(projectileSpeed));
         projectile.setGravity(gravity);
 
         projectile.setMetadata("ability", new FixedMetadataValue(ability.plugin, new AbilityCouple(ability.getInfo().codeName, player.getName())));

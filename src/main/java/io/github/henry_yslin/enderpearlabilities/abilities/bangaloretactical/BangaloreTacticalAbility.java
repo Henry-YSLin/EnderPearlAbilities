@@ -13,7 +13,6 @@ import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffectType;
@@ -22,7 +21,6 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class BangaloreTacticalAbility extends Ability {
 
@@ -71,7 +69,6 @@ public class BangaloreTacticalAbility extends Ability {
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
-    final AtomicInteger enderPearlHitTime = new AtomicInteger();
     final List<SmokeSpot> smokeSpots = new ArrayList<>();
     final List<Entity> projectiles = Collections.synchronizedList(new ArrayList<>());
     AbilityRunnable smokeRunnable;
@@ -216,7 +213,7 @@ public class BangaloreTacticalAbility extends Ability {
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> {
-                    Projectile projectile = AbilityUtils.fireEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
+                    Projectile projectile = AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
                     if (projectile != null)
                         projectiles.add(projectile);
                     cooldown.startCooldown(info.cooldown);
@@ -233,10 +230,9 @@ public class BangaloreTacticalAbility extends Ability {
         if (!AbilityUtils.verifyAbilityCouple(this, projectile)) return;
         if (!player.getName().equals(ownerName)) return;
 
-        if (!(projectile instanceof EnderPearl)) return;
+        if (!(projectile instanceof Snowball)) return;
 
         event.setCancelled(true);
-        enderPearlHitTime.set(player.getTicksLived());
 
         projectile.getWorld().spawnParticle(Particle.SMOKE_NORMAL, projectile.getLocation(), 2, 0.1, 0.1, 0.1, 0.02);
 
@@ -247,13 +243,13 @@ public class BangaloreTacticalAbility extends Ability {
             for (int i = -2; i <= 2; i++) {
                 Vector horizontal = projectile.getVelocity().getCrossProduct(new Vector(0, 1, 0)).normalize().multiply(0.2);
                 int finalI = i;
-                EnderPearl pearl = projectile.getWorld().spawn(hitPosition, EnderPearl.class, entity -> {
+                Snowball snowball = projectile.getWorld().spawn(hitPosition, Snowball.class, entity -> {
                     entity.setShooter(player);
                     entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
                     entity.setVelocity(horizontal.clone().multiply(finalI).setY(0.25));
                 });
-                projectiles.add(pearl);
-                pearl.setMetadata("smoke", new FixedMetadataValue(plugin, SMOKE_PELLET_LIFETIME));
+                projectiles.add(snowball);
+                snowball.setMetadata("smoke", new FixedMetadataValue(plugin, SMOKE_PELLET_LIFETIME));
             }
             projectile.getWorld().playSound(hitPosition, Sound.ENTITY_FIREWORK_ROCKET_LARGE_BLAST, 1, 1);
         } else {
@@ -276,25 +272,17 @@ public class BangaloreTacticalAbility extends Ability {
                 } else {
                     newVelocity = projectile.getVelocity().setX(0).setZ(0);
                 }
-                EnderPearl pearl = projectile.getWorld().spawn(hitPosition, EnderPearl.class, entity -> {
+                Snowball snowball = projectile.getWorld().spawn(hitPosition, Snowball.class, entity -> {
                     entity.setShooter(player);
                     entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
                     entity.setVelocity(newVelocity);
                 });
-                projectiles.add(pearl);
-                pearl.setMetadata("smoke", new FixedMetadataValue(plugin, lifetime));
+                projectiles.add(snowball);
+                snowball.setMetadata("smoke", new FixedMetadataValue(plugin, lifetime));
             }
         }
         projectiles.remove(projectile);
         projectile.remove();
-    }
-
-    @EventHandler
-    public void onPlayerTeleport(PlayerTeleportEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
-        if (Math.abs(event.getPlayer().getTicksLived() - enderPearlHitTime.get()) > 1) return;
-        event.setCancelled(true);
     }
 
     private static class SmokeSpot {

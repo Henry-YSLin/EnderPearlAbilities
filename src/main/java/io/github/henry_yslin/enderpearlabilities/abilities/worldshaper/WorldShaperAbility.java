@@ -10,21 +10,19 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorldShaperAbility extends Ability {
 
@@ -48,8 +46,8 @@ public class WorldShaperAbility extends Ability {
                 .codeName("worldshaper")
                 .name("World Shaper")
                 .origin("Create Mod")
-                .description("Fires an ender pearl which explodes on impact, instantly mining a 3x3 area of blocks using the tool held in main hand.")
-                .usage("Right click to fire an ender pearl. The tool held in main hand will be used to mine a 3x3 area where the pearl lands. Blocks inside this blast area will not be mined if the tool in main hand cannot produce block drops from those blocks. Tool durability is twice as efficient as manual mining and will not completely deplete while using this ability. The ender pearl has a high chance to drop as item after the blast.")
+                .description("Fires a projectile which explodes on impact, instantly mining a 3x3 area of blocks using the tool held in main hand.")
+                .usage("Right click to fire. The tool held in main hand will be used to mine a 3x3 area where the projectile lands. Blocks inside this blast area will not be mined if the tool in main hand cannot produce block drops from those blocks. Tool durability is twice as efficient as manual mining and will not completely deplete while using this ability. There is a high chance for the ender pearl to drop as item after the blast.")
                 .activation(ActivationHand.OffHand);
 
         if (config != null)
@@ -67,7 +65,6 @@ public class WorldShaperAbility extends Ability {
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
-    final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -106,7 +103,7 @@ public class WorldShaperAbility extends Ability {
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> {
-                    AbilityUtils.fireEnderPearl(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false);
+                    AbilityUtils.fireProjectile(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false);
                     cooldown.startCooldown(info.cooldown);
                 }
         ).execute();
@@ -121,12 +118,11 @@ public class WorldShaperAbility extends Ability {
         if (!AbilityUtils.verifyAbilityCouple(this, projectile)) return;
         if (!player.getName().equals(ownerName)) return;
 
-        if (!(projectile instanceof EnderPearl)) return;
+        if (!(projectile instanceof Snowball)) return;
 
         event.setCancelled(true);
 
         projectile.remove();
-        enderPearlHitTime.set(player.getTicksLived());
 
         Entity hitEntity = event.getHitEntity();
 
@@ -170,13 +166,5 @@ public class WorldShaperAbility extends Ability {
                 player.getWorld().dropItem(finalLocation, new ItemStack(Material.ENDER_PEARL, 1));
             }
         }
-    }
-
-    @EventHandler
-    public void onPlayerTeleport(PlayerTeleportEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
-        if (Math.abs(event.getPlayer().getTicksLived() - enderPearlHitTime.get()) > 1) return;
-        event.setCancelled(true);
     }
 }

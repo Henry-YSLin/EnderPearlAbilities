@@ -18,7 +18,6 @@ import org.bukkit.event.entity.EntityUnleashEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
@@ -28,7 +27,6 @@ import org.bukkit.util.Vector;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class PathfinderAbility extends Ability {
 
@@ -53,7 +51,7 @@ public class PathfinderAbility extends Ability {
                 .name("Grappling Hook")
                 .origin("Apex - Pathfinder")
                 .description("Shoot a grappling hook to swing around, pull yourself up, or pull other entities close to you.\nPassive ability: Break your fall for a brief moment if the fall will be lethal.")
-                .usage("Right click to throw an ender pearl. The grapple anchors to where the ender pearl hits. Look at the anchor while grappling to pull yourself towards the anchor. Look sideways to swing. Right click again to cancel the grapple.")
+                .usage("Right click to throw a grapple. The grapple will anchor to where it hits. Look at the anchor while grappling to pull yourself towards the anchor. Look sideways to swing. Right click again to cancel the grapple.")
                 .activation(ActivationHand.OffHand);
 
         if (config != null)
@@ -74,7 +72,6 @@ public class PathfinderAbility extends Ability {
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityRunnable grapple;
-    final AtomicInteger enderPearlHitTime = new AtomicInteger();
     SlowFallRunnable slowFallRunnable;
 
     public boolean isAbilityActive() {
@@ -133,7 +130,7 @@ public class PathfinderAbility extends Ability {
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
-                next -> AbilityUtils.fireEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false)
+                next -> AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false)
         ).execute();
     }
 
@@ -179,7 +176,6 @@ public class PathfinderAbility extends Ability {
 
         event.setCancelled(true);
         projectile.remove();
-        enderPearlHitTime.set(player.getTicksLived());
 
         Entity hitEntity = event.getHitEntity();
         Mob anchor;
@@ -264,14 +260,6 @@ public class PathfinderAbility extends Ability {
                 cooldown.startCooldown(info.cooldown);
             }
         }).runTaskRepeated(this, 0, 1, info.duration);
-    }
-
-    @EventHandler
-    public void onPlayerTeleport(PlayerTeleportEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
-        if (Math.abs(event.getPlayer().getTicksLived() - enderPearlHitTime.get()) > 1) return;
-        event.setCancelled(true);
     }
 
     @EventHandler

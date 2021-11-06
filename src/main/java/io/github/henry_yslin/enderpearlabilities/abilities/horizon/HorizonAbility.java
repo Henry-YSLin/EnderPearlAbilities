@@ -7,21 +7,19 @@ import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class HorizonAbility extends Ability {
 
@@ -47,7 +45,7 @@ public class HorizonAbility extends Ability {
                 .name("Black Hole")
                 .origin("Apex - Horizon")
                 .description("Create an inescapable micro black hole that pulls all entities in towards it.\nPassive ability: Cushion your fall to reduce fall damage.")
-                .usage("Right click to throw an ender pearl. A black hole will be created where the pearl lands.")
+                .usage("Right click to throw a projectile. A black hole will be created where it lands.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
@@ -66,7 +64,6 @@ public class HorizonAbility extends Ability {
 
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
-    final AtomicInteger enderPearlHitTime = new AtomicInteger();
     SpacewalkRunnable spacewalkRunnable;
 
     @EventHandler
@@ -108,7 +105,7 @@ public class HorizonAbility extends Ability {
         if (abilityActive.get()) return;
 
         PlayerUtils.consumeEnderPearl(player);
-        AbilityUtils.fireEnderPearl(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
+        AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
     }
 
     @EventHandler
@@ -120,14 +117,13 @@ public class HorizonAbility extends Ability {
         if (!AbilityUtils.verifyAbilityCouple(this, projectile)) return;
         if (!player.getName().equals(ownerName)) return;
 
-        if (!(projectile instanceof EnderPearl)) return;
+        if (!(projectile instanceof Snowball)) return;
 
         event.setCancelled(true);
 
         projectile.remove();
         abilityActive.set(true);
         blockShoot.set(false);
-        enderPearlHitTime.set(player.getTicksLived());
 
         Location finalLocation = projectile.getLocation();
 
@@ -189,13 +185,5 @@ public class HorizonAbility extends Ability {
                     }
                 }.runTaskRepeated(this, 0, 1, info.duration)
         ).execute();
-    }
-
-    @EventHandler
-    public void onPlayerTeleport(PlayerTeleportEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
-        if (Math.abs(event.getPlayer().getTicksLived() - enderPearlHitTime.get()) > 1) return;
-        event.setCancelled(true);
     }
 }

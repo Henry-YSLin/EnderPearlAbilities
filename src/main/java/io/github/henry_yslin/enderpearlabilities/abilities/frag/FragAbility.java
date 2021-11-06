@@ -6,14 +6,13 @@ import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.projectiles.ProjectileSource;
@@ -21,7 +20,6 @@ import org.bukkit.util.Vector;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class FragAbility extends Ability {
@@ -65,7 +63,6 @@ public class FragAbility extends Ability {
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
-    final AtomicInteger enderPearlHitTime = new AtomicInteger();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -102,44 +99,44 @@ public class FragAbility extends Ability {
 
         abilityActive.set(true);
 
-        AtomicReference<Projectile> enderPearl = new AtomicReference<>();
+        AtomicReference<Projectile> grenade = new AtomicReference<>();
 
         PlayerUtils.consumeEnderPearl(player);
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> {
-                    Projectile projectile = AbilityUtils.fireEnderPearl(this, player, null, info.duration, PROJECTILE_SPEED, true);
+                    Projectile projectile = AbilityUtils.fireProjectile(this, player, null, info.duration, PROJECTILE_SPEED, true);
                     if (projectile != null) {
-                        enderPearl.set(projectile);
-                        projectile.setMetadata("pearl", new FixedMetadataValue(plugin, enderPearl));
+                        grenade.set(projectile);
+                        projectile.setMetadata("grenade", new FixedMetadataValue(plugin, grenade));
                     }
                     next.run();
                 },
                 next -> new AbilityRunnable() {
                     @Override
                     protected void tick() {
-                        Projectile pearl = enderPearl.get();
-                        if (pearl == null) {
+                        Projectile snowball = grenade.get();
+                        if (snowball == null) {
                             cancel();
                             return;
                         }
-                        pearl.setVelocity(pearl.getVelocity().add(new Vector(0, -0.05, 0)));
-                        pearl.getWorld().spawnParticle(Particle.END_ROD, pearl.getLocation(), 1, 0, 0, 0, 0);
+                        snowball.setVelocity(snowball.getVelocity().add(new Vector(0, -0.05, 0)));
+                        snowball.getWorld().spawnParticle(Particle.END_ROD, snowball.getLocation(), 1, 0, 0, 0, 0);
                     }
 
                     @Override
                     protected void end() {
-                        Projectile pearl = enderPearl.get();
-                        if (pearl != null && pearl.isValid()) {
-                            World world = pearl.getWorld();
-//                            Location pearlLocation = pearl.getLocation();
+                        Projectile snowball = grenade.get();
+                        if (snowball != null && snowball.isValid()) {
+                            World world = snowball.getWorld();
+//                            Location snowballLocation = snowball.getLocation();
 //                            // Flash bang
-//                            world.spawnParticle(Particle.FLASH, pearlLocation, 3, 1, 1, 1, 1);
-//                            world.spawnParticle(Particle.FIREWORKS_SPARK, pearlLocation, 10, 0.05, 0.05, 0.05, 0.3);
-//                            world.getNearbyEntities(pearlLocation, 20, 20, 20, entity -> entity instanceof LivingEntity).forEach(entity -> {
+//                            world.spawnParticle(Particle.FLASH, snowballLocation, 3, 1, 1, 1, 1);
+//                            world.spawnParticle(Particle.FIREWORKS_SPARK, snowballLocation, 10, 0.05, 0.05, 0.05, 0.3);
+//                            world.getNearbyEntities(snowballLocation, 20, 20, 20, entity -> entity instanceof LivingEntity).forEach(entity -> {
 //                                LivingEntity livingEntity = (LivingEntity) entity;
-//                                double distance = pearlLocation.distance(livingEntity.getEyeLocation());
-//                                RayTraceResult result = world.rayTraceBlocks(pearlLocation, livingEntity.getEyeLocation().toVector().subtract(pearlLocation.toVector()), distance, FluidCollisionMode.NEVER, true);
+//                                double distance = snowballLocation.distance(livingEntity.getEyeLocation());
+//                                RayTraceResult result = world.rayTraceBlocks(snowballLocation, livingEntity.getEyeLocation().toVector().subtract(pearlLocation.toVector()), distance, FluidCollisionMode.NEVER, true);
 //                                if (result != null) {
 //                                    if (result.getHitBlock() != null) return;
 //                                }
@@ -148,8 +145,8 @@ public class FragAbility extends Ability {
 //                                livingEntity.addPotionEffect(PotionEffectType.CONFUSION.createEffect(duration * 2, 1));
 //                            });
                             if (hasCompleted())
-                                world.createExplosion(pearl.getLocation().add(0, 0.1, 0), 6, false, false);
-                            pearl.remove();
+                                world.createExplosion(snowball.getLocation().add(0, 0.1, 0), 6, false, false);
+                            snowball.remove();
                         }
                         abilityActive.set(false);
                         cooldown.startCooldown(info.cooldown);
@@ -168,10 +165,9 @@ public class FragAbility extends Ability {
         if (!AbilityUtils.verifyAbilityCouple(this, projectile)) return;
         if (!player.getName().equals(ownerName)) return;
 
-        if (!(projectile instanceof EnderPearl)) return;
+        if (!(projectile instanceof Snowball)) return;
 
         event.setCancelled(true);
-        enderPearlHitTime.set(player.getTicksLived());
 
         projectile.getWorld().spawnParticle(Particle.SMOKE_NORMAL, projectile.getLocation(), 2, 0.1, 0.1, 0.1, 0.02);
 
@@ -184,25 +180,17 @@ public class FragAbility extends Ability {
         } else {
             newVelocity = projectile.getVelocity().setX(0).setZ(0);
         }
-        EnderPearl pearl = projectile.getWorld().spawn(hitPosition, EnderPearl.class, entity -> {
+        Snowball snowball = projectile.getWorld().spawn(hitPosition, Snowball.class, entity -> {
             entity.setShooter(player);
             entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
             entity.setVelocity(newVelocity);
         });
-        Optional<Object> ref = EntityUtils.getMetadata(projectile, "pearl");
+        Optional<Object> ref = EntityUtils.getMetadata(projectile, "grenade");
         if (ref.isPresent()) {
-            AtomicReference<Projectile> enderPearl = (AtomicReference<Projectile>) ref.get();
-            enderPearl.set(pearl);
-            pearl.setMetadata("pearl", new FixedMetadataValue(plugin, enderPearl));
+            AtomicReference<Projectile> grenade = (AtomicReference<Projectile>) ref.get();
+            grenade.set(snowball);
+            snowball.setMetadata("grenade", new FixedMetadataValue(plugin, grenade));
         }
         projectile.remove();
-    }
-
-    @EventHandler
-    public void onPlayerTeleport(PlayerTeleportEvent event) {
-        if (!event.getPlayer().getName().equals(ownerName)) return;
-        if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
-        if (Math.abs(event.getPlayer().getTicksLived() - enderPearlHitTime.get()) > 1) return;
-        event.setCancelled(true);
     }
 }
