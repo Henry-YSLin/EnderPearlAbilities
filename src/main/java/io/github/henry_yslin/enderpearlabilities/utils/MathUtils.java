@@ -51,4 +51,67 @@ public class MathUtils {
     public static boolean isInCube(Location center, double x, double y, double z, Location loc) {
         return Math.abs(loc.getX() - center.getX()) <= x && Math.abs(loc.getY() - center.getY()) <= y && Math.abs(loc.getZ() - center.getZ()) <= z;
     }
+
+    public static void copyVector(Vector from, Vector to) {
+        to.setX(from.getX());
+        to.setY(from.getY());
+        to.setZ(from.getZ());
+    }
+
+    // check if a line intersect with a cube
+    // https://stackoverflow.com/questions/4578967/check-if-a-line-intersects-with-a-cube
+    public static boolean lineBoxIntersect(Location center, double x, double y, double z, Location start, Location end) {
+        return lineBoxIntersect(center.clone().subtract(x, y, z).toVector(), center.clone().add(x, y, z).toVector(), start.toVector(), end.toVector(), null);
+    }
+
+    /**
+     * Check if a line intersect with a cube.
+     *
+     * @param box1        First corner of cube, the coordinates of this corner must all be smaller than {@code box2}.
+     * @param box2        Second corner of cube, the coordinates of this corner must all be larger than {@code box1}.
+     * @param line1       First point of line.
+     * @param line2       Second point of line.
+     * @param hitLocation The location of intersection, if any.
+     * @return True if the line intersects the cube.
+     */
+    // https://stackoverflow.com/questions/3235385/given-a-bounding-box-and-a-line-two-points-determine-if-the-line-intersects-t
+    public static boolean lineBoxIntersect(Vector box1, Vector box2, Vector line1, Vector line2, Vector hitLocation) {
+        Vector hit = hitLocation;
+        if (hit == null) hit = new Vector();
+        if (line2.getX() < box1.getX() && line1.getX() < box1.getX()) return false;
+        if (line2.getX() > box2.getX() && line1.getX() > box2.getX()) return false;
+        if (line2.getY() < box1.getY() && line1.getY() < box1.getY()) return false;
+        if (line2.getY() > box2.getY() && line1.getY() > box2.getY()) return false;
+        if (line2.getZ() < box1.getZ() && line1.getZ() < box1.getZ()) return false;
+        if (line2.getZ() > box2.getZ() && line1.getZ() > box2.getZ()) return false;
+        if (line1.getX() > box1.getX() && line1.getX() < box2.getX() &&
+                line1.getY() > box1.getY() && line1.getY() < box2.getY() &&
+                line1.getZ() > box1.getZ() && line1.getZ() < box2.getZ()) {
+            copyVector(line1, hit);
+            return true;
+        }
+        return (getIntersection(line1.getX() - box1.getX(), line2.getX() - box1.getX(), line1, line2, hit) && inBox(hit, box1, box2, 1))
+                || (getIntersection(line1.getY() - box1.getY(), line2.getY() - box1.getY(), line1, line2, hit) && inBox(hit, box1, box2, 2))
+                || (getIntersection(line1.getZ() - box1.getZ(), line2.getZ() - box1.getZ(), line1, line2, hit) && inBox(hit, box1, box2, 3))
+                || (getIntersection(line1.getX() - box2.getX(), line2.getX() - box2.getX(), line1, line2, hit) && inBox(hit, box1, box2, 1))
+                || (getIntersection(line1.getY() - box2.getY(), line2.getY() - box2.getY(), line1, line2, hit) && inBox(hit, box1, box2, 2))
+                || (getIntersection(line1.getZ() - box2.getZ(), line2.getZ() - box2.getZ(), line1, line2, hit) && inBox(hit, box1, box2, 3));
+    }
+
+    private static boolean getIntersection(double fDst1, double fDst2, Vector p1, Vector p2, Vector hit) {
+        if ((fDst1 * fDst2) >= 0.0f) return false;
+        if (fDst1 == fDst2) return false;
+        copyVector(p1.add(p2.subtract(p1).multiply(-fDst1 / (fDst2 - fDst1))), hit);
+        return true;
+    }
+
+    private static boolean inBox(Vector hit, Vector b1, Vector b2, int axis) {
+        if (axis == 1 && hit.getZ() > b1.getZ() && hit.getZ() < b2.getZ() && hit.getY() > b1.getY() && hit.getY() < b2.getY())
+            return true;
+        if (axis == 2 && hit.getZ() > b1.getZ() && hit.getZ() < b2.getZ() && hit.getX() > b1.getX() && hit.getX() < b2.getX())
+            return true;
+        if (axis == 3 && hit.getX() > b1.getX() && hit.getX() < b2.getX() && hit.getY() > b1.getY() && hit.getY() < b2.getY())
+            return true;
+        return false;
+    }
 }

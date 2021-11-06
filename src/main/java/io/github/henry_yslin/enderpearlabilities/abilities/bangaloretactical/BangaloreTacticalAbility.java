@@ -108,7 +108,7 @@ public class BangaloreTacticalAbility extends Ability {
         if (smokeRunnable != null && !smokeRunnable.isCancelled())
             smokeRunnable.cancel();
         (smokeRunnable = new AbilityRunnable() {
-            final List<Player> rescanTargets = new ArrayList<>();
+            final List<LivingEntity> rescanTargets = new ArrayList<>();
 
             @Override
             protected void start() {
@@ -120,19 +120,25 @@ public class BangaloreTacticalAbility extends Ability {
                 super.tick();
                 if (smokeSpots.size() == 0) return;
                 rescanTargets.clear();
+                boolean recalculateLineOfSight = false;
                 for (int i = smokeSpots.size() - 1; i >= 0; i--) {
                     SmokeSpot smokeSpot = smokeSpots.get(i);
                     World world = Objects.requireNonNull(smokeSpot.location.getWorld());
-                    if (smokeSpot.lifetime == info.duration)
-                        world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, smokeSpot.location, 50, 2, 2, 2, 0.003, null, true);
-                    if (smokeSpot.lifetime > 200)
+                    if (smokeSpot.lifetime == info.duration) {
+                        recalculateLineOfSight = true;
                         world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, smokeSpot.location, 5, 2, 2, 2, 0.003, null, true);
+                    }
+                    if (smokeSpot.lifetime > 200)
+                        world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, smokeSpot.location, 1, 2, 2, 2, 0.003, null, true);
                     for (Entity entity : world.getNearbyEntities(smokeSpot.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS)) {
                         if (entity instanceof Player p) {
                             if (!p.hasPotionEffect(PotionEffectType.INVISIBILITY))
                                 rescanTargets.add(p);
                             p.addPotionEffect(PotionEffectType.INVISIBILITY.createEffect(5, 1));
                         } else if (entity instanceof Mob mob) {
+                            if (!mob.hasPotionEffect(PotionEffectType.BLINDNESS))
+                                rescanTargets.add(mob);
+                            mob.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(5, 1));
                             mob.setTarget(null);
                         }
                     }
@@ -141,12 +147,24 @@ public class BangaloreTacticalAbility extends Ability {
                         smokeSpots.remove(i);
                 }
                 if (rescanTargets.size() > 0) {
-                    for (World world : rescanTargets.stream().map(Player::getWorld).distinct().toList()) {
+                    for (World world : rescanTargets.stream().map(LivingEntity::getWorld).distinct().toList()) {
                         for (LivingEntity entity : world.getLivingEntities()) {
                             if (entity instanceof Mob mob) {
-                                //noinspection SuspiciousMethodCalls
                                 if (rescanTargets.contains(mob.getTarget())) {
                                     mob.setTarget(null);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (recalculateLineOfSight) {
+                    for (World world : smokeSpots.stream().map(s -> s.location.getWorld()).distinct().toList()) {
+                        for (LivingEntity entity : world.getLivingEntities()) {
+                            if (entity instanceof Mob mob) {
+                                Entity target = mob.getTarget();
+                                if (target != null) {
+                                    if (smokeSpots.stream().anyMatch(s -> MathUtils.lineBoxIntersect(s.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, target.getLocation(), mob.getLocation())))
+                                        mob.setTarget(null);
                                 }
                             }
                         }
@@ -164,13 +182,20 @@ public class BangaloreTacticalAbility extends Ability {
     @EventHandler
     public void onEntityTargetLivingEntity(EntityTargetLivingEntityEvent event) {
         if (event.getEntity() instanceof Mob mob) {
-            if (smokeSpots.stream().anyMatch(smokeSpot -> MathUtils.isInCube(smokeSpot.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, mob.getLocation()))) {
-                event.setCancelled(true);
-                return;
+            Entity target = event.getTarget();
+            if (target != null) {
+                if (smokeSpots.stream().anyMatch(smokeSpot -> MathUtils.isInCube(smokeSpot.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, mob.getLocation()))) {
+                    event.setCancelled(true);
+                    return;
+                } else if (smokeSpots.stream().anyMatch(s -> MathUtils.lineBoxIntersect(s.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, target.getLocation(), mob.getLocation()))) {
+                    event.setCancelled(true);
+                    return;
+                }
             }
         }
-        if (event.getTarget() instanceof Player player) {
-            if (smokeSpots.stream().anyMatch(smokeSpot -> MathUtils.isInCube(smokeSpot.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, player.getLocation()))) {
+        Entity target = event.getTarget();
+        if (target != null) {
+            if (smokeSpots.stream().anyMatch(smokeSpot -> MathUtils.isInCube(smokeSpot.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, target.getLocation()))) {
                 event.setCancelled(true);
             }
         }
