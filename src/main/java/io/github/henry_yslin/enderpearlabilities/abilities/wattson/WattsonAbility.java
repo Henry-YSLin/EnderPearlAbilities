@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class WattsonAbility extends Ability {
 
+    static final int INTERCEPTION_PER_TICK = Integer.MAX_VALUE;
+
     private final AbilityInfo info;
 
     @Override
@@ -209,15 +211,15 @@ public class WattsonAbility extends Ability {
                             world.spawnParticle(Particle.END_ROD, crystal.getLocation(), 2, 0.5, 0.5, 0.5, 0.02);
                         if (beamTick <= 0) crystal.setBeamTarget(null);
                         else beamTick--;
-                        boolean intercepted = false;
+                        int interceptions = 0;
                         for (Entity entity : world.getNearbyEntities(crystal.getLocation(), 8, 8, 8)) {
-                            if (shouldIntercept(entity) && !intercepted) {
+                            if (shouldIntercept(entity) && interceptions < INTERCEPTION_PER_TICK) {
                                 crystal.setBeamTarget(entity.getLocation().add(0, -2, 0));
                                 beamTick = 5;
                                 world.spawnParticle(Particle.SMOKE_LARGE, entity.getLocation(), 5, 0.1, 0.1, 0.1, 0.01);
                                 world.playSound(entity.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 0.1f, 0);
                                 entity.remove();
-                                intercepted = true;
+                                interceptions++;
                             } else if (count % 5 == 1) {
                                 if (entity instanceof Player player) {
                                     ItemStackUtils.damageTool(player.getInventory().getHelmet(), -1);
