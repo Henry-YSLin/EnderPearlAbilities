@@ -4,6 +4,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
@@ -20,11 +21,11 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BangaloreUltimateAbility extends Ability {
@@ -33,16 +34,15 @@ public class BangaloreUltimateAbility extends Ability {
     static final double PROJECTILE_SPEED = 2;
     static final boolean PROJECTILE_GRAVITY = true;
     static final int MISSILE_ARRAY_SIZE = 6;
-    static final double MISSILE_SPACING = 10;
-    static final double EXPLOSION_RADIUS = 5;
+    static final double MISSILE_SPACING = 8;
 
     private final AbilityInfo info;
 
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
         super.setConfigDefaults(config);
-        config.addDefault("charge-up", 120);
-        config.addDefault("duration", 120);
+        config.addDefault("charge-up", 100);
+        config.addDefault("duration", 80);
         config.addDefault("cooldown", 1000);
     }
 
@@ -102,7 +102,6 @@ public class BangaloreUltimateAbility extends Ability {
         if (!AbilityUtils.verifyAbilityCouple(this, event.getEntity())) return;
         event.setCancelled(true);
         event.getEntity().remove();
-        event.getEntity().getWorld().createExplosion(event.getEntity().getLocation(), 4, false, false);
     }
 
     @EventHandler
@@ -141,13 +140,13 @@ public class BangaloreUltimateAbility extends Ability {
 
         Vector forward = projectile.getVelocity().setY(0).normalize().multiply(MISSILE_SPACING);
         Vector sideways = forward.getCrossProduct(new Vector(0, 1, 0)).normalize().multiply(MISSILE_SPACING);
-        Location origin = finalLocation.add(sideways.clone().multiply(-(MISSILE_ARRAY_SIZE - 1) / 2));
+        Location origin = finalLocation.add(sideways.clone().multiply(-(MISSILE_ARRAY_SIZE - 1) / 2d));
 
         List<Location> missileLocations = new ArrayList<>(MISSILE_ARRAY_SIZE * MISSILE_ARRAY_SIZE);
         for (int i = 0; i < MISSILE_ARRAY_SIZE; i++) {
             Location rowOrigin = origin.clone().add(forward.clone().multiply(i));
             if (i % 2 == 0)
-                rowOrigin.add(sideways.clone().multiply(MISSILE_ARRAY_SIZE));
+                rowOrigin.add(sideways.clone().multiply(MISSILE_ARRAY_SIZE - 1));
             for (int j = 0; j < MISSILE_ARRAY_SIZE; j++) {
                 missileLocations.add(rowOrigin.clone().add(sideways.clone().multiply(j * (i % 2 == 0 ? -1 : 1))));
             }
@@ -160,10 +159,14 @@ public class BangaloreUltimateAbility extends Ability {
                     @Override
                     protected void start() {
                         for (Location location : missileLocations) {
-                            World world = Objects.requireNonNull(location.getWorld());
-                            Location landingLocation = world.getHighestBlockAt(location).getLocation().add(0.5, 1.5, 0.5);
+                            location.setY(300);
+                            Location landingLocation;
+                            RayTraceResult result = world.rayTraceBlocks(location, new Vector(0, -1, 0), 301, FluidCollisionMode.ALWAYS, true);
+                            if (result != null)
+                                landingLocation = result.getHitPosition().toLocation(world);
+                            else
+                                landingLocation = location.clone().subtract(0, location.getY(), 0);
 
-                            // todo: should not be force
                             world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, landingLocation, 5, 0.1, 0.5, 0.1, 0, null, true);
                         }
                     }
@@ -171,10 +174,9 @@ public class BangaloreUltimateAbility extends Ability {
                     @Override
                     protected void tick() {
                         Location location = missileLocations.remove(0);
-                        World world = Objects.requireNonNull(location.getWorld());
                         location.setY(300);
                         TNTPrimed tnt = world.spawn(location, TNTPrimed.class, entity -> {
-                            entity.setFuseTicks(info.duration);
+                            entity.setFuseTicks(info.duration + 10);
                             entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
                             entity.setVelocity(new Vector(0, -10, 0));
                         });

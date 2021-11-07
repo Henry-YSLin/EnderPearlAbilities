@@ -2,10 +2,7 @@ package io.github.henry_yslin.enderpearlabilities.abilities.bangaloretactical;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
-import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -17,6 +14,7 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -260,7 +258,11 @@ public class BangaloreTacticalAbility extends Ability {
                 World world = Objects.requireNonNull(spot.location.getWorld());
                 smokeSpots.add(spot);
                 for (Entity nearbyEntity : world.getNearbyEntities(spot.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, entity -> entity instanceof LivingEntity && entity != player)) {
-                    ((LivingEntity) nearbyEntity).damage(2, player);
+                    LivingEntity livingEntity = (LivingEntity) nearbyEntity;
+                    Vector offset = livingEntity.getEyeLocation().toVector().subtract(spot.location.toVector());
+                    RayTraceResult result = world.rayTraceBlocks(spot.location, offset, offset.length(), FluidCollisionMode.NEVER, true);
+                    if (result == null)
+                        ((LivingEntity) nearbyEntity).damage(2, player);
                 }
                 projectile.getWorld().playSound(hitPosition, Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 0.5f, 0);
             } else {
