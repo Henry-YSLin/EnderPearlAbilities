@@ -42,8 +42,8 @@ public class BangaloreUltimateAbility extends Ability {
     public void setConfigDefaults(ConfigurationSection config) {
         super.setConfigDefaults(config);
         config.addDefault("charge-up", 100);
-        config.addDefault("duration", 80);
-        config.addDefault("cooldown", 1000);
+        config.addDefault("duration", 100);
+        config.addDefault("cooldown", 1500);
     }
 
     public BangaloreUltimateAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
