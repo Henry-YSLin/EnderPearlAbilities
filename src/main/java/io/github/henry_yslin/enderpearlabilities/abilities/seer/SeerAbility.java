@@ -179,8 +179,8 @@ public class SeerAbility extends Ability {
                             entity.setGlowing(true);
                         }
                         if (entity instanceof Player p) {
-                            player.playSound(player.getLocation(), Sound.ENTITY_BEE_LOOP_AGGRESSIVE, 0.2f, 2);
-                            player.sendTitle(" ", ChatColor.RED + "Micro-drones detected", 5, 30, 30);
+                            p.playSound(p.getLocation(), Sound.ENTITY_BEE_LOOP_AGGRESSIVE, 0.2f, 2);
+                            p.sendTitle(" ", ChatColor.RED + "Micro-drones detected", 5, 30, 30);
                         }
                     }
 

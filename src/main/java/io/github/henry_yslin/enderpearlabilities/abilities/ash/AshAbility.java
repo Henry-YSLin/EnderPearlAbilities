@@ -246,7 +246,7 @@ public class AshAbility extends Ability {
                         @Override
                         protected void start() {
                             startLocation[0] = player.getLocation();
-                            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 1, 2);
+                            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.3f, 2);
                             abilityActive.set(true);
 
                             VoidSpaceManager.getInstance().enterVoid(player);

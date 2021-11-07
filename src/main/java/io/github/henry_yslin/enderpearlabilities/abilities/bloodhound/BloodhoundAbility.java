@@ -143,7 +143,7 @@ public class BloodhoundAbility extends Ability {
                             entity.setGlowing(true);
                         }
                         if (entity instanceof Player p) {
-                            player.sendTitle(" ", ChatColor.RED + "Sonar detected", 5, 30, 30);
+                            p.sendTitle(" ", ChatColor.RED + "Sonar detected", 5, 30, 30);
                         }
                     }
                     next.run();

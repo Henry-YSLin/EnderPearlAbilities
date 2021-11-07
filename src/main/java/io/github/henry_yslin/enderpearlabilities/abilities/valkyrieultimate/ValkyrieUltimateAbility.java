@@ -7,6 +7,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
@@ -157,7 +158,7 @@ public class ValkyrieUltimateAbility extends Ability {
                                     groundLocation.setY(player.getLocation().getY());
                                 }
                                 player.setGravity(false);
-                                if (player.getLocation().getY() - groundLocation.getY() < 1.5) {
+                                if (player.getLocation().getY() - groundLocation.getY() < 1) {
                                     player.setVelocity(player.getVelocity().add(new Vector(0, 0.1, 0)));
                                 } else {
                                     player.setVelocity(player.getVelocity().setY(0));
@@ -186,6 +187,7 @@ public class ValkyrieUltimateAbility extends Ability {
                         Location groundLocation;
                         Location lastLocation;
                         boolean allowGlide = false;
+                        int stationaryTick = 0;
 
                         @Override
                         protected void start() {
@@ -212,7 +214,14 @@ public class ValkyrieUltimateAbility extends Ability {
                             }
                             boolean shouldPropel = player.getLocation().getY() - groundLocation.getY() < MAX_LAUNCH_HEIGHT;
                             if (shouldPropel) {
-                                if (player.getLocation().equals(lastLocation)) shouldPropel = false;
+                                if (lastLocation != null && MathUtils.almostEqual(player.getLocation().getY(), lastLocation.getY())) {
+                                    stationaryTick++;
+                                    if (stationaryTick > 20) {
+                                        shouldPropel = false;
+                                    }
+                                } else {
+                                    stationaryTick = 0;
+                                }
                             }
                             if (shouldPropel) {
                                 RayTraceResult result = player.getWorld().rayTraceBlocks(player.getEyeLocation(), new Vector(0, 1, 0), 5, FluidCollisionMode.NEVER, true);

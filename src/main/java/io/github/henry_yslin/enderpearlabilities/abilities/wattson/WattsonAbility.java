@@ -60,6 +60,7 @@ public class WattsonAbility extends Ability {
     }
 
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+    AtomicReference<EnderCrystal> pylon = new AtomicReference<>();
 
     private boolean shouldIntercept(Entity entity) {
         if (!entity.isValid()) return false;
@@ -142,7 +143,6 @@ public class WattsonAbility extends Ability {
 
         if (abilityActive.get()) return;
 
-        AtomicReference<EnderCrystal> pylon = new AtomicReference<>();
         World world = player.getWorld();
 
         if (!event.getClickedBlock().getType().isSolid()) return;
@@ -155,6 +155,9 @@ public class WattsonAbility extends Ability {
 
         new FunctionChain(
                 next -> {
+                    if (pylon.get() != null && pylon.get().isValid()) {
+                        pylon.get().remove();
+                    }
                     EnderCrystal crystal = world.spawn(location, EnderCrystal.class, false, entity -> {
                         entity.setGravity(false);
                         entity.setGlowing(true);
