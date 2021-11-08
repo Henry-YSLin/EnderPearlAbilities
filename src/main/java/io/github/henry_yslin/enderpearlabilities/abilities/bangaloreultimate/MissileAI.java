@@ -54,7 +54,7 @@ public class MissileAI extends AbilityRunnable {
             Vector offset = livingEntity.getEyeLocation().toVector().subtract(center.toVector());
             RayTraceResult result = tnt.getWorld().rayTraceBlocks(center, offset, offset.length(), FluidCollisionMode.NEVER, true);
             if (result == null) {
-                livingEntity.damage(15, player);
+                livingEntity.damage(8, player);
                 livingEntity.addPotionEffect(PotionEffectType.SLOW.createEffect(200, 3));
                 livingEntity.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(100, 0));
                 livingEntity.addPotionEffect(PotionEffectType.CONFUSION.createEffect(160, 1));
