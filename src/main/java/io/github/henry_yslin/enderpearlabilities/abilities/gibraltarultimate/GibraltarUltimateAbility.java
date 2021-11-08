@@ -1,9 +1,10 @@
-package io.github.henry_yslin.enderpearlabilities.abilities.bangaloreultimate;
+package io.github.henry_yslin.enderpearlabilities.abilities.gibraltarultimate;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -24,37 +25,35 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class BangaloreUltimateAbility extends Ability {
+public class GibraltarUltimateAbility extends Ability {
 
     static final int PROJECTILE_LIFETIME = 100;
     static final double PROJECTILE_SPEED = 2;
     static final boolean PROJECTILE_GRAVITY = true;
-    static final int MISSILE_ARRAY_SIZE = 6;
-    static final double MISSILE_SPACING = 8;
+    static final double AIRSTRIKE_RADIUS = 12;
+    static final int MISSILE_DELAY = 3;
 
     private final AbilityInfo info;
 
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
         super.setConfigDefaults(config);
-        config.addDefault("charge-up", 100);
-        config.addDefault("duration", 100);
+        config.addDefault("charge-up", 0);
+        config.addDefault("duration", 120);
         config.addDefault("cooldown", 1500);
     }
 
-    public BangaloreUltimateAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
+    public GibraltarUltimateAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
         super(plugin, ownerName, config);
 
         AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("bangalore-ultimate")
-                .name("Rolling Thunder")
-                .origin("Apex - Bangalore")
-                .description("Call in an artillery strike that slowly creeps across the landscape.")
-                .usage("Right click to throw a flare. Several rows of missiles will then land sequentially in front of the flare and stick for a while before exploding, slowing and blinding entities.")
+                .codeName("gibraltar-ultimate")
+                .name("Defensive Bombardment")
+                .origin("Apex - Gibraltar")
+                .description("\tCall in a concentrated mortar strike on a marked position.")
+                .usage("Right click to throw a flare that marks a radius for continuous bombardment.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
@@ -116,33 +115,7 @@ public class BangaloreUltimateAbility extends Ability {
         if (abilityActive.get()) return;
 
         PlayerUtils.consumeEnderPearl(player);
-        new AbilityRunnable() {
-            Projectile projectile;
-            int ticksToCancel;
-
-            @Override
-            protected void start() {
-                ticksToCancel = info.chargeUp;
-                projectile = AbilityUtils.fireProjectile(executor, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
-            }
-
-            @Override
-            protected void tick() {
-                if (!projectile.isValid()) {
-                    ticksToCancel--;
-                    if (ticksToCancel <= 0) {
-                        cancel();
-                        return;
-                    }
-                }
-                projectile.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, projectile.getLocation(), 5, 0, 0, 0, 0.1);
-            }
-
-            @Override
-            protected void end() {
-                super.end();
-            }
-        }.runTaskTimer(this, 0, 1);
+        AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
     }
 
     @EventHandler
@@ -164,43 +137,33 @@ public class BangaloreUltimateAbility extends Ability {
 
         Location finalLocation = projectile.getLocation();
 
-        Vector forward = projectile.getVelocity().setY(0).normalize().multiply(MISSILE_SPACING);
-        Vector sideways = forward.getCrossProduct(new Vector(0, 1, 0)).normalize().multiply(MISSILE_SPACING);
-        Location origin = finalLocation.clone().add(sideways.clone().multiply(-(MISSILE_ARRAY_SIZE - 1) / 2d));
-
-        List<Location> missileLocations = new ArrayList<>(MISSILE_ARRAY_SIZE * MISSILE_ARRAY_SIZE);
-        for (int i = 0; i < MISSILE_ARRAY_SIZE; i++) {
-            Location rowOrigin = origin.clone().add(forward.clone().multiply(i));
-            if (i % 2 == 0)
-                rowOrigin.add(sideways.clone().multiply(MISSILE_ARRAY_SIZE - 1));
-            for (int j = 0; j < MISSILE_ARRAY_SIZE; j++) {
-                missileLocations.add(rowOrigin.clone().add(sideways.clone().multiply(j * (i % 2 == 0 ? -1 : 1))));
-            }
-        }
-
         World world = projectile.getWorld();
 
         new FunctionChain(
                 nextFunction -> new AbilityRunnable() {
                     @Override
                     protected void start() {
-                        for (Location location : missileLocations) {
-                            location.setY(300);
-                            Location landingLocation;
-                            RayTraceResult result = world.rayTraceBlocks(location, new Vector(0, -1, 0), 301, FluidCollisionMode.ALWAYS, true);
-                            if (result != null)
-                                landingLocation = result.getHitPosition().toLocation(world);
-                            else
-                                landingLocation = location.clone().subtract(0, location.getY(), 0);
-
-                            world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, landingLocation, 5, 0.1, 0.5, 0.1, 0, null, true);
-                        }
+                        WorldUtils.spawnParticleRect(finalLocation.clone().add(-AIRSTRIKE_RADIUS, 0, -AIRSTRIKE_RADIUS), finalLocation.clone().add(AIRSTRIKE_RADIUS, 1, AIRSTRIKE_RADIUS), Particle.SMOKE_LARGE, 3, true);
                     }
 
                     @Override
                     protected void tick() {
-                        Location location = missileLocations.remove(0);
-                        location.setY(300);
+                        Location location = new Location(
+                                world,
+                                finalLocation.getX() + AIRSTRIKE_RADIUS * (Math.random() - 0.5) * 2,
+                                300,
+                                finalLocation.getZ() + AIRSTRIKE_RADIUS * (Math.random() - 0.5) * 2
+                        );
+
+                        Location landingLocation;
+                        RayTraceResult result = world.rayTraceBlocks(location, new Vector(0, -1, 0), 301, FluidCollisionMode.ALWAYS, true);
+                        if (result != null)
+                            landingLocation = result.getHitPosition().toLocation(world);
+                        else
+                            landingLocation = location.clone().subtract(0, location.getY(), 0);
+
+                        world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, landingLocation, 5, 0.1, 0.5, 0.1, 0, null, true);
+
                         TNTPrimed tnt = world.spawn(location, TNTPrimed.class, entity -> {
                             entity.setFuseTicks(info.duration + 10);
                             entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
@@ -213,7 +176,7 @@ public class BangaloreUltimateAbility extends Ability {
                     protected void end() {
                         abilityActive.set(false);
                     }
-                }.runTaskRepeated(this, 0, Math.max(1, info.chargeUp / MISSILE_ARRAY_SIZE / MISSILE_ARRAY_SIZE), MISSILE_ARRAY_SIZE * MISSILE_ARRAY_SIZE)
+                }.runTaskRepeated(this, 0, MISSILE_DELAY, info.duration / MISSILE_DELAY)
         ).execute();
     }
 }
