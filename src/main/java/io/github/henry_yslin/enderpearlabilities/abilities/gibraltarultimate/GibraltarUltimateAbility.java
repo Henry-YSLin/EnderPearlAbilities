@@ -52,7 +52,7 @@ public class GibraltarUltimateAbility extends Ability {
                 .codeName("gibraltar-ultimate")
                 .name("Defensive Bombardment")
                 .origin("Apex - Gibraltar")
-                .description("\tCall in a concentrated mortar strike on a marked position.")
+                .description("Call in a concentrated mortar strike on a marked position.")
                 .usage("Right click to throw a flare that marks a radius for continuous bombardment.")
                 .activation(ActivationHand.MainHand);
 
@@ -143,7 +143,7 @@ public class GibraltarUltimateAbility extends Ability {
                 nextFunction -> new AbilityRunnable() {
                     @Override
                     protected void start() {
-                        WorldUtils.spawnParticleRect(finalLocation.clone().add(-AIRSTRIKE_RADIUS, 0, -AIRSTRIKE_RADIUS), finalLocation.clone().add(AIRSTRIKE_RADIUS, 1, AIRSTRIKE_RADIUS), Particle.SMOKE_LARGE, 3, true);
+                        WorldUtils.spawnParticleCubeOutline(finalLocation.clone().add(-AIRSTRIKE_RADIUS, 0, -AIRSTRIKE_RADIUS), finalLocation.clone().add(AIRSTRIKE_RADIUS, 1, AIRSTRIKE_RADIUS), Particle.SMOKE_LARGE, 3, true);
                     }
 
                     @Override

@@ -127,7 +127,7 @@ public class HorizonAbility extends Ability {
 
         Location finalLocation = projectile.getLocation();
 
-        WorldUtils.spawnParticleRect(finalLocation.clone().add(-5.5, -5.5, -5.5), finalLocation.clone().add(5.5, 5.5, 5.5), Particle.VILLAGER_HAPPY, 5, true);
+        WorldUtils.spawnParticleCubeOutline(finalLocation.clone().add(-5.5, -5.5, -5.5), finalLocation.clone().add(5.5, 5.5, 5.5), Particle.VILLAGER_HAPPY, 5, true);
 
         World world = projectile.getWorld();
 
@@ -172,7 +172,7 @@ public class HorizonAbility extends Ability {
                         blackHoleLocation.add(0, 0.05, 0);
                         world.spawnParticle(Particle.SMOKE_LARGE, blackHoleLocation, 5, 0.5, 0.5, 0.5, 0.2);
                         if (count % 20 == 0) {
-                            WorldUtils.spawnParticleRect(blackHoleLocation.clone().add(-5.5, -5.5, -5.5), blackHoleLocation.clone().add(5.5, 5.5, 5.5), Particle.VILLAGER_HAPPY, 5, true);
+                            WorldUtils.spawnParticleCubeOutline(blackHoleLocation.clone().add(-5.5, -5.5, -5.5), blackHoleLocation.clone().add(5.5, 5.5, 5.5), Particle.VILLAGER_HAPPY, 5, true);
                         }
                     }
 

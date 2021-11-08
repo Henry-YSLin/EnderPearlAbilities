@@ -116,7 +116,7 @@ public class ValkyrieTacticalAbility extends Ability {
                         targetLocation = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(TARGET_RANGE));
                     else
                         targetLocation = result.getHitPosition().toLocation(player.getWorld());
-                    WorldUtils.spawnParticleRect(targetLocation.clone().add(-2.5, -2.5, -2.5), targetLocation.clone().add(2.5, 2.5, 2.5), Particle.SMOKE_NORMAL, 5, true);
+                    WorldUtils.spawnParticleCubeOutline(targetLocation.clone().add(-2.5, -2.5, -2.5), targetLocation.clone().add(2.5, 2.5, 2.5), Particle.SMOKE_NORMAL, 5, true);
                     fireMissiles(targetLocation);
                 }
         ).execute();

@@ -5,6 +5,8 @@ import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.util.Vector;
 
+import java.util.Objects;
+
 public class WorldUtils {
 
     /**
@@ -52,9 +54,8 @@ public class WorldUtils {
      *                 range and encourage their client to render it regardless of
      *                 settings
      */
-    public static void spawnParticleRect(Location corner1, Location corner2, Particle particle, double density, boolean force) {
-        World world = corner1.getWorld();
-        if (world == null) return;
+    public static void spawnParticleCubeOutline(Location corner1, Location corner2, Particle particle, double density, boolean force) {
+        World world = Objects.requireNonNull(corner1.getWorld());
 
         double x1 = Math.min(corner1.getX(), corner2.getX());
         double x2 = Math.max(corner1.getX(), corner2.getX());
@@ -81,6 +82,18 @@ public class WorldUtils {
             world.spawnParticle(particle, new Location(world, corner1.getX(), corner2.getY(), z), 1, 0, 0, 0, 0, null, force);
             world.spawnParticle(particle, new Location(world, corner2.getX(), corner1.getY(), z), 1, 0, 0, 0, 0, null, force);
             world.spawnParticle(particle, new Location(world, corner2.getX(), corner2.getY(), z), 1, 0, 0, 0, 0, null, force);
+        }
+    }
+
+    public static void spawnParticleCubeFilled(Location corner1, Location corner2, Particle particle, double density, boolean force) {
+        World world = Objects.requireNonNull(corner1.getWorld());
+
+        for (double x = corner1.getX(); x < corner2.getX(); x += 1 / density) {
+            for (double y = corner1.getY(); y < corner2.getY(); y += 1 / density) {
+                for (double z = corner1.getZ(); z < corner2.getZ(); z += 1 / density) {
+                    world.spawnParticle(particle, new Location(world, x, y, z), 1, 0, 0, 0, 0, null, force);
+                }
+            }
         }
     }
 }

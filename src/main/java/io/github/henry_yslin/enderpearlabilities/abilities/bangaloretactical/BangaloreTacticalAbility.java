@@ -158,7 +158,7 @@ public class BangaloreTacticalAbility extends Ability {
                             if (entity instanceof Mob mob) {
                                 Entity target = mob.getTarget();
                                 if (target != null) {
-                                    if (smokeSpots.stream().anyMatch(s -> MathUtils.lineBoxIntersect(s.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, target.getLocation(), mob.getLocation())))
+                                    if (smokeSpots.stream().anyMatch(s -> MathUtils.lineBoxIntersect(s.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, target.getLocation(), mob.getLocation()).isPresent()))
                                         mob.setTarget(null);
                                 }
                             }
@@ -182,7 +182,7 @@ public class BangaloreTacticalAbility extends Ability {
                 if (smokeSpots.stream().anyMatch(smokeSpot -> MathUtils.isInCube(smokeSpot.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, mob.getLocation()))) {
                     event.setCancelled(true);
                     return;
-                } else if (smokeSpots.stream().anyMatch(s -> MathUtils.lineBoxIntersect(s.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, target.getLocation(), mob.getLocation()))) {
+                } else if (smokeSpots.stream().anyMatch(s -> MathUtils.lineBoxIntersect(s.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, target.getLocation(), mob.getLocation()).isPresent())) {
                     event.setCancelled(true);
                     return;
                 }

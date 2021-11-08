@@ -3,6 +3,8 @@ package io.github.henry_yslin.enderpearlabilities.utils;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
+import java.util.Optional;
+
 public class MathUtils {
 
     /**
@@ -58,44 +60,76 @@ public class MathUtils {
         to.setZ(from.getZ());
     }
 
+    public static Optional<Vector> lineRectangleIntersect(Vector lineStart, Vector lineEnd, Vector corner1, Vector corner2, Vector normal) {
+        return linePlaneIntersect(lineStart, lineEnd, normal, corner1.clone().add(corner2).multiply(0.5)).map(intersect -> {
+            if (intersect.getX() >= Math.min(corner1.getX(), corner2.getX()) && intersect.getX() <= Math.max(corner1.getX(), corner2.getX()) &&
+                    intersect.getY() >= Math.min(corner1.getY(), corner2.getY()) && intersect.getY() <= Math.max(corner1.getY(), corner2.getY()) &&
+                    intersect.getZ() >= Math.min(corner1.getZ(), corner2.getZ()) && intersect.getZ() <= Math.max(corner1.getZ(), corner2.getZ())
+            ) {
+                return intersect;
+            }
+            return null;
+        });
+    }
+
+    /**
+     * Check if a line intersect with a plane.
+     *
+     * @param p1          The start point of the line.
+     * @param p2          The end point of the line.
+     * @param planeNormal The normal of the plane.
+     * @param planePoint  A point on the plane.
+     * @return The intersection point if the line intersects the plane, otherwise Optional.empty().
+     */
+    public static Optional<Vector> linePlaneIntersect(Vector p1, Vector p2, Vector planeNormal, Vector planePoint) {
+        Vector ray = p2.clone().subtract(p1);
+        double d = planeNormal.dot(planePoint);
+        if (almostEqual(planeNormal.dot(ray), 0))
+            return Optional.empty();
+        double t = (d - planeNormal.dot(p1)) / planeNormal.dot(ray);
+        if (t < 0 || t > 1)
+            return Optional.empty();
+        return Optional.of(p1.clone().add(ray.multiply(t)));
+    }
+
     // check if a line intersect with a cube
     // https://stackoverflow.com/questions/4578967/check-if-a-line-intersects-with-a-cube
-    public static boolean lineBoxIntersect(Location center, double x, double y, double z, Location start, Location end) {
-        return lineBoxIntersect(center.clone().subtract(x, y, z).toVector(), center.clone().add(x, y, z).toVector(), start.toVector(), end.toVector(), null);
+    public static Optional<Vector> lineBoxIntersect(Location center, double x, double y, double z, Location start, Location end) {
+        return lineBoxIntersect(center.clone().subtract(x, y, z).toVector(), center.clone().add(x, y, z).toVector(), start.toVector(), end.toVector());
     }
 
     /**
      * Check if a line intersect with a cube.
      *
-     * @param box1        First corner of cube, the coordinates of this corner must all be smaller than {@code box2}.
-     * @param box2        Second corner of cube, the coordinates of this corner must all be larger than {@code box1}.
-     * @param line1       First point of line.
-     * @param line2       Second point of line.
-     * @param hitLocation The location of intersection, if any.
-     * @return True if the line intersects the cube.
+     * @param box1  First corner of cube, the coordinates of this corner must all be smaller than {@code box2}.
+     * @param box2  Second corner of cube, the coordinates of this corner must all be larger than {@code box1}.
+     * @param line1 First point of line.
+     * @param line2 Second point of line.
+     * @return The intersection point if the line intersects the cube, otherwise Optional.empty().
      */
     // https://stackoverflow.com/questions/3235385/given-a-bounding-box-and-a-line-two-points-determine-if-the-line-intersects-t
-    public static boolean lineBoxIntersect(Vector box1, Vector box2, Vector line1, Vector line2, Vector hitLocation) {
-        Vector hit = hitLocation;
-        if (hit == null) hit = new Vector();
-        if (line2.getX() < box1.getX() && line1.getX() < box1.getX()) return false;
-        if (line2.getX() > box2.getX() && line1.getX() > box2.getX()) return false;
-        if (line2.getY() < box1.getY() && line1.getY() < box1.getY()) return false;
-        if (line2.getY() > box2.getY() && line1.getY() > box2.getY()) return false;
-        if (line2.getZ() < box1.getZ() && line1.getZ() < box1.getZ()) return false;
-        if (line2.getZ() > box2.getZ() && line1.getZ() > box2.getZ()) return false;
+    public static Optional<Vector> lineBoxIntersect(Vector box1, Vector box2, Vector line1, Vector line2) {
+        Vector hit = new Vector();
+        if (line2.getX() < box1.getX() && line1.getX() < box1.getX()) return Optional.empty();
+        if (line2.getX() > box2.getX() && line1.getX() > box2.getX()) return Optional.empty();
+        if (line2.getY() < box1.getY() && line1.getY() < box1.getY()) return Optional.empty();
+        if (line2.getY() > box2.getY() && line1.getY() > box2.getY()) return Optional.empty();
+        if (line2.getZ() < box1.getZ() && line1.getZ() < box1.getZ()) return Optional.empty();
+        if (line2.getZ() > box2.getZ() && line1.getZ() > box2.getZ()) return Optional.empty();
         if (line1.getX() > box1.getX() && line1.getX() < box2.getX() &&
                 line1.getY() > box1.getY() && line1.getY() < box2.getY() &&
                 line1.getZ() > box1.getZ() && line1.getZ() < box2.getZ()) {
-            copyVector(line1, hit);
-            return true;
+            return Optional.of(line1.clone());
         }
-        return (getIntersection(line1.getX() - box1.getX(), line2.getX() - box1.getX(), line1, line2, hit) && inBox(hit, box1, box2, 1))
+        if (getIntersection(line1.getX() - box1.getX(), line2.getX() - box1.getX(), line1, line2, hit) && inBox(hit, box1, box2, 1)
                 || (getIntersection(line1.getY() - box1.getY(), line2.getY() - box1.getY(), line1, line2, hit) && inBox(hit, box1, box2, 2))
                 || (getIntersection(line1.getZ() - box1.getZ(), line2.getZ() - box1.getZ(), line1, line2, hit) && inBox(hit, box1, box2, 3))
                 || (getIntersection(line1.getX() - box2.getX(), line2.getX() - box2.getX(), line1, line2, hit) && inBox(hit, box1, box2, 1))
                 || (getIntersection(line1.getY() - box2.getY(), line2.getY() - box2.getY(), line1, line2, hit) && inBox(hit, box1, box2, 2))
-                || (getIntersection(line1.getZ() - box2.getZ(), line2.getZ() - box2.getZ(), line1, line2, hit) && inBox(hit, box1, box2, 3));
+                || (getIntersection(line1.getZ() - box2.getZ(), line2.getZ() - box2.getZ(), line1, line2, hit) && inBox(hit, box1, box2, 3))) {
+            return Optional.of(hit);
+        }
+        return Optional.empty();
     }
 
     private static boolean getIntersection(double fDst1, double fDst2, Vector p1, Vector p2, Vector hit) {
