@@ -167,7 +167,7 @@ public class GibraltarUltimateAbility extends Ability {
                         TNTPrimed tnt = world.spawn(location, TNTPrimed.class, entity -> {
                             entity.setFuseTicks(info.duration + 10);
                             entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
-                            entity.setVelocity(new Vector(0, -10, 0));
+                            entity.setVelocity(new Vector(0, -7.5 - Math.random() * 5, 0));
                         });
                         new MissileAI(player, tnt).runTaskRepeated(executor, 0, 1, info.duration);
                     }

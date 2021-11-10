@@ -3,7 +3,6 @@ package io.github.henry_yslin.enderpearlabilities.managers.shield;
 import io.github.henry_yslin.enderpearlabilities.managers.ManagerRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Projectile;
 import org.bukkit.util.Vector;
 
 import java.util.Optional;
@@ -34,13 +33,11 @@ public class ShieldRunnable extends ManagerRunnable {
             }
 
             for (Entity entity : shield.getWorld().getNearbyEntities(shield.getBoundingBox().clone().expand(PROJECTILE_CHECK_RADIUS))) {
-                if (entity instanceof Projectile projectile) {
-                    Optional<Vector> intersect = MathUtils.lineRectangleIntersect(projectile.getLocation().toVector(), projectile.getLocation().add(projectile.getVelocity()).toVector(), shield.getBoundingBox(), shield.getNormal());
-                    intersect.ifPresent(vector -> {
-                        Vector hitOffset = projectile.getLocation().toVector().subtract(vector);
-                        shield.getBehavior().projectileWillHit(shield, projectile, vector.toLocation(shield.getWorld()), hitOffset.dot(shield.getNormal()) > 0);
-                    });
-                }
+                Optional<Vector> intersect = MathUtils.lineRectangleIntersect(entity.getLocation().toVector(), entity.getLocation().add(entity.getVelocity()).toVector(), shield.getBoundingBox(), shield.getNormal());
+                intersect.ifPresent(vector -> {
+                    Vector hitOffset = entity.getLocation().toVector().subtract(vector);
+                    shield.getBehavior().entityWillHit(shield, entity, vector.toLocation(shield.getWorld()), hitOffset.dot(shield.getNormal()) > 0);
+                });
             }
         }
     }

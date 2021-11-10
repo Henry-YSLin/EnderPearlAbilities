@@ -4,7 +4,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
-import io.github.henry_yslin.enderpearlabilities.managers.shield.ProjectileBlockerShieldBehavior;
+import io.github.henry_yslin.enderpearlabilities.managers.shield.EntityBlockingShieldBehavior;
 import io.github.henry_yslin.enderpearlabilities.managers.shield.Shield;
 import io.github.henry_yslin.enderpearlabilities.managers.shield.ShieldManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -152,31 +152,31 @@ public class GibraltarTacticalAbility extends Ability {
                 world,
                 BoundingBox.of(finalLocation.clone().add(-SHIELD_RADIUS, -1.5, SHIELD_RADIUS - 0.005), finalLocation.clone().add(SHIELD_RADIUS, SHIELD_RADIUS, SHIELD_RADIUS + 0.005)),
                 new Vector(0, 0, 1),
-                ProjectileBlockerShieldBehavior.getInstance()
+                EntityBlockingShieldBehavior.getInstance()
         ));
         shields.add(new Shield(
                 world,
                 BoundingBox.of(finalLocation.clone().add(-SHIELD_RADIUS, -1.5, -SHIELD_RADIUS - 0.005), finalLocation.clone().add(SHIELD_RADIUS, SHIELD_RADIUS, -SHIELD_RADIUS + 0.005)),
                 new Vector(0, 0, -1),
-                ProjectileBlockerShieldBehavior.getInstance()
+                EntityBlockingShieldBehavior.getInstance()
         ));
         shields.add(new Shield(
                 world,
                 BoundingBox.of(finalLocation.clone().add(SHIELD_RADIUS - 0.005, -1.5, -SHIELD_RADIUS), finalLocation.clone().add(SHIELD_RADIUS + 0.005, SHIELD_RADIUS, SHIELD_RADIUS)),
                 new Vector(1, 0, 0),
-                ProjectileBlockerShieldBehavior.getInstance()
+                EntityBlockingShieldBehavior.getInstance()
         ));
         shields.add(new Shield(
                 world,
                 BoundingBox.of(finalLocation.clone().add(-SHIELD_RADIUS - 0.005, -1.5, -SHIELD_RADIUS), finalLocation.clone().add(-SHIELD_RADIUS + 0.005, SHIELD_RADIUS, SHIELD_RADIUS)),
                 new Vector(-1, 0, 0),
-                ProjectileBlockerShieldBehavior.getInstance()
+                EntityBlockingShieldBehavior.getInstance()
         ));
         shields.add(new Shield(
                 world,
                 BoundingBox.of(finalLocation.clone().add(-SHIELD_RADIUS, SHIELD_RADIUS - 0.005, -SHIELD_RADIUS), finalLocation.clone().add(SHIELD_RADIUS, SHIELD_RADIUS + 0.005, SHIELD_RADIUS)),
                 new Vector(0, 1, 0),
-                ProjectileBlockerShieldBehavior.getInstance()
+                EntityBlockingShieldBehavior.getInstance()
         ));
 
         ShieldManager.getInstance().getShields().addAll(shields);

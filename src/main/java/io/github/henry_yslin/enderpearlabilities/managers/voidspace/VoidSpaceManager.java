@@ -91,7 +91,6 @@ public class VoidSpaceManager extends Manager {
         InteractionLockManager.getInstance().lockInteraction(player);
         player.setCollidable(false);
         player.setInvulnerable(true);
-        player.setInvisible(true);
         for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
             if (!isInVoid(onlinePlayer))
                 onlinePlayer.hidePlayer(plugin, player);
@@ -119,7 +118,6 @@ public class VoidSpaceManager extends Manager {
         InteractionLockManager.getInstance().unlockInteraction(player);
         player.setCollidable(true);
         player.setInvulnerable(false);
-        player.setInvisible(false);
         player.setFireTicks(0);
         player.removePotionEffect(PotionEffectType.CONDUIT_POWER);
         player.removePotionEffect(PotionEffectType.NIGHT_VISION);
