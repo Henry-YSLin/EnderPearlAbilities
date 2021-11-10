@@ -88,9 +88,9 @@ public class WorldUtils {
     public static void spawnParticleCubeFilled(Location corner1, Location corner2, Particle particle, double density, boolean force) {
         World world = Objects.requireNonNull(corner1.getWorld());
 
-        for (double x = corner1.getX(); x < corner2.getX(); x += 1 / density) {
-            for (double y = corner1.getY(); y < corner2.getY(); y += 1 / density) {
-                for (double z = corner1.getZ(); z < corner2.getZ(); z += 1 / density) {
+        for (double x = corner1.getX(); MathUtils.almostSmaller(x, corner2.getX()); x += 1 / density) {
+            for (double y = corner1.getY(); MathUtils.almostSmaller(y, corner2.getY()); y += 1 / density) {
+                for (double z = corner1.getZ(); MathUtils.almostSmaller(z, corner2.getZ()); z += 1 / density) {
                     world.spawnParticle(particle, new Location(world, x, y, z), 1, 0, 0, 0, 0, null, force);
                 }
             }

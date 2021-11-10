@@ -1,6 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.utils;
 
 import org.bukkit.Location;
+import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
 import java.util.Optional;
@@ -40,6 +41,22 @@ public class MathUtils {
         return Math.abs(val1 - val2) < epsilon;
     }
 
+    public static boolean almostLarger(double val1, double val2) {
+        return almostLarger(val1, val2, 0.000001);
+    }
+
+    public static boolean almostLarger(double val1, double val2, double epsilon) {
+        return val1 + epsilon > val2;
+    }
+
+    public static boolean almostSmaller(double val1, double val2) {
+        return almostSmaller(val1, val2, 0.000001);
+    }
+
+    public static boolean almostSmaller(double val1, double val2, double epsilon) {
+        return val1 - epsilon < val2;
+    }
+
     /**
      * Check if a given Location is within a cube described by its center and x, y, z half-lengths
      *
@@ -60,14 +77,9 @@ public class MathUtils {
         to.setZ(from.getZ());
     }
 
-    public static Optional<Vector> lineRectangleIntersect(Vector lineStart, Vector lineEnd, Vector corner1, Vector corner2, Vector normal) {
-        return linePlaneIntersect(lineStart, lineEnd, normal, corner1.clone().add(corner2).multiply(0.5)).map(intersect -> {
-            if (intersect.getX() >= Math.min(corner1.getX(), corner2.getX()) && intersect.getX() <= Math.max(corner1.getX(), corner2.getX()) &&
-                    intersect.getY() >= Math.min(corner1.getY(), corner2.getY()) && intersect.getY() <= Math.max(corner1.getY(), corner2.getY()) &&
-                    intersect.getZ() >= Math.min(corner1.getZ(), corner2.getZ()) && intersect.getZ() <= Math.max(corner1.getZ(), corner2.getZ())
-            ) {
-                return intersect;
-            }
+    public static Optional<Vector> lineRectangleIntersect(Vector lineStart, Vector lineEnd, BoundingBox boundingBox, Vector normal) {
+        return linePlaneIntersect(lineStart, lineEnd, normal, boundingBox.getCenter()).map(intersect -> {
+            if (boundingBox.contains(intersect)) return intersect;
             return null;
         });
     }

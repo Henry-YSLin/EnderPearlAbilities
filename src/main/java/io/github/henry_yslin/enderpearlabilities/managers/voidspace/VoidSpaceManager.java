@@ -45,7 +45,7 @@ public class VoidSpaceManager extends Manager {
         instance = this;
     }
 
-    private List<Player> playersInVoid = Collections.synchronizedList(new ArrayList<>());
+    private final List<Player> playersInVoid = Collections.synchronizedList(new ArrayList<>());
 
     public boolean isInVoid(Player player) {
         return playersInVoid.contains(player);
