@@ -124,13 +124,19 @@ public class CryptoAbility extends Ability {
             plugin.getLogger().warning("Trying to spawn drone with null world.");
             return null;
         }
-        if (isDroneValid())
+        double droneHealth = -1;
+        if (isDroneValid()) {
+            droneHealth = Math.max(1, drone.get().getHealth());
             drone.get().remove();
+        }
+        double finalDroneHealth = droneHealth;
         Vex vex = deployLocation.getWorld().spawn(deployLocation, Vex.class, false, entity -> {
             entity.setGravity(false);
             if (entity.getEquipment() != null)
                 entity.getEquipment().setItemInMainHand(new ItemStack(Material.AIR, 0));
             entity.setAI(false);
+            if (finalDroneHealth > 0)
+                entity.setHealth(finalDroneHealth);
             entity.setPersistent(true);
             entity.setCustomName(ownerName + "'s drone");
             entity.setCustomNameVisible(true);
@@ -452,6 +458,9 @@ public class CryptoAbility extends Ability {
                         else
                             bossbar.setProgress(0);
                         d.teleport(player.getEyeLocation().add(0, -d.getEyeHeight(), 0));
+                        d.setVelocity(player.getVelocity());
+                        if (d.getTicksLived() % 5 == 0)
+                            EntityUtils.destroyEntityForPlayer(d, player);
                         if (crosshairInterval <= 0) {
                             crosshairInterval = 10;
                             player.sendTitle(" ", "^", 0, 10, 5);
