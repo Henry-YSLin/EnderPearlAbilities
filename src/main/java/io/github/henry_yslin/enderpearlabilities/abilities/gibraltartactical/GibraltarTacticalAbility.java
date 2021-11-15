@@ -36,8 +36,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GibraltarTacticalAbility extends Ability {
 
-    static final int PROJECTILE_LIFETIME = 60;
-    static final double PROJECTILE_SPEED = 1;
+    static final int PROJECTILE_LIFETIME = 100;
+    static final double PROJECTILE_SPEED = 0.5;
     static final boolean PROJECTILE_GRAVITY = true;
     static final double SHIELD_RADIUS = 6;
 
