@@ -66,9 +66,15 @@ public class ShieldManager extends Manager {
             shieldRunnable.cancel();
     }
 
+    private static final List<EntityDamageEvent.DamageCause> ALLOWED_CAUSES = List.of(
+            EntityDamageEvent.DamageCause.ENTITY_ATTACK,
+            EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK,
+            EntityDamageEvent.DamageCause.ENTITY_EXPLOSION
+    );
+
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK || event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+        if (ALLOWED_CAUSES.contains(event.getCause())) {
             if (!(event.getDamager() instanceof LivingEntity damager)) return;
             Location origin = damager.getEyeLocation();
             RayTraceResult result = damager.getWorld().rayTrace(origin, origin.getDirection(), 5, FluidCollisionMode.NEVER, true, 0, entity -> entity.equals(event.getEntity()));
@@ -76,7 +82,10 @@ public class ShieldManager extends Manager {
             if (result != null) {
                 hitPosition = result.getHitPosition();
             } else {
-                hitPosition = event.getEntity().getLocation().toVector();
+                if (event.getEntity() instanceof LivingEntity victim)
+                    hitPosition = victim.getEyeLocation().toVector();
+                else
+                    hitPosition = event.getEntity().getLocation().toVector();
             }
             for (Shield shield : shields) {
                 Optional<Vector> intersect = MathUtils.lineRectangleIntersect(origin.toVector(), hitPosition, shield.getBoundingBox(), shield.getNormal());
