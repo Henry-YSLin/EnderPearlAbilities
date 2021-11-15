@@ -7,10 +7,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical.CryptoTacticalAbility;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
-import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
-import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.*;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -23,6 +20,8 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -98,6 +97,22 @@ public class CryptoUltimateAbility extends Ability {
         cooldown.startCooldown(info.cooldown);
     }
 
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        Entity damager = event.getDamager();
+        if (EntityUtils.getMetadata(damager, "emp").isPresent()) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onProjectileLaunch(ProjectileLaunchEvent event) {
+        Entity shooter = (Entity) event.getEntity().getShooter();
+        if (shooter != null && EntityUtils.getMetadata(shooter, "emp").isPresent()) {
+            event.setCancelled(true);
+        }
+    }
+
     private void activateAbility(LivingEntity abilityTarget) {
         List<Entity> entities = new ArrayList<>();
 
@@ -125,7 +140,7 @@ public class CryptoUltimateAbility extends Ability {
                             }
                             bossbar.setProgress(count / (double) info.chargeUp);
                             player.getWorld().spawnParticle(Particle.WHITE_ASH, player.getLocation(), 5, 0.5, 0.5, 0.5, 0.02);
-                            WorldUtils.spawnParticleSphere(abilityTarget.getLocation(), EMP_RADIUS, Particle.ELECTRIC_SPARK, 100, true);
+                            WorldUtils.spawnParticleSphere(abilityTarget.getLocation(), EMP_RADIUS, Particle.END_ROD, 100, true);
                         }
 
                         @Override
@@ -139,19 +154,19 @@ public class CryptoUltimateAbility extends Ability {
                 },
                 next -> {
                     abilityActive.set(true);
-                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1, 0.5f);
-                    player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 2000, 1, 1, 1, 1);
-                    entities.addAll(player.getWorld().getNearbyEntities(player.getLocation(), EMP_RADIUS, EMP_RADIUS, EMP_RADIUS, entity -> entity instanceof LivingEntity && entity.getLocation().distance(abilityTarget.getLocation()) < EMP_RADIUS));
+                    abilityTarget.getWorld().playSound(abilityTarget.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1, 0.5f);
+                    abilityTarget.getWorld().spawnParticle(Particle.END_ROD, abilityTarget.getLocation(), 2000, 1, 1, 1, 1, null, true);
+                    entities.addAll(abilityTarget.getWorld().getNearbyEntities(abilityTarget.getLocation(), EMP_RADIUS, EMP_RADIUS, EMP_RADIUS, entity -> entity instanceof LivingEntity && entity.getLocation().distance(abilityTarget.getLocation()) < EMP_RADIUS));
                     entities.removeIf(entity -> {
                         if (entity instanceof Player p) {
-                            return p.getGameMode() == GameMode.SPECTATOR;
+                            return p.getName().equals(ownerName) || p.getGameMode() == GameMode.SPECTATOR;
                         }
                         return false;
                     });
                     for (Entity entity : entities) {
                         if (entity instanceof LivingEntity livingEntity) {
                             livingEntity.damage(4, abilityTarget);
-                            livingEntity.addPotionEffect(PotionEffectType.SLOW.createEffect(info.duration, 1));
+                            livingEntity.addPotionEffect(PotionEffectType.SLOW.createEffect(30, 3));
                             livingEntity.setMetadata("emp", new FixedMetadataValue(plugin, info.codeName));
                         }
                         if (entity instanceof Player p) {
@@ -163,11 +178,18 @@ public class CryptoUltimateAbility extends Ability {
                 },
                 next -> new AbilityRunnable() {
                     BossBar bossbar;
+                    BossBar hitBossbar;
 
                     @Override
                     protected synchronized void start() {
                         bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
+                        hitBossbar = Bukkit.createBossBar(ChatColor.RED + info.name, BarColor.RED, BarStyle.SOLID);
+                        for (Entity entity : entities) {
+                            if (entity instanceof Player p) {
+                                hitBossbar.addPlayer(p);
+                            }
+                        }
                     }
 
                     @Override
@@ -176,11 +198,13 @@ public class CryptoUltimateAbility extends Ability {
                             cancel();
                         }
                         bossbar.setProgress(count / (double) info.duration * 10);
+                        hitBossbar.setProgress(count / (double) info.duration * 10);
                     }
 
                     @Override
                     protected synchronized void end() {
                         bossbar.removeAll();
+                        hitBossbar.removeAll();
                         for (Entity entity : entities) {
                             entity.removeMetadata("emp", plugin);
                             if (entity instanceof Player p) {
@@ -199,7 +223,7 @@ public class CryptoUltimateAbility extends Ability {
     @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        if (player.getName().equals(ownerName)) return;
+        if (!player.getName().equals(ownerName)) return;
 
         Optional<Ability> droneAbility = EnderPearlAbilities.getInstance().getAbilities().stream()
                 .filter(ability -> ability instanceof CryptoTacticalAbility && ability.ownerName.equals(ownerName))
@@ -218,23 +242,23 @@ public class CryptoUltimateAbility extends Ability {
                     if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK)
                         return;
                     if (!player.getInventory().contains(Material.ENDER_PEARL, 1)) return;
-                    targetEntity = droneEntity;
                 } else {
                     if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
-                    targetEntity = player;
                 }
+                targetEntity = droneEntity;
             } else {
                 if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.RED + "Drone required"));
+                event.setCancelled(true);
                 return;
             }
         }
 
+        event.setCancelled(true);
+
         if (cooldown.getCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
-
-        event.setCancelled(true);
 
         PlayerUtils.consumeEnderPearl(player);
 
