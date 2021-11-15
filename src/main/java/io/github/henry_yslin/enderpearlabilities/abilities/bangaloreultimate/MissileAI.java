@@ -60,5 +60,6 @@ public class MissileAI extends AbilityRunnable {
                 livingEntity.addPotionEffect(PotionEffectType.CONFUSION.createEffect(160, 1));
             }
         }
+        tnt.remove();
     }
 }

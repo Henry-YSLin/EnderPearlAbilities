@@ -34,8 +34,8 @@ public class WraithTacticalAbility extends Ability {
     public void setConfigDefaults(ConfigurationSection config) {
         super.setConfigDefaults(config);
         config.addDefault("charge-up", 20);
-        config.addDefault("duration", 200);
-        config.addDefault("cooldown", 300);
+        config.addDefault("duration", 140);
+        config.addDefault("cooldown", 500);
     }
 
     public WraithTacticalAbility(Plugin plugin, String ownerName, ConfigurationSection config) {

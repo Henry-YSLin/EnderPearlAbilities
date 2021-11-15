@@ -2,10 +2,9 @@ package io.github.henry_yslin.enderpearlabilities.abilities.valkyrietactical;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
-import org.bukkit.FluidCollisionMode;
-import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Arrow;
@@ -25,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ValkyrieTacticalAbility extends Ability {
 
@@ -103,22 +103,21 @@ public class ValkyrieTacticalAbility extends Ability {
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
+        AtomicReference<Location> targetLocation = new AtomicReference<>();
         new FunctionChain(
                 next -> {
                     PlayerUtils.consumeEnderPearl(player);
+                    RayTraceResult result = player.getWorld().rayTrace(player.getEyeLocation(), player.getEyeLocation().getDirection(), TARGET_RANGE, FluidCollisionMode.NEVER, true, 0, entity -> !entity.equals(player));
+                    if (result == null) {
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.RED + "Too far away"));
+                        return;
+                    } else
+                        targetLocation.set(result.getHitPosition().toLocation(player.getWorld()));
+                    WorldUtils.spawnParticleCubeOutline(targetLocation.get().clone().add(-2.5, -2.5, -2.5), targetLocation.get().clone().add(2.5, 2.5, 2.5), Particle.SMOKE_NORMAL, 5, true);
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
-                next -> {
-                    RayTraceResult result = player.getWorld().rayTrace(player.getEyeLocation(), player.getEyeLocation().getDirection(), TARGET_RANGE, FluidCollisionMode.NEVER, true, 0, entity -> !entity.equals(player));
-                    Location targetLocation;
-                    if (result == null)
-                        targetLocation = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(TARGET_RANGE));
-                    else
-                        targetLocation = result.getHitPosition().toLocation(player.getWorld());
-                    WorldUtils.spawnParticleCubeOutline(targetLocation.clone().add(-2.5, -2.5, -2.5), targetLocation.clone().add(2.5, 2.5, 2.5), Particle.SMOKE_NORMAL, 5, true);
-                    fireMissiles(targetLocation);
-                }
+                next -> fireMissiles(targetLocation.get())
         ).execute();
     }
 
