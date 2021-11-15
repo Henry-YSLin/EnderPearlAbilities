@@ -1,4 +1,4 @@
-package io.github.henry_yslin.enderpearlabilities.abilities.wraith;
+package io.github.henry_yslin.enderpearlabilities.abilities.wraithtactical;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
@@ -25,7 +25,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class WraithAbility extends Ability {
+public class WraithTacticalAbility extends Ability {
     static final int CANCEL_DELAY = 10;
 
     private final AbilityInfo info;
@@ -38,16 +38,16 @@ public class WraithAbility extends Ability {
         config.addDefault("cooldown", 300);
     }
 
-    public WraithAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
+    public WraithTacticalAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
         super(plugin, ownerName, config);
 
         AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("wraith")
+                .codeName("wraith-tactical")
                 .name("Into The Void")
                 .origin("Apex - Wraith")
                 .description("Reposition quickly through the safety of void space, avoiding all damage and interactions.\nPassive ability: A voice warns you when danger approaches.")
                 .usage("Right click with an ender pearl to activate the ability. Right click again to exit early. You may not interact with anything while the ability is active.")
-                .activation(ActivationHand.MainHand);
+                .activation(ActivationHand.OffHand);
 
         if (config != null)
             builder

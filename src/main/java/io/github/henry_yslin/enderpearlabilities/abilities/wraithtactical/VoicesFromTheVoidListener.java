@@ -1,4 +1,4 @@
-package io.github.henry_yslin.enderpearlabilities.abilities.wraith;
+package io.github.henry_yslin.enderpearlabilities.abilities.wraithtactical;
 
 import io.github.henry_yslin.enderpearlabilities.BasicExtendedListener;
 import io.github.henry_yslin.enderpearlabilities.BasicExtendedRunnable;

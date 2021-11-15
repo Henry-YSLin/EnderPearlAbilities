@@ -2,7 +2,6 @@ package io.github.henry_yslin.enderpearlabilities.managers.shield;
 
 import io.github.henry_yslin.enderpearlabilities.managers.Manager;
 import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.LivingEntity;
@@ -77,7 +76,7 @@ public class ShieldManager extends Manager {
         if (ALLOWED_CAUSES.contains(event.getCause())) {
             if (!(event.getDamager() instanceof LivingEntity damager)) return;
             Location origin = damager.getEyeLocation();
-            RayTraceResult result = damager.getWorld().rayTrace(origin, origin.getDirection(), 5, FluidCollisionMode.NEVER, true, 0, entity -> entity.equals(event.getEntity()));
+            RayTraceResult result = event.getEntity().getBoundingBox().rayTrace(origin.toVector(), origin.getDirection(), 5);
             Vector hitPosition;
             if (result != null) {
                 hitPosition = result.getHitPosition();

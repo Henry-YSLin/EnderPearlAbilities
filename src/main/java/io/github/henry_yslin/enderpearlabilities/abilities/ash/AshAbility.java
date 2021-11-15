@@ -31,7 +31,6 @@ public class AshAbility extends Ability {
     static final int TARGET_RANGE = 80;
     static final double ANGLE_ALLOWANCE = Math.toRadians(10);
     static final double PHASE_VELOCITY = 2;
-    static final int PORTAL_DURATION = 1200;
 
     private final AbilityInfo info;
 
@@ -39,7 +38,7 @@ public class AshAbility extends Ability {
     public void setConfigDefaults(ConfigurationSection config) {
         super.setConfigDefaults(config);
         config.addDefault("charge-up", 0);
-        config.addDefault("duration", 15);
+        config.addDefault("duration", 400);
         config.addDefault("cooldown", 400);
     }
 
@@ -298,22 +297,22 @@ public class AshAbility extends Ability {
                             @Override
                             protected void start() {
                                 from = startLocation[0].clone().add(0, 1, 0);
-                                to = lastLocation[0].clone().add(0, 1.01, 0);
+                                to = lastLocation[0].clone().add(0, 1, 0);
                             }
 
                             @Override
                             protected void tick() {
                                 World world = Objects.requireNonNull(from.getWorld());
-                                world.spawnParticle(Particle.DRAGON_BREATH, from, 10, 0.3, 1, 0.3, 0.01, null, true);
+                                world.spawnParticle(Particle.DRAGON_BREATH, from, 10, 0.1, 1, 0.1, 0.005, null, true);
                                 world.spawnParticle(Particle.ELECTRIC_SPARK, to, 10, 0.05, 1, 0.05, 0.01, null, true);
 
                                 for (Entity entity : world.getNearbyEntities(from, 0.5, 1, 0.5, entity -> entity instanceof LivingEntity)) {
                                     from.getWorld().playSound(from, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1, 0.5f);
                                     from.getWorld().playSound(to, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1, 0.5f);
-                                    entity.teleport(to);
+                                    entity.teleport(to.clone().subtract(0, 0.99, 0));
                                     entity.setFallDistance(0);
                                     entity.setVelocity(new Vector());
-                                    WorldUtils.spawnParticleLine(from, to, Particle.DRAGON_BREATH, 5, true);
+                                    WorldUtils.spawnParticleLine(from, to, Particle.DRAGON_BREATH, 2, true);
                                 }
                             }
 
@@ -321,7 +320,7 @@ public class AshAbility extends Ability {
                             protected void end() {
                                 super.end();
                             }
-                        }).runTaskRepeated(this, 0, 1, PORTAL_DURATION);
+                        }).runTaskRepeated(this, 0, 1, info.duration);
                     }
             ).execute();
         }
