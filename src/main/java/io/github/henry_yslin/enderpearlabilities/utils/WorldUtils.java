@@ -96,4 +96,17 @@ public class WorldUtils {
             }
         }
     }
+
+    public static void spawnParticleSphere(Location center, double radius, Particle particle, int count, boolean force) {
+        World world = Objects.requireNonNull(center.getWorld());
+
+        for (int i = 0; i < count; i++) {
+            Vector direction = new Vector(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
+            if (MathUtils.almostEqual(direction.lengthSquared(), 0)) {
+                direction = new Vector(0, 0, 1);
+            }
+            direction.normalize().multiply(radius);
+            world.spawnParticle(particle, center.clone().add(direction), 1, 0, 0, 0, 0, null, force);
+        }
+    }
 }

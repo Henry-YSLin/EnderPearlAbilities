@@ -1,4 +1,4 @@
-package io.github.henry_yslin.enderpearlabilities.abilities.crypto;
+package io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;

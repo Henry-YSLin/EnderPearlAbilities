@@ -1,4 +1,4 @@
-package io.github.henry_yslin.enderpearlabilities.abilities.crypto;
+package io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class CryptoAbility extends Ability {
+public class CryptoTacticalAbility extends Ability {
 
     private final AbilityInfo info;
 
@@ -54,16 +54,16 @@ public class CryptoAbility extends Ability {
         config.addDefault("cooldown", 800);
     }
 
-    public CryptoAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
+    public CryptoTacticalAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
         super(plugin, ownerName, config);
 
         AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("crypto")
+                .codeName("crypto-tactical")
                 .name("Surveillance Drone")
                 .origin("Apex - Crypto")
                 .description("Deploys an aerial drone for various purposes. Cooldown is only active if the drone is destroyed or recalled.")
                 .usage("Right click to deploy a new drone or enter an existing one. Sneak while right-clicking to recall a deployed drone. Length of cooldown depends on the drone's heath. Right click while in the drone to interact with objects. Left click to exit drone view and leave the drone in place. Ramming the drone into entities will cause damage to both the drone and the entity. Driving the drone through walls will temporarily limit vision.")
-                .activation(ActivationHand.MainHand);
+                .activation(ActivationHand.OffHand);
 
         if (config != null)
             builder
@@ -85,6 +85,10 @@ public class CryptoAbility extends Ability {
     final AtomicReference<LivingEntity> drone = new AtomicReference<>();
     final AtomicReference<NPC> dummy = new AtomicReference<>();
     DroneStatusRunnable droneStatusRunnable;
+
+    public LivingEntity getDroneEntity() {
+        return drone.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
