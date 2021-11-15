@@ -197,6 +197,13 @@ public final class EnderPearlAbilities extends JavaPlugin {
             HandlerList.unregisterAll(ability);
             ability.onDisable();
             getLogger().info("Calling onDisable for \"" + ability.getInfo().codeName + "\"");
+            ConfigurationSection section = config.getConfigurationSection(ability.getInfo().codeName);
+            if (section != null) {
+                List<String> players = section.getStringList("players");
+                players.remove(ability.ownerName);
+                section.set("players", players);
+                saveConfig();
+            }
         }
     }
 
@@ -204,7 +211,16 @@ public final class EnderPearlAbilities extends JavaPlugin {
         try {
             String codeName = templateAbility.getInfo().codeName;
             ConfigurationSection configSection = config.getConfigurationSection(codeName);
-            if (configSection == null) configSection = config.createSection(codeName);
+            if (configSection == null) {
+                configSection = config.createSection(codeName);
+                templateAbility.setConfigDefaults(configSection);
+            }
+            List<String> players = configSection.getStringList("players");
+            if (!players.contains(ownerName)) {
+                players.add(ownerName);
+                configSection.set("players", players);
+                saveConfig();
+            }
             Ability instance = templateAbility.getClass().getDeclaredConstructor(Plugin.class, String.class, ConfigurationSection.class).newInstance(this, ownerName, configSection);
             abilities.add(instance);
             getServer().getPluginManager().registerEvents(instance, this);

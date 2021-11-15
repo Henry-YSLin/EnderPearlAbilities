@@ -125,7 +125,7 @@ public class CryptoAbility extends Ability {
             return null;
         }
         double droneHealth = -1;
-        if (isDroneValid()) {
+        if (drone.get() != null) {
             droneHealth = Math.max(1, drone.get().getHealth());
             drone.get().remove();
         }
@@ -209,7 +209,7 @@ public class CryptoAbility extends Ability {
         if (abilityActive.get()) exitDrone();
 
         LivingEntity d = drone.get();
-        if (d != null && d.isValid()) {
+        if (d != null) {
             d.remove();
             drone.set(null);
         }
@@ -347,7 +347,7 @@ public class CryptoAbility extends Ability {
                             return;
                         }
                         bossbar.setProgress(count / (double) info.chargeUp);
-                        drone.get().getWorld().spawnParticle(Particle.PORTAL, drone.get().getLocation(), 5, 0.5, 0.5, 0.5, 0.02);
+                        drone.get().getWorld().spawnParticle(Particle.PORTAL, drone.get().getLocation(), 5, 0.1, 0.5, 0.1, 0.02);
                     }
 
                     @Override

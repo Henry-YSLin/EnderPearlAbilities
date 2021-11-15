@@ -6,6 +6,7 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Projectile;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.util.Vector;
 
 public class EntityBlockingShieldBehavior extends ShieldBehavior {
@@ -47,6 +48,12 @@ public class EntityBlockingShieldBehavior extends ShieldBehavior {
             double magnitude = entity.getVelocity().dot(normal);
             entity.setVelocity(entity.getVelocity().add(normal.multiply(magnitude * -1)));
         }
+        shield.getWorld().spawnParticle(Particle.DRAGON_BREATH, hitPosition, 1, 0, 0, 0, 0);
+    }
+
+    @Override
+    public void livingEntityWillMelee(Shield shield, EntityDamageByEntityEvent event, Location hitPosition, boolean backwardHit) {
+        event.setCancelled(true);
         shield.getWorld().spawnParticle(Particle.DRAGON_BREATH, hitPosition, 1, 0, 0, 0, 0);
     }
 }
