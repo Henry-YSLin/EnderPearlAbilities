@@ -50,7 +50,7 @@ public class CryptoUltimateAbility extends Ability {
                 .name("EMP")
                 .origin("Apex - Crypto")
                 .description("Charge up an EMP blast from your drone (if any). Deals damage, slows entities and blocks their actions.")
-                .usage("If a drone ability is available, you must have an existing drone to use this ability. Left click while in drone view, or right click with an ender pearl in person to charge up the EMP.")
+                .usage("If a drone ability is available, you must have an existing drone to use this ability. Left click while in drone view, or right click with an ender pearl in person to charge up the EMP. EMP blast affects all entities in radius, including yourself.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
