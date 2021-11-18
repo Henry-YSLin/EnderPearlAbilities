@@ -35,7 +35,7 @@ public class RampartAbility extends Ability {
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
         super.setConfigDefaults(config);
-        config.addDefault("charge-up", 25);
+        config.addDefault("charge-up", 20);
         config.addDefault("duration", 200);
         config.addDefault("cooldown", 60);
     }

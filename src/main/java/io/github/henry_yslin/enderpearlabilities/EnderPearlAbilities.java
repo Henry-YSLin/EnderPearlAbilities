@@ -15,7 +15,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.reflections.Reflections;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import static org.reflections.scanners.Scanners.SubTypes;
 
@@ -65,8 +68,8 @@ public final class EnderPearlAbilities extends JavaPlugin {
 
         // Plugin startup logic
         Reflections reflections = new Reflections("io.github.henry_yslin.enderpearlabilities");
-        Set<Class<?>> managerSubTypes =
-                reflections.get(SubTypes.of(Manager.class).asClass());
+        List<Class<?>> managerSubTypes =
+                reflections.get(SubTypes.of(Manager.class).asClass()).stream().sorted(Comparator.comparing(Class::getName)).toList();
         for (Class<?> subType : managerSubTypes) {
             try {
                 Manager manager = (Manager) subType.getDeclaredConstructor(Plugin.class, ConfigurationSection.class).newInstance(this, null);
@@ -82,8 +85,8 @@ public final class EnderPearlAbilities extends JavaPlugin {
             }
         }
 
-        Set<Class<?>> abilitySubTypes =
-                reflections.get(SubTypes.of(Ability.class).asClass());
+        List<Class<?>> abilitySubTypes =
+                reflections.get(SubTypes.of(Ability.class).asClass()).stream().sorted(Comparator.comparing(Class::getName)).toList();
         for (Class<?> subType : abilitySubTypes) {
             try {
                 Ability ability = (Ability) subType.getDeclaredConstructor(Plugin.class, String.class, ConfigurationSection.class).newInstance(this, null, null);

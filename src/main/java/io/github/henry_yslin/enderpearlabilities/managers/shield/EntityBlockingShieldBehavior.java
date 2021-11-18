@@ -40,7 +40,7 @@ public class EntityBlockingShieldBehavior extends ShieldBehavior {
         if (entity instanceof Projectile) {
             if (entity.hasGravity()) {
                 double magnitude = entity.getVelocity().dot(normal);
-                entity.setVelocity(entity.getVelocity().add(normal.multiply(magnitude * -1.2)));
+                entity.setVelocity(entity.getVelocity().add(normal.multiply(magnitude * -1.05)).multiply(0.5));
             } else {
                 entity.remove();
             }
