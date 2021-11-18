@@ -38,7 +38,7 @@ public class DroneStatusRunnable extends AbilityRunnable {
             if (drone.get() != null && drone.get().isValid()) {
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.LIGHT_PURPLE + "Enter existing drone, sneak to recall"));
             } else {
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.LIGHT_PURPLE + "Deploy new drone" + (drone.get() != null ? drone.get().toString() : "")));
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.LIGHT_PURPLE + "Deploy new drone"));
             }
         }
     }

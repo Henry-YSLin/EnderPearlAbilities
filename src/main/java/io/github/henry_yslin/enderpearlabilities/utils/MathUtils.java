@@ -16,7 +16,9 @@ public class MathUtils {
      * @return The same vector with {@code magnitude} as the maximum magnitude.
      */
     public static Vector clamp(Vector vector, double magnitude) {
-        magnitude = Math.min(magnitude, vector.length());
+        double length = vector.length();
+        if (almostEqual(length, 0)) return vector;
+        magnitude = Math.min(magnitude, length);
         return vector.normalize().multiply(magnitude);
     }
 

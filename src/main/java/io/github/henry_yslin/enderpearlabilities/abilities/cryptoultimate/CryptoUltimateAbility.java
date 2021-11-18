@@ -1,10 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.cryptoultimate;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
+import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical.CryptoTacticalAbility;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
@@ -15,9 +12,7 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -34,7 +29,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CryptoUltimateAbility extends Ability {
-    static final double EMP_RADIUS = 30;
+    static final double EMP_RADIUS = 20;
+    final String TACTICAL_ABILITY_NAME;
 
     private final AbilityInfo info;
 
@@ -54,7 +50,7 @@ public class CryptoUltimateAbility extends Ability {
                 .name("EMP")
                 .origin("Apex - Crypto")
                 .description("Charge up an EMP blast from your drone (if any). Deals damage, slows entities and blocks their actions.")
-                .usage("If a drone ability is available, you must have an existing drone to use this ability. Right click while in drone view, or right click with an ender pearl in person to charge up the EMP.")
+                .usage("If a drone ability is available, you must have an existing drone to use this ability. Left click while in drone view, or right click with an ender pearl in person to charge up the EMP.")
                 .activation(ActivationHand.MainHand);
 
         if (config != null)
@@ -64,6 +60,8 @@ public class CryptoUltimateAbility extends Ability {
                     .cooldown(config.getInt("cooldown"));
 
         info = builder.build();
+
+        TACTICAL_ABILITY_NAME = new CryptoTacticalAbility(plugin, null, null).getInfo().codeName;
     }
 
     @Override
@@ -159,10 +157,32 @@ public class CryptoUltimateAbility extends Ability {
                     entities.addAll(abilityTarget.getWorld().getNearbyEntities(abilityTarget.getLocation(), EMP_RADIUS, EMP_RADIUS, EMP_RADIUS, entity -> entity instanceof LivingEntity && entity.getLocation().distance(abilityTarget.getLocation()) < EMP_RADIUS));
                     entities.removeIf(entity -> {
                         if (entity instanceof Player p) {
-                            return p.getName().equals(ownerName) || p.getGameMode() == GameMode.SPECTATOR;
+                            return p.getGameMode() == GameMode.SPECTATOR;
+                        }
+                        if (entity instanceof Mob mob) {
+                            return !mob.hasAI();
                         }
                         return false;
                     });
+                    for (int i = entities.size() - 1; i >= 0; i--) {
+                        Entity entity = entities.get(i);
+                        if (entity.getType() == EntityType.PLAYER) {
+                            if (entity.hasMetadata("NPC")) {
+                                Optional<Object> metadata = EntityUtils.getMetadata(entity, "ability");
+                                if (metadata.isPresent()) {
+                                    if (metadata.get() instanceof AbilityCouple couple) {
+                                        if (couple.ability().equals(TACTICAL_ABILITY_NAME))
+                                            entities.add(plugin.getServer().getPlayer(couple.player()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (entities.isEmpty()) {
+                        abilityActive.set(false);
+                        cooldown.startCooldown(info.cooldown);
+                        return;
+                    }
                     for (Entity entity : entities) {
                         if (entity instanceof LivingEntity livingEntity) {
                             livingEntity.damage(4, abilityTarget);
@@ -239,9 +259,12 @@ public class CryptoUltimateAbility extends Ability {
             LivingEntity droneEntity = tacticalAbility.getDroneEntity();
             if (droneEntity != null && droneEntity.isValid()) {
                 if (player.getGameMode() == GameMode.SPECTATOR) {
-                    if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK)
+                    if (event.getAction() != Action.LEFT_CLICK_AIR && event.getAction() != Action.LEFT_CLICK_BLOCK)
                         return;
-                    if (!player.getInventory().contains(Material.ENDER_PEARL, 1)) return;
+                    if (!PlayerUtils.inventoryContains(player, Material.ENDER_PEARL, 1)) {
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.RED + "Not enough ender pearls"));
+                        return;
+                    }
                 } else {
                     if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
                 }

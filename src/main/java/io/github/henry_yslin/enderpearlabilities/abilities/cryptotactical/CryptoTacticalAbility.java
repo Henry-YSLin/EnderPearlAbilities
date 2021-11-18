@@ -11,7 +11,6 @@ import net.citizensnpcs.api.trait.trait.Equipment;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
-import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -39,7 +38,6 @@ import org.bukkit.util.RayTraceResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class CryptoTacticalAbility extends Ability {
@@ -62,7 +60,7 @@ public class CryptoTacticalAbility extends Ability {
                 .name("Surveillance Drone")
                 .origin("Apex - Crypto")
                 .description("Deploys an aerial drone for various purposes. Cooldown is only active if the drone is destroyed or recalled.")
-                .usage("Right click to deploy a new drone or enter an existing one. Sneak while right-clicking to recall a deployed drone. Length of cooldown depends on the drone's heath. Right click while in the drone to interact with objects. Left click to exit drone view and leave the drone in place. Ramming the drone into entities will cause damage to both the drone and the entity. Driving the drone through walls will temporarily limit vision.")
+                .usage("Right click to deploy a new drone or enter an existing one. Sneak while right-clicking to recall a deployed drone. Length of cooldown depends on the drone's heath. Right click while in drone to exit drone view and leave the drone in place. Ramming the drone into entities will cause damage to both the drone and the entity. Driving the drone through walls will temporarily limit vision.")
                 .activation(ActivationHand.OffHand);
 
         if (config != null)
@@ -79,7 +77,6 @@ public class CryptoTacticalAbility extends Ability {
         return info;
     }
 
-    final AtomicInteger rightClickCooldown = new AtomicInteger(0);
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicReference<LivingEntity> drone = new AtomicReference<>();
@@ -311,14 +308,8 @@ public class CryptoTacticalAbility extends Ability {
         Player player = event.getPlayer();
 
         if (player.equals(this.player) && abilityActive.get()) {
-            if (event.getAction() == Action.LEFT_CLICK_AIR) {
-                if (player.getTicksLived() - rightClickCooldown.get() < 2) return;
+            if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 abilityActive.set(false);
-            } else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                rightClickCooldown.set(player.getTicksLived());
-                Block block = event.getClickedBlock();
-
-                PlayerUtils.rightClickBlock(player, block);
             }
             return;
         }
@@ -442,6 +433,7 @@ public class CryptoTacticalAbility extends Ability {
                     BossBar bossbar;
                     LivingEntity d;
                     int crosshairInterval = 0;
+                    int speedInterval = 0;
 
                     @Override
                     protected void start() {
@@ -461,6 +453,9 @@ public class CryptoTacticalAbility extends Ability {
                             bossbar.setProgress(d.getHealth() / maxHealth);
                         else
                             bossbar.setProgress(0);
+                        speedInterval = 1 - speedInterval;
+                        if (speedInterval == 0)
+                            player.setVelocity(player.getVelocity());
                         d.teleport(player.getEyeLocation().add(0, -d.getEyeHeight(), 0));
                         d.setVelocity(player.getVelocity());
                         if (d.getTicksLived() % 5 == 0)

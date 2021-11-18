@@ -118,6 +118,16 @@ public class PlayerUtils {
         return !block.getDrops(player.getInventory().getItemInMainHand(), player).isEmpty();
     }
 
+    public static boolean inventoryContains(Player player, Material material, int amount) {
+        int count = 0;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.getType() == material) {
+                count += item.getAmount();
+            }
+        }
+        return count >= amount;
+    }
+
     /**
      * Simulate a player right-click on a block.
      *
