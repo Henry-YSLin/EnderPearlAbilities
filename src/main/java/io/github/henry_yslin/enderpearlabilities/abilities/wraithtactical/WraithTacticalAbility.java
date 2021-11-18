@@ -22,6 +22,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -118,11 +119,12 @@ public class WraithTacticalAbility extends Ability {
         new FunctionChain(
                 next -> {
                     PlayerUtils.consumeEnderPearl(player);
+                    player.addPotionEffect(PotionEffectType.SLOW.createEffect(info.chargeUp, 2));
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> {
-                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 1, 0);
+                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.7f, 0.8f);
                     cancelAbility.set(false);
                     abilityActive.set(true);
 
