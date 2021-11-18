@@ -22,6 +22,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -166,7 +167,7 @@ public class RampartAbility extends Ability {
                             return;
                         }
                         if (player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL) {
-                            player.setVelocity(player.getVelocity().multiply(0.9).setY(player.getVelocity().getY()));
+                            player.addPotionEffect(PotionEffectType.SLOW.createEffect(5, 1));
                         }
                         boolean firing = isSneaking.get();
                         if (firing)
