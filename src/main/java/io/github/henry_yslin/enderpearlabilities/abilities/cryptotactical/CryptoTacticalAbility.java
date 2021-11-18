@@ -42,6 +42,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class CryptoTacticalAbility extends Ability {
 
+    static final float FLY_SPEED = 0.06f;
+
     private final AbilityInfo info;
 
     @Override
@@ -433,7 +435,6 @@ public class CryptoTacticalAbility extends Ability {
                     BossBar bossbar;
                     LivingEntity d;
                     int crosshairInterval = 0;
-                    int speedInterval = 0;
 
                     @Override
                     protected void start() {
@@ -453,9 +454,7 @@ public class CryptoTacticalAbility extends Ability {
                             bossbar.setProgress(d.getHealth() / maxHealth);
                         else
                             bossbar.setProgress(0);
-                        speedInterval = 1 - speedInterval;
-                        if (speedInterval == 0)
-                            player.setVelocity(player.getVelocity());
+                        player.setFlySpeed(FLY_SPEED);
                         d.teleport(player.getEyeLocation().add(0, -d.getEyeHeight(), 0));
                         d.setVelocity(player.getVelocity());
                         if (d.getTicksLived() % 5 == 0)

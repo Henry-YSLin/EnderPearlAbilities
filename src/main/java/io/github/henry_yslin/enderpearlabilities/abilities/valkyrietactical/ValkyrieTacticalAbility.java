@@ -59,6 +59,8 @@ public class ValkyrieTacticalAbility extends Ability {
                     .cooldown(config.getInt("cooldown"));
 
         info = builder.build();
+
+        subListeners.add(new VTOLJetsListener(plugin, this, config));
     }
 
     @Override
