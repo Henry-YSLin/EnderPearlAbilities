@@ -9,12 +9,15 @@ import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -31,8 +34,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ValkyrieUltimateAbility extends Ability {
 
     static final int MAX_LAUNCH_HEIGHT = 64;
-    static final int MIN_LAUNCH_HEIGHT = 10;
+    static final int MIN_LAUNCH_HEIGHT = 30;
     static final int INITIAL_BURN_DURATION = 30;
+    static final int SCAN_INTERVAL = 20;
+    static final double MIN_SCAN_RANGE = 30;
+    static final double MAX_SCAN_RANGE = 200;
 
     private final AbilityInfo info;
 
@@ -213,11 +219,11 @@ public class ValkyrieUltimateAbility extends Ability {
                             }
                             double propulsion;
                             if (info.duration - count == INITIAL_BURN_DURATION) {
-                                player.setVelocity(player.getVelocity().add(new Vector(0, 1.1, 0)));
+                                player.setVelocity(player.getVelocity().add(new Vector(0, 0.2, 0)));
                                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_BLAST, 1, 0);
                             }
                             if (info.duration - count >= INITIAL_BURN_DURATION)
-                                propulsion = 1.1;
+                                propulsion = 0.2;
                             else {
                                 propulsion = Math.min((info.duration - count) * 0.0005 + 0.075, 0.09);
                                 player.getWorld().spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 2, 0.1, 0.1, 0.1, 0.05);
@@ -259,6 +265,7 @@ public class ValkyrieUltimateAbility extends Ability {
                     }.runTaskRepeated(this, 0, 1, info.duration),
                     next -> new AbilityRunnable() {
                         ItemStack chestplate;
+                        int scanInterval;
 
                         @Override
                         protected void start() {
@@ -272,6 +279,7 @@ public class ValkyrieUltimateAbility extends Ability {
                             elytra.addEnchantment(Enchantment.VANISHING_CURSE, 1);
                             player.getInventory().setChestplate(elytra);
                             player.setGliding(true);
+                            scanInterval = SCAN_INTERVAL;
                         }
 
                         @Override
@@ -282,9 +290,26 @@ public class ValkyrieUltimateAbility extends Ability {
                                 return;
                             }
                             player.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation(), 2, 0.1, 0.1, 0.1, 0, null, true);
-                            RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), 1, FluidCollisionMode.ALWAYS, true);
+
+                            double groundHeight = 256;
+                            RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), 256, FluidCollisionMode.ALWAYS, true);
                             if (result != null) {
-                                cancel();
+                                double groundY = result.getHitPosition().getY();
+                                groundHeight = player.getLocation().getY() - groundY;
+                                if (groundHeight < 1)
+                                    cancel();
+                            }
+
+                            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.GREEN + String.format("GND: %dm  Y: %dm  SPD: %dm/s", (int) groundHeight, (int) player.getLocation().getY(), (int) (player.getVelocity().length() * 20))));
+
+                            scanInterval--;
+                            if (scanInterval <= 0) {
+                                scanInterval = SCAN_INTERVAL;
+                                player.getWorld().getNearbyEntities(
+                                        player.getEyeLocation(),
+                                        MAX_SCAN_RANGE, MAX_SCAN_RANGE, MAX_SCAN_RANGE,
+                                        entity -> entity instanceof LivingEntity && entity.getLocation().distanceSquared(player.getLocation()) > MIN_SCAN_RANGE * MIN_SCAN_RANGE
+                                ).forEach(entity -> player.spawnParticle(Particle.FLASH, entity.getLocation().add(0, 1, 0), 1, 0, 0, 0, 0, null));
                             }
                         }
 
