@@ -142,6 +142,7 @@ public class ValkyrieUltimateAbility extends Ability {
                             boolean shouldContinue = executor.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
                                     executor.getInfo().activation == ActivationHand.OffHand && offHandPearl;
                             if (!player.isValid()) shouldContinue = false;
+                            if (!player.isOnline()) shouldContinue = false;
                             if (!player.getWorld().equals(groundLocation.getWorld())) shouldContinue = false;
                             if (groundLocation.toVector().setY(0).distance(player.getLocation().toVector().setY(0)) > 1)
                                 shouldContinue = false;
@@ -167,8 +168,10 @@ public class ValkyrieUltimateAbility extends Ability {
                                     player.setVelocity(player.getVelocity().add(new Vector(0, 0.1, 0)));
                                 } else {
                                     player.setVelocity(player.getVelocity().setY(0));
-                                    if (stableLocation == null)
+                                    if (stableLocation == null) {
                                         stableLocation = player.getLocation();
+                                        player.teleport(stableLocation);
+                                    }
                                 }
                                 player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 2, 0.1, 0.1, 0.1, 0.05);
                             } else {

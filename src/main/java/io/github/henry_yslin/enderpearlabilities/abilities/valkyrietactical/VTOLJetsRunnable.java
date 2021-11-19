@@ -41,6 +41,12 @@ public class VTOLJetsRunnable extends AbilityRunnable {
 
     @Override
     public void tick() {
+        if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
+            player.setAllowFlight(true);
+            player.setFlySpeed(0.1f);
+            bossbar.setVisible(false);
+            return;
+        }
         ItemStack chestplate = player.getInventory().getChestplate();
         if ((chestplate != null && chestplate.getType() == Material.ELYTRA)) {
             player.setAllowFlight(false);
@@ -96,6 +102,7 @@ public class VTOLJetsRunnable extends AbilityRunnable {
     @Override
     protected void end() {
         super.end();
+        player.setFlySpeed(0.1f);
         bossbar.removeAll();
     }
 }

@@ -494,6 +494,7 @@ public class CryptoTacticalAbility extends Ability {
                     @Override
                     protected void end() {
                         bossbar.removeAll();
+                        player.setFlySpeed(0.1f);
                         if (d.isValid())
                             exitDrone();
                         else
