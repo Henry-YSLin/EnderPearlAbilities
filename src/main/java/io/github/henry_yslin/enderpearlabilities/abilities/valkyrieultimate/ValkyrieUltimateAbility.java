@@ -38,7 +38,7 @@ public class ValkyrieUltimateAbility extends Ability {
     static final int INITIAL_BURN_DURATION = 30;
     static final int SCAN_INTERVAL = 20;
     static final double MIN_SCAN_RANGE = 30;
-    static final double MAX_SCAN_RANGE = 200;
+    static final double MAX_SCAN_RANGE = 250;
 
     private final AbilityInfo info;
 
@@ -57,7 +57,7 @@ public class ValkyrieUltimateAbility extends Ability {
                 .codeName("valkyrie-ultimate")
                 .name("Skyward Dive")
                 .origin("Apex - Valkyrie")
-                .description("Press once to prepare for launch. Press again to launch into the air and skydive.")
+                .description("Press once to prepare for launch. Press again to launch into the air and skydive. Living entities are pinged with flashing light while you are in flight.")
                 .usage("Right click to prepare for launch. Right click again to launch. Switch away from ender pearl to cancel.")
                 .activation(ActivationHand.MainHand);
 
