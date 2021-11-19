@@ -48,7 +48,7 @@ public class ValkyrieTacticalAbility extends Ability {
                 .codeName("valkyrie-tactical")
                 .name("Missile Swarm")
                 .origin("Apex - Valkyrie")
-                .description("Fire a swarm of missiles that damage and slow entities.")
+                .description("Fire a swarm of missiles that damage and slow entities.\nPassive ability: Double-tap and hold the jump key to engage jetpack. Jetpack is disabled while you are falling or when elytra are equipped.")
                 .usage("Right click to fire homing missiles towards your crosshair location. Entities hit by missiles will be slowed for a brief moment.")
                 .activation(ActivationHand.OffHand);
 
@@ -59,8 +59,6 @@ public class ValkyrieTacticalAbility extends Ability {
                     .cooldown(config.getInt("cooldown"));
 
         info = builder.build();
-
-        subListeners.add(new VTOLJetsListener(plugin, this, config));
     }
 
     @Override
@@ -71,15 +69,14 @@ public class ValkyrieTacticalAbility extends Ability {
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final Random random = new Random();
+    VTOLJetsRunnable vtolJetsRunnable;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
-            chargingUp.set(false);
-            abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
+            setUpPlayer(player);
         }
     }
 
@@ -87,10 +84,19 @@ public class ValkyrieTacticalAbility extends Ability {
     public void onEnable() {
         super.onEnable();
         if (player != null) {
-            chargingUp.set(false);
-            abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
+            setUpPlayer(player);
         }
+    }
+
+    private void setUpPlayer(Player player) {
+        chargingUp.set(false);
+        abilityActive.set(false);
+        cooldown.startCooldown(info.cooldown);
+
+        if (vtolJetsRunnable != null && !vtolJetsRunnable.isCancelled())
+            vtolJetsRunnable.cancel();
+        vtolJetsRunnable = new VTOLJetsRunnable(player);
+        vtolJetsRunnable.runTaskTimer(this, 0, 1);
     }
 
     @EventHandler

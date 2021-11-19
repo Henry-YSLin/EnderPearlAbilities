@@ -117,6 +117,7 @@ public class ValkyrieUltimateAbility extends Ability {
                     next -> new AbilityRunnable() {
                         BossBar bossbar;
                         Location groundLocation;
+                        Location stableLocation;
 
                         @Override
                         protected void start() {
@@ -126,6 +127,7 @@ public class ValkyrieUltimateAbility extends Ability {
                             chargingUp.set(true);
                             chargeUpDuration.set(0);
                             groundLocation = player.getLocation();
+                            stableLocation = null;
                         }
 
                         @Override
@@ -143,6 +145,9 @@ public class ValkyrieUltimateAbility extends Ability {
                             if (!player.getWorld().equals(groundLocation.getWorld())) shouldContinue = false;
                             if (groundLocation.toVector().setY(0).distance(player.getLocation().toVector().setY(0)) > 1)
                                 shouldContinue = false;
+                            if (shouldContinue)
+                                if (stableLocation != null && stableLocation.distance(player.getLocation()) > 1)
+                                    shouldContinue = false;
                             if (shouldContinue) {
                                 RayTraceResult result = player.getWorld().rayTraceBlocks(player.getEyeLocation(), new Vector(0, 1, 0), MIN_LAUNCH_HEIGHT, FluidCollisionMode.NEVER, true);
                                 if (result != null) {
@@ -162,6 +167,8 @@ public class ValkyrieUltimateAbility extends Ability {
                                     player.setVelocity(player.getVelocity().add(new Vector(0, 0.1, 0)));
                                 } else {
                                     player.setVelocity(player.getVelocity().setY(0));
+                                    if (stableLocation == null)
+                                        stableLocation = player.getLocation();
                                 }
                                 player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 2, 0.1, 0.1, 0.1, 0.05);
                             } else {
