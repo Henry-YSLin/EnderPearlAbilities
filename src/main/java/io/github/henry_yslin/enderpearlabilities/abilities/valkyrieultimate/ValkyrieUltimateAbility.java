@@ -22,6 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
@@ -78,6 +79,7 @@ public class ValkyrieUltimateAbility extends Ability {
     final AtomicInteger chargeUpDuration = new AtomicInteger(0);
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+    AbilityRunnable flightRunnable;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -100,6 +102,13 @@ public class ValkyrieUltimateAbility extends Ability {
         chargingUp.set(false);
         abilityActive.set(false);
         cooldown.startCooldown(info.cooldown);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        if (!event.getPlayer().getName().equals(ownerName)) return;
+        if (flightRunnable != null && !flightRunnable.isCancelled())
+            flightRunnable.cancel();
     }
 
     @EventHandler
@@ -263,63 +272,67 @@ public class ValkyrieUltimateAbility extends Ability {
                                 abilityActive.set(false);
                         }
                     }.runTaskRepeated(this, 0, 1, info.duration),
-                    next -> new AbilityRunnable() {
-                        ItemStack chestplate;
-                        int scanInterval;
+                    next -> {
+                        if (flightRunnable != null && !flightRunnable.isCancelled())
+                            flightRunnable.cancel();
+                        (flightRunnable = new AbilityRunnable() {
+                            ItemStack chestplate;
+                            int scanInterval;
 
-                        @Override
-                        protected void start() {
-                            chestplate = player.getInventory().getChestplate();
-                            ItemStack elytra = new ItemStack(Material.ELYTRA, 1);
-                            ItemMeta meta = Bukkit.getServer().getItemFactory().getItemMeta(Material.ELYTRA);
-                            if (meta != null)
-                                meta.setUnbreakable(true);
-                            elytra.setItemMeta(meta);
-                            elytra.addEnchantment(Enchantment.BINDING_CURSE, 1);
-                            elytra.addEnchantment(Enchantment.VANISHING_CURSE, 1);
-                            player.getInventory().setChestplate(elytra);
-                            player.setGliding(true);
-                            scanInterval = SCAN_INTERVAL;
-                        }
-
-                        @Override
-                        protected void tick() {
-                            //noinspection deprecation
-                            if (!player.isValid() || player.isOnGround()) {
-                                cancel();
-                                return;
-                            }
-                            player.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation(), 2, 0.1, 0.1, 0.1, 0, null, true);
-
-                            double groundHeight = 256;
-                            RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), 256, FluidCollisionMode.ALWAYS, true);
-                            if (result != null) {
-                                double groundY = result.getHitPosition().getY();
-                                groundHeight = player.getLocation().getY() - groundY;
-                                if (groundHeight < 1)
-                                    cancel();
-                            }
-
-                            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.GREEN + String.format("GND: %dm  Y: %dm  SPD: %dm/s", (int) groundHeight, (int) player.getLocation().getY(), (int) (player.getVelocity().length() * 20))));
-
-                            scanInterval--;
-                            if (scanInterval <= 0) {
+                            @Override
+                            protected void start() {
+                                chestplate = player.getInventory().getChestplate();
+                                ItemStack elytra = new ItemStack(Material.ELYTRA, 1);
+                                ItemMeta meta = Bukkit.getServer().getItemFactory().getItemMeta(Material.ELYTRA);
+                                if (meta != null)
+                                    meta.setUnbreakable(true);
+                                elytra.setItemMeta(meta);
+                                elytra.addEnchantment(Enchantment.BINDING_CURSE, 1);
+                                elytra.addEnchantment(Enchantment.VANISHING_CURSE, 1);
+                                player.getInventory().setChestplate(elytra);
+                                player.setGliding(true);
                                 scanInterval = SCAN_INTERVAL;
-                                player.getWorld().getNearbyEntities(
-                                        player.getEyeLocation(),
-                                        MAX_SCAN_RANGE, MAX_SCAN_RANGE, MAX_SCAN_RANGE,
-                                        entity -> entity instanceof LivingEntity && entity.getLocation().distanceSquared(player.getLocation()) > MIN_SCAN_RANGE * MIN_SCAN_RANGE
-                                ).forEach(entity -> player.spawnParticle(Particle.FLASH, entity.getLocation().add(0, 1, 0), 1, 0, 0, 0, 0, null));
                             }
-                        }
 
-                        @Override
-                        protected void end() {
-                            player.getInventory().setChestplate(chestplate);
-                            abilityActive.set(false);
-                            cooldown.startCooldown(info.cooldown);
-                        }
-                    }.runTaskTimer(this, 0, 1)
+                            @Override
+                            protected void tick() {
+                                //noinspection deprecation
+                                if (!player.isValid() || player.isOnGround()) {
+                                    cancel();
+                                    return;
+                                }
+                                player.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation(), 2, 0.1, 0.1, 0.1, 0, null, true);
+
+                                double groundHeight = 256;
+                                RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), 256, FluidCollisionMode.ALWAYS, true);
+                                if (result != null) {
+                                    double groundY = result.getHitPosition().getY();
+                                    groundHeight = player.getLocation().getY() - groundY;
+                                    if (groundHeight < 1)
+                                        cancel();
+                                }
+
+                                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.GREEN + String.format("GND: %dm  Y: %dm  SPD: %dm/s", (int) groundHeight, (int) player.getLocation().getY(), (int) (player.getVelocity().length() * 20))));
+
+                                scanInterval--;
+                                if (scanInterval <= 0) {
+                                    scanInterval = SCAN_INTERVAL;
+                                    player.getWorld().getNearbyEntities(
+                                            player.getEyeLocation(),
+                                            MAX_SCAN_RANGE, MAX_SCAN_RANGE, MAX_SCAN_RANGE,
+                                            entity -> entity instanceof LivingEntity && entity.getLocation().distanceSquared(player.getLocation()) > MIN_SCAN_RANGE * MIN_SCAN_RANGE
+                                    ).forEach(entity -> player.spawnParticle(Particle.FLASH, entity.getLocation().add(0, 1, 0), 1, 0, 0, 0, 0, null));
+                                }
+                            }
+
+                            @Override
+                            protected void end() {
+                                player.getInventory().setChestplate(chestplate);
+                                abilityActive.set(false);
+                                cooldown.startCooldown(info.cooldown);
+                            }
+                        }).runTaskTimer(this, 0, 1);
+                    }
             ).execute();
         }
     }
