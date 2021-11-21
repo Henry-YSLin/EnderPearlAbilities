@@ -1,15 +1,13 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.titanfall;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.*;
-import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
-import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.*;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Bukkit;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import org.bukkit.*;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.IronGolem;
@@ -17,16 +15,18 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.spigotmc.event.entity.EntityDismountEvent;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -34,6 +34,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class TitanfallAbility extends Ability {
 
     static final int ACTION_COOLDOWN = 5;
+    static final int ENERGY_SIPHON_COOLDOWN = 200;
+    static final int ENERGY_SIPHON_CHARGE_UP = 20;
 
     private final AbilityInfo info;
 
@@ -42,7 +44,7 @@ public class TitanfallAbility extends Ability {
         super.setConfigDefaults(config);
         config.addDefault("charge-up", 10);
         config.addDefault("duration", 0);
-        config.addDefault("cooldown", 2400);
+        config.addDefault("cooldown", 12000);
     }
 
     public TitanfallAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
@@ -52,7 +54,7 @@ public class TitanfallAbility extends Ability {
                 .codeName("titanfall")
                 .name("Titanfall")
                 .origin("Titanfall")
-                .description("Deploy and pilot a titan for combat.")
+                .description("Deploy and pilot a titan for combat.\nTitan ability: Fire an electric blast that slows entity and regenerates health.\nPassive ability: dealing damage reduces titan cooldown.")
                 .usage("Right click to summon a titan at your location. Use vehicle controls to mount and dismount the titan. While mounted, right click to switch between attack and move mode. Left click an entity in attack mode to lock target. Left click in move mode to jump. You are invincible while controlling the titan, but you will be ejected upwards when the titan is destroyed.")
                 .activation(ActivationHand.MainHand);
 
@@ -99,10 +101,21 @@ public class TitanfallAbility extends Ability {
     }
 
     @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player player)) return;
+        if (!player.getName().equals(ownerName)) return;
+        if (event.getEntity().equals(titan.get())) return;
+        if (!cooldown.getCoolingDown()) return;
+        cooldown.addCooldown((int) (-event.getFinalDamage() * 20));
+        player.getWorld().spawnParticle(Particle.HEART, player.getLocation(), (int) event.getFinalDamage(), 0.5, 0.5, 0.5, 0.1);
+    }
+
+    @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         Player player = event.getPlayer();
         if (!player.getName().equals(ownerName)) return;
         if (!AbilityUtils.verifyAbilityCouple(this, event.getRightClicked())) return;
+        event.setCancelled(true);
         if (event.getRightClicked().getPassengers().size() > 0) return;
         event.getRightClicked().addPassenger(player);
         for (Player p : Bukkit.getOnlinePlayers()) {
@@ -173,11 +186,18 @@ public class TitanfallAbility extends Ability {
                         boolean attackMode = false;
                         boolean landed = false;
                         IronGolem t;
+                        BossBar siphonChargeUpBar;
+                        int siphonChargeUp = 0;
+                        AbilityCooldown siphonCooldown;
 
                         @Override
                         protected void start() {
                             super.start();
+                            siphonCooldown = new AbilityCooldown(executor, player, false);
                             t = titan.get();
+                            siphonChargeUpBar = Bukkit.createBossBar(ChatColor.WHITE + "Energy Siphon", BarColor.WHITE, BarStyle.SOLID);
+                            siphonChargeUpBar.addPlayer(player);
+                            siphonChargeUpBar.setProgress(0);
                         }
 
                         @Override
@@ -196,23 +216,67 @@ public class TitanfallAbility extends Ability {
                             }
                             if (t.getPassengers().size() <= 0) {
                                 t.setAware(false);
+                                siphonChargeUpBar.setVisible(false);
+                                siphonChargeUp = 0;
                             } else {
                                 t.setAware(true);
-                                if (!attackMode) {
+                                if (siphonCooldown.getCoolingDown()) {
+                                    siphonChargeUpBar.setVisible(false);
+                                } else if (siphonChargeUp > 0) {
+                                    if (siphonChargeUp < ENERGY_SIPHON_CHARGE_UP)
+                                        siphonChargeUp++;
+                                    siphonChargeUpBar.setVisible(true);
+                                    siphonChargeUpBar.setProgress((double) siphonChargeUp / ENERGY_SIPHON_CHARGE_UP);
+                                    if (siphonChargeUp >= ENERGY_SIPHON_CHARGE_UP) {
+                                        RayTraceResult result = player.getWorld().rayTrace(player.getEyeLocation(), player.getEyeLocation().getDirection(), 32, FluidCollisionMode.NEVER, true, 0, entity -> !entity.equals(player) && !entity.equals(t) && entity instanceof LivingEntity);
+                                        Vector hit;
+                                        boolean effective = false;
+                                        if (result == null) {
+                                            hit = player.getEyeLocation().toVector().add(player.getEyeLocation().getDirection().multiply(32));
+                                        } else {
+                                            hit = result.getHitPosition();
+                                            LivingEntity entity = (LivingEntity) result.getHitEntity();
+                                            if (entity != null) {
+                                                effective = true;
+                                                entity.damage(4, player);
+                                                entity.addPotionEffect(PotionEffectType.SLOW.createEffect(60, 1));
+                                                t.setHealth(Math.min(EntityUtils.getMaxHealth(t), t.getHealth() + 4));
+                                            }
+                                        }
+                                        WorldUtils.spawnParticleLine(t.getEyeLocation(), hit.toLocation(t.getWorld()), effective ? Particle.DRAGON_BREATH : Particle.ELECTRIC_SPARK, 3, false);
+                                        siphonChargeUp = 0;
+                                        siphonCooldown.startCooldown(ENERGY_SIPHON_COOLDOWN);
+                                        siphonChargeUpBar.setProgress(0);
+                                    }
+                                } else {
+                                    siphonChargeUpBar.setVisible(false);
+                                }
+                                if (attackMode) {
+                                    RayTraceResult result = player.getWorld().rayTraceEntities(player.getEyeLocation(), player.getEyeLocation().getDirection(), 48, entity -> {
+                                        if (!(entity instanceof LivingEntity)) return false;
+                                        if (entity instanceof Player p) {
+                                            return !p.getName().equals(player.getName());
+                                        }
+                                        if (entity.equals(t)) return false;
+                                        return true;
+                                    });
+                                    if (result != null)
+                                        t.setTarget((LivingEntity) result.getHitEntity());
+                                } else {
                                     if (t.isOnGround() && !t.isInWater())
                                         t.setVelocity(t.getVelocity().add(player.getLocation().getDirection().setY(0).multiply(0.08)));
                                     else
                                         t.setVelocity(t.getVelocity().add(player.getLocation().getDirection().setY(0).multiply(0.02)));
-                                    t.setRotation(player.getLocation().getYaw(), player.getLocation().getPitch());
+                                    t.setRotation(player.getLocation().getYaw(), t.getLocation().getPitch());
                                 }
                             }
                             Action action = pendingAction.get();
                             if (action != null) {
                                 if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
                                     if (attackMode) {
-                                        LivingEntity target = PlayerUtils.getPlayerTargetLivingEntity(player);
-                                        if (!Objects.equals(target, t))
-                                            t.setTarget(target);
+                                        if (!siphonCooldown.getCoolingDown())
+                                            if (siphonChargeUp <= 0)
+                                                siphonChargeUp = 1;
                                     } else {
                                         if (t.isOnGround())
                                             t.setVelocity(t.getVelocity().add(new Vector(0, 1, 0)));
@@ -224,10 +288,20 @@ public class TitanfallAbility extends Ability {
                             }
                             if (actionCooldown.get() > 0)
                                 actionCooldown.decrementAndGet();
-                            if (t.getPassengers().size() > 0)
-                                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(attackMode ? "Attack mode" : "Move mode"));
-                            else
-                                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("Dismounted"));
+                            if (t.getPassengers().size() <= 0) {
+                                if (t.getTicksLived() % 20 == 0)
+                                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("Titan idle"));
+                            } else {
+                                String statusText = "";
+                                statusText += attackMode ? "Attack mode" : "Move mode";
+                                if (siphonCooldown.getCoolingDown())
+                                    statusText += " | Energy Siphon in " + siphonCooldown.getCooldownTicks() / 20 + "s";
+                                if (t.getTarget() != null)
+                                    statusText += " | Target: " + t.getTarget().getName();
+                                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(statusText));
+                            }
+                            if (siphonCooldown.getCoolingDown())
+                                t.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, t.getLocation(), 2, 0.5, 0.5, 0.5, 0.02);
                             t.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, t.getLocation().add(0, 1, 0), 1, 0.8, 0.8, 0.8, 0.1);
                         }
 

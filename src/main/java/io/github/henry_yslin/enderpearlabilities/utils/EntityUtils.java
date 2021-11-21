@@ -24,7 +24,7 @@ public class EntityUtils {
      */
     public static double getMaxHealth(LivingEntity entity) {
         AttributeInstance attribute = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (attribute == null) return 0;
+        if (attribute == null) return Double.POSITIVE_INFINITY;
         return attribute.getValue();
     }
 

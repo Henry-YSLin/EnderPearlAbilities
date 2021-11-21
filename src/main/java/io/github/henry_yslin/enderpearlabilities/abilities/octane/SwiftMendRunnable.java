@@ -12,7 +12,6 @@ public class SwiftMendRunnable extends AbilityRunnable {
     public SwiftMendRunnable(Player player) {
         this.player = player;
         maxHealth = EntityUtils.getMaxHealth(player);
-        if (maxHealth == 0) maxHealth = Double.POSITIVE_INFINITY;
     }
 
     @Override
