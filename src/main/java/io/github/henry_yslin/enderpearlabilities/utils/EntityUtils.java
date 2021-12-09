@@ -5,10 +5,9 @@ import com.comphenix.protocol.events.PacketContainer;
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.metadata.MetadataValue;
+import org.bukkit.potion.PotionEffectType;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -52,5 +51,60 @@ public class EntityUtils {
         } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
+    }
+
+    public static double getGravity(Entity entity) {
+        if (!entity.hasGravity()) return 0;
+        if (entity instanceof LivingEntity livingEntity) {
+            if (livingEntity.hasPotionEffect(PotionEffectType.SLOW_FALLING)) return 0.01;
+            else return 0.08;
+        }
+        if (entity.getType() == EntityType.DROPPED_ITEM
+                || entity.getType() == EntityType.FALLING_BLOCK
+                || entity.getType() == EntityType.PRIMED_TNT)
+            return 0.04;
+        if (entity instanceof Minecart) return 0.04;
+        if (entity instanceof Boat) return 0.04;
+        if (entity.getType() == EntityType.LLAMA_SPIT) return 0.06;
+        if (entity.getType() == EntityType.EXPERIENCE_ORB) return 0.03;
+        if (entity.getType() == EntityType.FISHING_HOOK) return 0.03;
+        if (entity instanceof Projectile) {
+            if (entity instanceof Arrow || entity instanceof Trident)
+                return 0.05;
+            if (entity instanceof Fireball) return 0.1;
+            return 0.03;
+        }
+        return 0.03;
+    }
+
+    public static double getDrag(Entity entity) {
+        if (entity instanceof LivingEntity) return 0.02;
+        if (entity.getType() == EntityType.DROPPED_ITEM
+                || entity.getType() == EntityType.FALLING_BLOCK
+                || entity.getType() == EntityType.PRIMED_TNT)
+            return 0.02;
+        if (entity instanceof Minecart) return 0.05;
+        if (entity instanceof Boat) return 0;
+        if (entity.getType() == EntityType.LLAMA_SPIT) return 0.01;
+        if (entity.getType() == EntityType.EXPERIENCE_ORB) return 0.02;
+        if (entity.getType() == EntityType.FISHING_HOOK) return 0.08;
+        if (entity instanceof Projectile) {
+            if (entity instanceof Arrow || entity instanceof Trident)
+                return 0.01;
+            if (entity instanceof Fireball) {
+                if (entity instanceof WitherSkull skull)
+                    if (skull.isCharged())
+                        return 0.27;
+                return 0.05;
+            }
+            return 0.01;
+        }
+        return 0.02;
+    }
+
+    public static boolean hasDelayedDrag(Entity entity) {
+        if (entity instanceof LivingEntity) return true;
+        if (entity instanceof LargeFireball) return true;
+        return false;
     }
 }
