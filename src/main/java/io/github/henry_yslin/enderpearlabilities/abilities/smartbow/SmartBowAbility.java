@@ -57,7 +57,7 @@ public class SmartBowAbility extends Ability {
                 .codeName("smart-bow")
                 .name("Smart Bow")
                 .origin("Titanfall")
-                .description("Enhance your bow-type weapons with advanced automatic aim correction that greatly increase the chance of hitting your target.")
+                .description("Enhance your bow-type weapons with advanced automatic aim correction that greatly increases the chance of hitting your target.")
                 .usage("Right click with an ender pearl to activate. Right click again to cancel. Cooldown depends on the number of shots fired.")
                 .activation(ActivationHand.OffHand);
 
