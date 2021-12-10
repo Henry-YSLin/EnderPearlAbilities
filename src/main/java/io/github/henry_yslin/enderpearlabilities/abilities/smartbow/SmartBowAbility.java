@@ -4,13 +4,10 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
-import io.github.henry_yslin.enderpearlabilities.abilities.wraithtactical.VoicesFromTheVoidListener;
 import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
-import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
-import org.bukkit.FluidCollisionMode;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Particle;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
@@ -29,7 +26,8 @@ public class SmartBowAbility extends Ability {
 
     static final int MAX_AIR_TIME = 100;
     static final double LOCK_ON_RANGE = 100;
-    static final double LOCK_ON_RADIUS = 5;
+    static final double LOCK_ON_RADIUS = 10;
+    static final double LOCK_ON_ANGLE = 45d / 180 * Math.PI;
 
     private final AbilityInfo info;
 
@@ -59,8 +57,6 @@ public class SmartBowAbility extends Ability {
                     .cooldown(config.getInt("cooldown"));
 
         info = builder.build();
-
-        subListeners.add(new VoicesFromTheVoidListener(plugin, this, config));
     }
 
     @Override
@@ -101,16 +97,27 @@ public class SmartBowAbility extends Ability {
     }
 
     private void simulate1TickMovement(Entity entity, Location location, Vector velocity, double gravity, double drag) {
-        RayTraceResult rayTraceResult = entity.getWorld().rayTraceBlocks(location, new Vector(0, -1, 0), 0.01, FluidCollisionMode.ALWAYS, true);
-        if (rayTraceResult != null && rayTraceResult.getHitBlock() != null)
-            velocity.multiply(0);
-        location.add(velocity);
-        if (EntityUtils.hasDelayedDrag(entity)) {
-            velocity.add(new Vector(0, -gravity, 0));
-            velocity.multiply(1 - drag);
+        if (entity.isOnGround()) {
+            location.add(velocity.clone().setY(0));
+        } else if (EntityUtils.isFlying(entity)) {
+            location.add(velocity);
         } else {
-            velocity.multiply(1 - drag);
-            velocity.add(new Vector(0, -gravity, 0));
+            boolean onGround = false;
+            if (velocity.getY() <= 0) {
+                RayTraceResult rayTraceResult = entity.getWorld().rayTraceBlocks(new Location(location.getWorld(), location.getX(), location.getY() + 0.01, location.getZ()), new Vector(0, -1, 0), 0.02 + velocity.getY(), FluidCollisionMode.ALWAYS, true);
+                if (rayTraceResult != null && rayTraceResult.getHitBlock() != null)
+                    onGround = true;
+            }
+            if (onGround)
+                velocity.multiply(0);
+            location.add(velocity);
+            if (EntityUtils.hasDelayedDrag(entity)) {
+                velocity.add(new Vector(0, -gravity, 0));
+                velocity.multiply(1 - drag);
+            } else {
+                velocity.multiply(1 - drag);
+                velocity.add(new Vector(0, -gravity, 0));
+            }
         }
     }
 
@@ -144,17 +151,23 @@ public class SmartBowAbility extends Ability {
             if (horizontalVelocity * horizontalVelocity + verticalVelocity * verticalVelocity > maxVelocity * maxVelocity)
                 continue;
 
-            return targetLocation.toVector().subtract(projectile.getLocation().toVector()).normalize().setY(0).multiply(horizontalVelocity).add(new Vector(0, verticalVelocity, 0));
+            return targetLocation.toVector().subtract(projectile.getLocation().toVector().setY(targetLocation.getY())).normalize().multiply(horizontalVelocity).add(new Vector(0, verticalVelocity, 0));
         }
         return target.getLocation().toVector().subtract(projectile.getLocation().toVector()).normalize().multiply(maxVelocity);
     }
 
     private RayTraceResult rayTrace(double raySize, Entity arrow) {
         return player.getWorld().rayTraceEntities(player.getEyeLocation(), player.getEyeLocation().getDirection(), LOCK_ON_RANGE, raySize, entity -> {
+            if (!entity.isValid()) return false;
             if (entity instanceof Player p) {
                 if (p.getGameMode() == GameMode.SPECTATOR) return false;
             }
-            return !entity.equals(player) && !entity.equals(arrow) && entity instanceof LivingEntity;
+            if (entity.equals(player) || entity.equals(arrow) || !(entity instanceof LivingEntity livingEntity))
+                return false;
+            if (raySize > 0) {
+                return livingEntity.getEyeLocation().subtract(player.getEyeLocation()).toVector().angle(player.getEyeLocation().getDirection()) <= LOCK_ON_ANGLE;
+            }
+            return true;
         });
     }
 
@@ -171,10 +184,11 @@ public class SmartBowAbility extends Ability {
             LivingEntity target = (LivingEntity) result.getHitEntity();
             Vector velocity = computeProjectileVelocity(arrow, target, arrow.getVelocity().length(), MAX_AIR_TIME);
             arrow.setVelocity(velocity);
-            WorldUtils.spawnParticleLine(player.getLocation(), target.getLocation(), Particle.ELECTRIC_SPARK, 2, true);
+            player.spawnParticle(Particle.FLASH, target.getLocation(), 1, 0, 0, 0, 0);
+        } else {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.RED + "No target found"));
         }
 
-        // https://minecraft.fandom.com/wiki/Entity#Motion_of_entities
         Vector velocity = arrow.getVelocity();
         Location location = arrow.getLocation();
 
@@ -182,7 +196,8 @@ public class SmartBowAbility extends Ability {
             location.add(velocity);
             velocity.multiply(0.99);
             velocity.add(new Vector(0, -1 / 20f, 0));
-            player.spawnParticle(Particle.DRAGON_BREATH, location, 1, 0, 0, 0, 0);
+            if (i >= 2)
+                player.spawnParticle(Particle.DRAGON_BREATH, location, 1, 0, 0, 0, 0);
         }
 
         (new AbilityRunnable() {
@@ -193,7 +208,8 @@ public class SmartBowAbility extends Ability {
                     cancel();
                     return;
                 }
-                arrow.getWorld().spawnParticle(Particle.END_ROD, arrow.getLocation(), 1, 0, 0, 0, 0, null, true);
+                if (arrow.getTicksLived() > 2)
+                    arrow.getWorld().spawnParticle(Particle.END_ROD, arrow.getLocation(), 1, 0, 0, 0, 0, null, true);
             }
         }).runTaskTimer(this, 0, 1);
     }

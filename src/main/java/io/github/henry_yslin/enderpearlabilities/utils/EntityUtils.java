@@ -53,6 +53,7 @@ public class EntityUtils {
         }
     }
 
+    // https://minecraft.fandom.com/wiki/Entity#Motion_of_entities
     public static double getGravity(Entity entity) {
         if (!entity.hasGravity()) return 0;
         if (entity instanceof LivingEntity livingEntity) {
@@ -100,6 +101,16 @@ public class EntityUtils {
             return 0.01;
         }
         return 0.02;
+    }
+
+    public static boolean isFlying(Entity entity) {
+        if (entity instanceof Player player)
+            return player.isFlying() || player.isGliding();
+        if (entity.getType() == EntityType.PHANTOM || entity.getType() == EntityType.BAT || entity.getType() == EntityType.ENDER_DRAGON)
+            return true;
+        if (entity.getType() == EntityType.BLAZE && !entity.isOnGround())
+            return true;
+        return false;
     }
 
     public static boolean hasDelayedDrag(Entity entity) {
