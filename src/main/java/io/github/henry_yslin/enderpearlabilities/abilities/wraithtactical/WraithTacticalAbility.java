@@ -14,6 +14,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
@@ -104,14 +105,14 @@ public class WraithTacticalAbility extends Ability {
 
         if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation, true)) return;
 
+        event.setCancelled(true);
+
         if (player.getName().equals(ownerName) && abilityActive.get()) {
             cancelAbility.set(true);
             return;
         }
 
         if (InteractionLockManager.getInstance().isInteractionLocked(player)) return;
-
-        event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
         if (chargingUp.get()) return;
@@ -138,7 +139,7 @@ public class WraithTacticalAbility extends Ability {
 
                     @Override
                     protected synchronized void start() {
-                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID, BarFlag.CREATE_FOG, BarFlag.DARKEN_SKY);
                         bossbar.addPlayer(player);
                     }
 

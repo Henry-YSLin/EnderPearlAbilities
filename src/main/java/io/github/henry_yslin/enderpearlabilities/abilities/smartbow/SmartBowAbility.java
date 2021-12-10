@@ -4,10 +4,17 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
+import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
+import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
@@ -15,12 +22,16 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SmartBowAbility extends Ability {
 
@@ -34,9 +45,9 @@ public class SmartBowAbility extends Ability {
     @Override
     public void setConfigDefaults(ConfigurationSection config) {
         super.setConfigDefaults(config);
-        config.addDefault("charge-up", 20);
-        config.addDefault("duration", 140);
-        config.addDefault("cooldown", 500);
+        config.addDefault("charge-up", 10);
+        config.addDefault("duration", 12);
+        config.addDefault("cooldown", 100);
     }
 
     public SmartBowAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
@@ -45,9 +56,9 @@ public class SmartBowAbility extends Ability {
         AbilityInfo.Builder builder = new AbilityInfo.Builder()
                 .codeName("smart-bow")
                 .name("Smart Bow")
-                .origin("Titanfall - Smart Pistol")
-                .description("Bow with built-in aimbot.")
-                .usage("Right click.")
+                .origin("Titanfall")
+                .description("Enhance your bow-type weapons with advanced automatic aim correction that greatly increase the chance of hitting your target.")
+                .usage("Right click with an ender pearl to activate. Right click again to cancel. Cooldown depends on the number of shots fired.")
                 .activation(ActivationHand.OffHand);
 
         if (config != null)
@@ -66,7 +77,8 @@ public class SmartBowAbility extends Ability {
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
-    final AtomicBoolean cancelAbility = new AtomicBoolean(false);
+    final AtomicInteger shotsLeft = new AtomicInteger(0);
+    final BossBar bossbar = Bukkit.createBossBar("", BarColor.BLUE, BarStyle.SEGMENTED_12);
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -86,14 +98,19 @@ public class SmartBowAbility extends Ability {
     }
 
     private void setUpPlayer(Player player) {
+        bossbar.setTitle(ChatColor.BLUE + info.name);
         chargingUp.set(false);
         abilityActive.set(false);
+        shotsLeft.set(0);
+        bossbar.setVisible(false);
+        bossbar.addPlayer(player);
         cooldown.startCooldown(info.cooldown);
     }
 
     @Override
     public void onDisable() {
         super.onDisable();
+        bossbar.removeAll();
     }
 
     private void simulate1TickMovement(Entity entity, Location location, Vector velocity, double gravity, double drag) {
@@ -157,7 +174,7 @@ public class SmartBowAbility extends Ability {
     }
 
     private RayTraceResult rayTrace(double raySize, Entity arrow) {
-        return player.getWorld().rayTraceEntities(player.getEyeLocation(), player.getEyeLocation().getDirection(), LOCK_ON_RANGE, raySize, entity -> {
+        return arrow.getWorld().rayTraceEntities(arrow.getLocation(), arrow.getVelocity(), LOCK_ON_RANGE, raySize, entity -> {
             if (!entity.isValid()) return false;
             if (entity instanceof Player p) {
                 if (p.getGameMode() == GameMode.SPECTATOR) return false;
@@ -165,7 +182,7 @@ public class SmartBowAbility extends Ability {
             if (entity.equals(player) || entity.equals(arrow) || !(entity instanceof LivingEntity livingEntity))
                 return false;
             if (raySize > 0) {
-                return livingEntity.getEyeLocation().subtract(player.getEyeLocation()).toVector().angle(player.getEyeLocation().getDirection()) <= LOCK_ON_ANGLE;
+                return livingEntity.getEyeLocation().subtract(arrow.getLocation()).toVector().angle(arrow.getVelocity()) <= LOCK_ON_ANGLE;
             }
             return true;
         });
@@ -176,6 +193,16 @@ public class SmartBowAbility extends Ability {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!player.getName().equals(ownerName)) return;
         if (!(event.getProjectile() instanceof Arrow arrow)) return;
+        if (!abilityActive.get()) return;
+
+        int shots = shotsLeft.decrementAndGet();
+        bossbar.setProgress(shots / (double) info.duration);
+
+        if (shots <= 0) {
+            abilityActive.set(false);
+            bossbar.setVisible(false);
+            cooldown();
+        }
 
         RayTraceResult result = rayTrace(0, arrow);
         if (result == null || result.getHitEntity() == null)
@@ -212,5 +239,64 @@ public class SmartBowAbility extends Ability {
                     arrow.getWorld().spawnParticle(Particle.END_ROD, arrow.getLocation(), 1, 0, 0, 0, 0, null, true);
             }
         }).runTaskTimer(this, 0, 1);
+    }
+
+    private void cooldown() {
+        cooldown.startCooldown(info.cooldown + (info.duration - shotsLeft.get()) * 40);
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation, true)) return;
+
+        event.setCancelled(true);
+
+        if (player.getName().equals(ownerName) && abilityActive.get()) {
+            bossbar.setVisible(false);
+            abilityActive.set(false);
+            cooldown();
+            shotsLeft.set(0);
+            return;
+        }
+
+        if (InteractionLockManager.getInstance().isInteractionLocked(player)) return;
+
+        if (cooldown.getCoolingDown()) return;
+        if (chargingUp.get()) return;
+
+        new FunctionChain(
+                next -> {
+                    PlayerUtils.consumeEnderPearl(player);
+                    next.run();
+                },
+                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> {
+                    abilityActive.set(true);
+                    bossbar.setVisible(true);
+                    bossbar.setProgress(1);
+                    shotsLeft.set(info.duration);
+                }
+        ).execute();
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        if (event.getPlayer().getName().equals(ownerName)) {
+            bossbar.setVisible(false);
+            abilityActive.set(false);
+            chargingUp.set(false);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        if (event.getEntity().getName().equals(ownerName)) {
+            bossbar.setVisible(false);
+            abilityActive.set(false);
+            chargingUp.set(false);
+            cooldown();
+        }
     }
 }
