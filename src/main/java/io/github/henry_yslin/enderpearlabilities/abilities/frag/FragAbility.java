@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class FragAbility extends Ability {
 
-    static final double PROJECTILE_SPEED = 2;
+    static final double PROJECTILE_SPEED = 10;
 
     private final AbilityInfo info;
 
@@ -43,8 +43,8 @@ public class FragAbility extends Ability {
                 .codeName("frag")
                 .name("Frag Grenade")
                 .origin("Apex")
-                .description("Throw frag grenades that bounce around and explode.")
-                .usage("Right click to throw.")
+                .description("Throw frag grenades with accurate guides.")
+                .usage("Hold an ender pearl to see the guide. Right click to throw.")
                 .activation(ActivationHand.OffHand);
 
         if (config != null)
@@ -63,15 +63,14 @@ public class FragAbility extends Ability {
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+    FragPredictionRunnable fragPredictionRunnable;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
-            chargingUp.set(false);
-            abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
+            setUpPlayer(player);
         }
     }
 
@@ -79,10 +78,23 @@ public class FragAbility extends Ability {
     public void onEnable() {
         super.onEnable();
         if (player != null) {
-            chargingUp.set(false);
-            abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
+            setUpPlayer(player);
         }
+    }
+
+    private void setUpPlayer(Player player) {
+        chargingUp.set(false);
+        abilityActive.set(false);
+        cooldown.startCooldown(info.cooldown);
+
+        if (fragPredictionRunnable != null && !fragPredictionRunnable.isCancelled())
+            fragPredictionRunnable.cancel();
+        fragPredictionRunnable = new FragPredictionRunnable(player);
+        fragPredictionRunnable.runTaskTimer(this, 0, 5);
+    }
+
+    private Location getFirePosition(Player player) {
+        return player.getEyeLocation().add(new Vector(0, 1, 0).crossProduct(player.getEyeLocation().getDirection()).multiply(0.4));
     }
 
     @EventHandler
@@ -105,14 +117,24 @@ public class FragAbility extends Ability {
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> {
-                    Projectile projectile = AbilityUtils.fireProjectile(this, player, null, info.duration, PROJECTILE_SPEED, true);
+                    Projectile projectile = AbilityUtils.fireProjectile(this, player, null, info.duration + 10, PROJECTILE_SPEED, true);
                     if (projectile != null) {
+                        projectile.teleport(getFirePosition(player));
                         grenade.set(projectile);
                         projectile.setMetadata("grenade", new FixedMetadataValue(plugin, grenade));
                     }
                     next.run();
                 },
                 next -> new AbilityRunnable() {
+                    Location lastLocation;
+
+                    @Override
+                    protected void start() {
+                        Projectile snowball = grenade.get();
+                        if (snowball == null) return;
+                        lastLocation = snowball.getLocation();
+                    }
+
                     @Override
                     protected void tick() {
                         Projectile snowball = grenade.get();
@@ -120,8 +142,9 @@ public class FragAbility extends Ability {
                             cancel();
                             return;
                         }
-                        snowball.setVelocity(snowball.getVelocity().add(new Vector(0, -0.05, 0)));
-                        snowball.getWorld().spawnParticle(Particle.END_ROD, snowball.getLocation(), 1, 0, 0, 0, 0);
+                        snowball.setVelocity(snowball.getVelocity().multiply(0.9).add(new Vector(0, -0.1, 0)));
+                        WorldUtils.spawnParticleLine(lastLocation, snowball.getLocation(), Particle.END_ROD, 1, true);
+                        lastLocation = snowball.getLocation();
                     }
 
                     @Override
@@ -145,7 +168,7 @@ public class FragAbility extends Ability {
 //                                livingEntity.addPotionEffect(PotionEffectType.CONFUSION.createEffect(duration * 2, 1));
 //                            });
                             if (hasCompleted())
-                                world.createExplosion(snowball.getLocation().add(0, 0.1, 0), 6, false, false);
+                                world.createExplosion(snowball.getLocation().add(0, 0.1, 0), 5, false, false);
                             snowball.remove();
                         }
                         abilityActive.set(false);
@@ -175,7 +198,7 @@ public class FragAbility extends Ability {
         Vector newVelocity;
         if (event.getHitBlockFace() != null) {
             double hitMagnitude = Math.abs(projectile.getVelocity().dot(event.getHitBlockFace().getDirection()));
-            newVelocity = projectile.getVelocity().add(event.getHitBlockFace().getDirection().multiply(hitMagnitude)).multiply(0.7).add(event.getHitBlockFace().getDirection().multiply(hitMagnitude * 0.5));
+            newVelocity = projectile.getVelocity().add(event.getHitBlockFace().getDirection().multiply(hitMagnitude)).multiply(0.3).add(event.getHitBlockFace().getDirection().multiply(Math.min(1, hitMagnitude * 0.5)));
 
         } else {
             newVelocity = projectile.getVelocity().setX(0).setZ(0);

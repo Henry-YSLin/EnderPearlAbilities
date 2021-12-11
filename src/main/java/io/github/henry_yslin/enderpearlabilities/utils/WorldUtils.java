@@ -3,6 +3,7 @@ package io.github.henry_yslin.enderpearlabilities.utils;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import java.util.Objects;
@@ -39,6 +40,27 @@ public class WorldUtils {
         int count = (int) (end.distance(start) * density);
         for (int i = 0; i < count; i++) {
             world.spawnParticle(particle, current, 1, 0, 0, 0, 0, null, force);
+            current.add(offset);
+        }
+    }
+
+    /**
+     * Display particles in a line for one player only. Note: player-specific particles are automatically "forced".
+     *
+     * @param start    The start position of the line.
+     * @param end      The end position of the line.
+     * @param particle The type of particle to display.
+     * @param density  The number of particles to display per meter.
+     */
+    public static void spawnPlayerParticleLine(Player player, Location start, Location end, Particle particle, double density) {
+        World world = start.getWorld();
+        if (world == null) return;
+
+        Vector offset = end.clone().subtract(start).toVector().normalize().multiply(1 / density);
+        Location current = start.clone();
+        int count = (int) (end.distance(start) * density);
+        for (int i = 0; i < count; i++) {
+            player.spawnParticle(particle, current, 1, 0, 0, 0, 0);
             current.add(offset);
         }
     }

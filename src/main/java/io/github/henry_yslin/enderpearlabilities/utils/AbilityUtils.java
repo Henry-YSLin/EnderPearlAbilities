@@ -139,7 +139,7 @@ public class AbilityUtils {
             inFlight.set(true);
         }
 
-        Projectile projectile = player.launchProjectile(Snowball.class, player.getLocation().getDirection().clone().normalize().multiply(projectileSpeed));
+        Projectile projectile = player.launchProjectile(Snowball.class, player.getLocation().getDirection().normalize().multiply(projectileSpeed));
         projectile.setGravity(gravity);
 
         projectile.setMetadata("ability", new FixedMetadataValue(ability.plugin, new AbilityCouple(ability.getInfo().codeName, player.getName())));
