@@ -123,6 +123,7 @@ public class TimeFreezeAbility extends Ability {
         event.setCancelled(true);
 
         if (cooldown.getCoolingDown()) return;
+        if (abilityActive.get()) return;
         if (chargingUp.get()) return;
 
         List<FreezeRecord> entities = new ArrayList<>();
