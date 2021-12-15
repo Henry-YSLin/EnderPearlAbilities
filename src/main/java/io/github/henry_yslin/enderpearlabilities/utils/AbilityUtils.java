@@ -1,6 +1,8 @@
 package io.github.henry_yslin.enderpearlabilities.utils;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.managers.Manager;
+import io.github.henry_yslin.enderpearlabilities.managers.ManagerRunnable;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
@@ -206,6 +208,28 @@ public class AbilityUtils {
                 if (runIfCancelled) next.run();
             }
         }.runTaskLater(ability, delay);
+    }
+
+    /**
+     * Execute a runnable after some delay.
+     *
+     * @param manager        The manager that owns the runnable.
+     * @param delay          The delay in ticks.
+     * @param next           The runnable to execute after the delay.
+     * @param runIfCancelled Whether to execute the runnable immediately if the delay is cancelled.
+     */
+    public static void delay(Manager manager, int delay, Runnable next, boolean runIfCancelled) {
+        new ManagerRunnable() {
+            @Override
+            protected void tick() {
+                if (!runIfCancelled) next.run();
+            }
+
+            @Override
+            protected void end() {
+                if (runIfCancelled) next.run();
+            }
+        }.runTaskLater(manager, delay);
     }
 
     private static String friendlyNumber(int number) {

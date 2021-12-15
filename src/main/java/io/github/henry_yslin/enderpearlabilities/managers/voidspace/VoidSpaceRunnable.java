@@ -1,7 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.managers.voidspace;
 
 import io.github.henry_yslin.enderpearlabilities.managers.ManagerRunnable;
-import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 
 public class VoidSpaceRunnable extends ManagerRunnable {
@@ -25,7 +24,6 @@ public class VoidSpaceRunnable extends ManagerRunnable {
         }
         player.setRemainingAir(player.getMaximumAir());
         player.setFireTicks(0);
-        player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 10, 0.5, 1, 0.5, 0.02, null, true);
     }
 
     @Override

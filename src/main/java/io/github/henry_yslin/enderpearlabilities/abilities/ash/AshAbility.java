@@ -264,6 +264,7 @@ public class AshAbility extends Ability {
                             currentLocation.add(velocity);
                             player.teleport(currentLocation);
                             player.setVelocity(velocity);
+                            player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 10, 0.5, 1, 0.5, 0.02, null, true);
                             player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, lastLocation[0].clone().add(0, 1, 0), 20, 0.05, 1, 0.05, 0, null, true);
 
                             if (currentLocation.distance(lastLocation[0]) < PHASE_VELOCITY * 1.5)
