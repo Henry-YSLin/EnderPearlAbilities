@@ -17,7 +17,7 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Mob;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -104,12 +104,13 @@ public class TimeFreezeAbility extends Ability {
     }
 
     private FreezeRecord freezeEntity(Entity entity) {
-        FreezeRecord record = new FreezeRecord(entity, entity.hasGravity(), entity.getVelocity(), entity instanceof Mob mob && mob.hasAI(), entity instanceof Creeper creeper ? creeper.getFuseTicks() : 0);
+        FreezeRecord record = new FreezeRecord(entity, entity.hasGravity(), entity.getVelocity(), entity instanceof LivingEntity livingEntity && livingEntity.hasAI(), entity instanceof Creeper creeper ? creeper.getFuseTicks() : 0);
         entity.setInvulnerable(true);
         entity.setGravity(false);
         entity.setVelocity(new Vector(0, 0, 0));
-        if (entity instanceof Mob mob) {
-            mob.setAI(false);
+        if (entity instanceof LivingEntity livingEntity) {
+            livingEntity.setCollidable(false);
+            livingEntity.setAI(false);
         }
         return record;
     }
@@ -160,6 +161,7 @@ public class TimeFreezeAbility extends Ability {
                         }
                         bossbar.setProgress(count / (double) info.duration);
                         for (FreezeRecord record : entities) {
+                            record.entity.setVelocity(new Vector(0, 0, 0));
                             if (record.entity instanceof Creeper creeper) {
                                 creeper.setFuseTicks(record.fuseTick);
                             }
@@ -182,8 +184,9 @@ public class TimeFreezeAbility extends Ability {
                         record.entity.setInvulnerable(false);
                         record.entity.setGravity(record.gravity);
                         record.entity.setVelocity(record.velocity);
-                        if (record.entity instanceof Mob mob) {
-                            mob.setAI(record.hasAI);
+                        if (record.entity instanceof LivingEntity livingEntity) {
+                            livingEntity.setCollidable(true);
+                            livingEntity.setAI(record.hasAI);
                         }
                     }
 
