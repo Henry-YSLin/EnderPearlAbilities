@@ -1,9 +1,11 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.bangaloretactical;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
@@ -28,41 +30,10 @@ public class BangaloreTacticalAbility extends Ability {
     static final boolean PROJECTILE_GRAVITY = true;
     static final double SMOKE_RADIUS = 4;
 
-    private final AbilityInfo info;
+    public BangaloreTacticalAbility(Plugin plugin, AbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
 
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 0);
-        config.addDefault("duration", 400);
-        config.addDefault("cooldown", 1000);
-    }
-
-    public BangaloreTacticalAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("bangalore-tactical")
-                .name("Smoke Launcher")
-                .origin("Apex - Bangalore")
-                .description("Fire a high-velocity smoke canister that explodes into a smoke wall on impact.\nPassive ability: Taking fire or damage while sprinting makes you move faster for a brief time.")
-                .usage("Right click to fire a smoke canister. The smoke wall will deal small damage and protect players from mob targeting.")
-                .activation(ActivationHand.OffHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-
-        subListeners.add(new DoubleTimeListener(plugin, this, config));
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+        subListeners.add(new DoubleTimeListener(plugin, this));
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
@@ -70,6 +41,16 @@ public class BangaloreTacticalAbility extends Ability {
     final List<SmokeSpot> smokeSpots = new ArrayList<>();
     final List<Entity> projectiles = Collections.synchronizedList(new ArrayList<>());
     AbilityRunnable smokeRunnable;
+
+    @Override
+    public boolean isActive() {
+        return false;
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -98,7 +79,7 @@ public class BangaloreTacticalAbility extends Ability {
 
     private void setUpPlayer(Player player) {
         blockShoot.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
 
         if (smokeRunnable != null && !smokeRunnable.isCancelled())
             smokeRunnable.cancel();
@@ -119,7 +100,7 @@ public class BangaloreTacticalAbility extends Ability {
                 for (int i = smokeSpots.size() - 1; i >= 0; i--) {
                     SmokeSpot smokeSpot = smokeSpots.get(i);
                     World world = Objects.requireNonNull(smokeSpot.location.getWorld());
-                    if (smokeSpot.lifetime == info.duration) {
+                    if (smokeSpot.lifetime == info.getDuration()) {
                         recalculateLineOfSight = true;
                         world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, smokeSpot.location, 50, 2, 2, 2, 0.003, null, true);
                     }
@@ -200,7 +181,7 @@ public class BangaloreTacticalAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -209,12 +190,12 @@ public class BangaloreTacticalAbility extends Ability {
 
         PlayerUtils.consumeEnderPearl(player);
         new FunctionChain(
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     Projectile projectile = AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
                     if (projectile != null)
                         projectiles.add(projectile);
-                    cooldown.setCooldown(info.cooldown);
+                    cooldown.setCooldown(info.getCooldown());
                 }
         ).execute();
     }
@@ -243,7 +224,7 @@ public class BangaloreTacticalAbility extends Ability {
                 int finalI = i;
                 Snowball snowball = projectile.getWorld().spawn(hitPosition, Snowball.class, entity -> {
                     entity.setShooter(player);
-                    entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+                    entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
                     entity.setVelocity(horizontal.clone().multiply(finalI).setY(0.25));
                 });
                 projectiles.add(snowball);
@@ -254,7 +235,7 @@ public class BangaloreTacticalAbility extends Ability {
             int lifetime = (int) ref.get();
             lifetime -= projectile.getTicksLived();
             if (lifetime <= 0) {
-                SmokeSpot spot = new SmokeSpot(hitPosition.add(0, player.getEyeHeight(true), 0), info.duration);
+                SmokeSpot spot = new SmokeSpot(hitPosition.add(0, player.getEyeHeight(true), 0), info.getDuration());
                 World world = Objects.requireNonNull(spot.location.getWorld());
                 smokeSpots.add(spot);
                 for (Entity nearbyEntity : world.getNearbyEntities(spot.location, SMOKE_RADIUS, SMOKE_RADIUS, SMOKE_RADIUS, entity -> entity instanceof LivingEntity && entity != player)) {
@@ -276,7 +257,7 @@ public class BangaloreTacticalAbility extends Ability {
                 }
                 Snowball snowball = projectile.getWorld().spawn(hitPosition, Snowball.class, entity -> {
                     entity.setShooter(player);
-                    entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+                    entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
                     entity.setVelocity(newVelocity);
                 });
                 projectiles.add(snowball);

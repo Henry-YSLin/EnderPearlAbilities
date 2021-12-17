@@ -10,7 +10,6 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -26,50 +25,29 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class AshAbility extends Ability {
+public class AshUltimateAbility extends Ability {
 
     static final int TARGET_RANGE = 80;
     static final double ANGLE_ALLOWANCE = Math.toRadians(10);
     static final double PHASE_VELOCITY = 2;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 0);
-        config.addDefault("duration", 400);
-        config.addDefault("cooldown", 400);
-    }
-
-    public AshAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("ash")
-                .name("Phase Breach")
-                .origin("Apex - Ash")
-                .description("Tear open a one-way portal to a targeted location.")
-                .usage("Right click to show targeting UI. Right click again to activate. Switch away from ender pearl or click an invalid location to cancel.")
-                .activation(ActivationHand.MainHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public AshUltimateAbility(Plugin plugin, AbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityRunnable portal;
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -91,7 +69,7 @@ public class AshAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
     }
 
     @EventHandler
@@ -146,7 +124,7 @@ public class AshAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -176,8 +154,8 @@ public class AshAbility extends Ability {
                             }
                             boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
                             boolean offHandPearl = player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
-                            boolean shouldContinue = ability.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
-                                    ability.getInfo().activation == ActivationHand.OffHand && offHandPearl;
+                            boolean shouldContinue = ability.getInfo().getActivation() == ActivationHand.MainHand && mainHandPearl ||
+                                    ability.getInfo().getActivation() == ActivationHand.OffHand && offHandPearl;
                             if (!player.isValid()) shouldContinue = false;
                             if (shouldContinue) {
                                 Optional<Location> targetLocation = getTargetLocation(player);
@@ -284,7 +262,7 @@ public class AshAbility extends Ability {
 
                             VoidSpaceManager.getInstance().exitVoid(player);
 
-                            cooldown.setCooldown(info.cooldown);
+                            cooldown.setCooldown(info.getCooldown());
                             if (completed)
                                 next.run();
                         }
@@ -322,7 +300,7 @@ public class AshAbility extends Ability {
                             protected void end() {
                                 super.end();
                             }
-                        }).runTaskRepeated(this, 0, 1, info.duration);
+                        }).runTaskRepeated(this, 0, 1, info.getDuration());
                     }
             ).execute();
         }

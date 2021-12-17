@@ -3,7 +3,6 @@ package io.github.henry_yslin.enderpearlabilities.abilities.bangaloretactical;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityListener;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -11,7 +10,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffectType;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -22,14 +20,9 @@ public class DoubleTimeListener extends AbilityListener {
 
     protected final Ability ability;
 
-    public DoubleTimeListener(Plugin plugin, Ability ability, @Nullable ConfigurationSection config) {
-        super(plugin, config);
+    public DoubleTimeListener(Plugin plugin, Ability ability) {
+        super(plugin);
         this.ability = ability;
-    }
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
     }
 
     AbilityRunnable projectileRunnable;
@@ -37,15 +30,15 @@ public class DoubleTimeListener extends AbilityListener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        if (player.getName().equals(ability.ownerName)) {
+        if (player.getName().equals(ability.getOwnerName())) {
             setUpPlayer(player);
         }
     }
 
     @Override
     public void onEnable() {
-        if (ability.player != null) {
-            setUpPlayer(ability.player);
+        if (ability.getPlayer() != null) {
+            setUpPlayer(ability.getPlayer());
         }
     }
 
@@ -72,7 +65,7 @@ public class DoubleTimeListener extends AbilityListener {
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
-        if (!player.getName().equals(ability.ownerName)) return;
+        if (!player.getName().equals(ability.getOwnerName())) return;
 
         if (player.isSprinting())
             player.addPotionEffect(PotionEffectType.SPEED.createEffect(SPEED_DURATION, 1));

@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Controls the behavior and description of a specific ability for one specified player.
@@ -51,6 +52,16 @@ public abstract class Ability extends AbilityListener {
      */
     public String getOwnerName() {
         return ownerName;
+    }
+
+    /**
+     * Get the player who owns this ability.
+     *
+     * @return The player who owns this ability, or null if the player is offline.
+     */
+    @Nullable
+    public Player getPlayer() {
+        return player;
     }
 
     /**
