@@ -1,7 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.ash;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
@@ -31,7 +30,7 @@ public class AshUltimateAbility extends Ability {
     static final double ANGLE_ALLOWANCE = Math.toRadians(10);
     static final double PHASE_VELOCITY = 2;
 
-    public AshUltimateAbility(Plugin plugin, AbilityInfo info, String ownerName) {
+    public AshUltimateAbility(Plugin plugin, AshUltimateAbilityInfo info, String ownerName) {
         super(plugin, info, ownerName);
     }
 

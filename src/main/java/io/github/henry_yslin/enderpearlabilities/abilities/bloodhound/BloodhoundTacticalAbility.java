@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.bloodhound;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
@@ -12,7 +10,6 @@ import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -29,46 +26,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class BloodhoundAbility extends Ability {
+public class BloodhoundTacticalAbility extends Ability {
+
     static final double SCAN_RADIUS = 75;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 10);
-        config.addDefault("duration", 200);
-        config.addDefault("cooldown", 600);
-    }
-
-    public BloodhoundAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("bloodhound")
-                .name("Eye of the Allfather")
-                .origin("Apex - Bloodhound")
-                .description("Briefly reveal entities through all structures around you.")
-                .usage("Right click to activate. Living entities are marked red while others are marked white. Scanned players are warned through a pop-up message.")
-                .activation(ActivationHand.OffHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public BloodhoundTacticalAbility(Plugin plugin, BloodhoundTacticalAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -90,14 +67,14 @@ public class BloodhoundAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
     }
 
     @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -122,7 +99,7 @@ public class BloodhoundAbility extends Ability {
         final Team team = tmp;
 
         new FunctionChain(
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     abilityActive.set(true);
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1, 0);
@@ -138,7 +115,7 @@ public class BloodhoundAbility extends Ability {
                         if (entity instanceof LivingEntity livingEntity) {
                             if (team != null)
                                 team.addEntry(entity.getUniqueId().toString());
-                            livingEntity.addPotionEffect(PotionEffectType.GLOWING.createEffect(info.duration, 1));
+                            livingEntity.addPotionEffect(PotionEffectType.GLOWING.createEffect(info.getDuration(), 1));
                         } else {
                             entity.setGlowing(true);
                         }
@@ -153,7 +130,7 @@ public class BloodhoundAbility extends Ability {
 
                     @Override
                     protected synchronized void start() {
-                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                     }
 
@@ -162,7 +139,7 @@ public class BloodhoundAbility extends Ability {
                         if (!abilityActive.get()) {
                             cancel();
                         }
-                        bossbar.setProgress(count / (double) info.duration * 10);
+                        bossbar.setProgress(count / (double) info.getDuration() * 10);
                     }
 
                     @Override
@@ -178,10 +155,10 @@ public class BloodhoundAbility extends Ability {
                             team.unregister();
                         entities.clear();
                         abilityActive.set(false);
-                        cooldown.setCooldown(info.cooldown);
+                        cooldown.setCooldown(info.getCooldown());
                         next.run();
                     }
-                }.runTaskRepeated(this, 0, 10, info.duration / 10)
+                }.runTaskRepeated(this, 0, 10, info.getDuration() / 10)
         ).execute();
     }
 }

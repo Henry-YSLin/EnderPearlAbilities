@@ -1,6 +1,8 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.bangaloreultimate;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
@@ -8,7 +10,6 @@ import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
@@ -36,43 +37,22 @@ public class BangaloreUltimateAbility extends Ability {
     static final int MISSILE_ARRAY_SIZE = 6;
     static final double MISSILE_SPACING = 8;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 100);
-        config.addDefault("duration", 100);
-        config.addDefault("cooldown", 1500);
-    }
-
-    public BangaloreUltimateAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("bangalore-ultimate")
-                .name("Rolling Thunder")
-                .origin("Apex - Bangalore")
-                .description("Call in an artillery strike that slowly creeps across the landscape.")
-                .usage("Right click to throw a flare. Several rows of missiles will then land sequentially in front of the flare and stick for a while before exploding, slowing and blinding entities.")
-                .activation(ActivationHand.MainHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public BangaloreUltimateAbility(Plugin plugin, BangaloreUltimateAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return false;
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -94,7 +74,7 @@ public class BangaloreUltimateAbility extends Ability {
     private void setUpPlayer(Player player) {
         abilityActive.set(false);
         blockShoot.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
     }
 
     @EventHandler
@@ -108,7 +88,7 @@ public class BangaloreUltimateAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -123,7 +103,7 @@ public class BangaloreUltimateAbility extends Ability {
 
             @Override
             protected void start() {
-                ticksToCancel = info.chargeUp;
+                ticksToCancel = info.getChargeUp();
                 projectile = AbilityUtils.fireProjectile(ability, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
             }
 
@@ -203,18 +183,18 @@ public class BangaloreUltimateAbility extends Ability {
                         Location location = missileLocations.remove(0);
                         location.setY(300);
                         TNTPrimed tnt = world.spawn(location, TNTPrimed.class, entity -> {
-                            entity.setFuseTicks(info.duration + 10);
-                            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+                            entity.setFuseTicks(info.getDuration() + 10);
+                            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
                             entity.setVelocity(new Vector(0, -10, 0));
                         });
-                        new MissileAI(player, tnt).runTaskRepeated(executor, 0, 1, info.duration);
+                        new MissileAI(player, tnt).runTaskRepeated(executor, 0, 1, info.getDuration());
                     }
 
                     @Override
                     protected void end() {
                         abilityActive.set(false);
                     }
-                }.runTaskRepeated(this, 0, Math.max(1, info.chargeUp / MISSILE_ARRAY_SIZE / MISSILE_ARRAY_SIZE), MISSILE_ARRAY_SIZE * MISSILE_ARRAY_SIZE)
+                }.runTaskRepeated(this, 0, Math.max(1, info.getChargeUp() / MISSILE_ARRAY_SIZE / MISSILE_ARRAY_SIZE), MISSILE_ARRAY_SIZE * MISSILE_ARRAY_SIZE)
         ).execute();
     }
 }

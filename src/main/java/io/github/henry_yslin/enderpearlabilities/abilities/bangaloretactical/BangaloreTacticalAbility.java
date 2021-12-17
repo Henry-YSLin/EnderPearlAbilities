@@ -2,7 +2,6 @@ package io.github.henry_yslin.enderpearlabilities.abilities.bangaloretactical;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
@@ -30,7 +29,7 @@ public class BangaloreTacticalAbility extends Ability {
     static final boolean PROJECTILE_GRAVITY = true;
     static final double SMOKE_RADIUS = 4;
 
-    public BangaloreTacticalAbility(Plugin plugin, AbilityInfo info, String ownerName) {
+    public BangaloreTacticalAbility(Plugin plugin, BangaloreTacticalAbilityInfo info, String ownerName) {
         super(plugin, info, ownerName);
 
         subListeners.add(new DoubleTimeListener(plugin, this));
