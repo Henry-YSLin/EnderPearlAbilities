@@ -1,11 +1,12 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.frag;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
@@ -22,48 +23,27 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class FragAbility extends Ability {
+public class FragGrenadeAbility extends Ability {
 
     static final double PROJECTILE_SPEED = 10;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 0);
-        config.addDefault("duration", 60);
-        config.addDefault("cooldown", 400);
-    }
-
-    public FragAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("frag")
-                .name("Frag Grenade")
-                .origin("Apex")
-                .description("Throw frag grenades with accurate guides.")
-                .usage("Hold an ender pearl to see the guide. Right click to throw.")
-                .activation(ActivationHand.OffHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public FragGrenadeAbility(Plugin plugin, FragGrenadeAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     FragPredictionRunnable fragPredictionRunnable;
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -85,7 +65,7 @@ public class FragAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
 
         if (fragPredictionRunnable != null && !fragPredictionRunnable.isCancelled())
             fragPredictionRunnable.cancel();
@@ -101,7 +81,7 @@ public class FragAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -115,9 +95,9 @@ public class FragAbility extends Ability {
 
         PlayerUtils.consumeEnderPearl(player);
         new FunctionChain(
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
-                    Projectile projectile = AbilityUtils.fireProjectile(this, player, null, info.duration + 10, PROJECTILE_SPEED, true);
+                    Projectile projectile = AbilityUtils.fireProjectile(this, player, null, info.getDuration() + 10, PROJECTILE_SPEED, true);
                     if (projectile != null) {
                         projectile.teleport(getFirePosition(player));
                         grenade.set(projectile);
@@ -172,9 +152,9 @@ public class FragAbility extends Ability {
                             snowball.remove();
                         }
                         abilityActive.set(false);
-                        cooldown.setCooldown(info.cooldown);
+                        cooldown.setCooldown(info.getCooldown());
                     }
-                }.runTaskRepeated(this, 0, 1, info.duration)
+                }.runTaskRepeated(this, 0, 1, info.getDuration())
         ).execute();
     }
 
@@ -205,7 +185,7 @@ public class FragAbility extends Ability {
         }
         Snowball snowball = projectile.getWorld().spawn(hitPosition, Snowball.class, entity -> {
             entity.setShooter(player);
-            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
             entity.setVelocity(newVelocity);
         });
         Optional<Object> ref = EntityUtils.getMetadata(projectile, "grenade");

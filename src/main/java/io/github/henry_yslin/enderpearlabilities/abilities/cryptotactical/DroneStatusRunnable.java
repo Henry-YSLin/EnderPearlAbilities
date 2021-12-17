@@ -31,13 +31,13 @@ public class DroneStatusRunnable extends AbilityRunnable {
 
     @Override
     public void tick() {
-        if (ability.cooldown.isCoolingDown()) return;
+        if (ability.getCooldown().isCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
         boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
         boolean offHandPearl = player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
-        if (ability.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
-                ability.getInfo().activation == ActivationHand.OffHand && offHandPearl) {
+        if (ability.getInfo().getActivation() == ActivationHand.MainHand && mainHandPearl ||
+                ability.getInfo().getActivation() == ActivationHand.OffHand && offHandPearl) {
             if (drone.get() != null && drone.get().isValid()) {
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.LIGHT_PURPLE + "Enter existing drone, sneak to recall"));
             } else {

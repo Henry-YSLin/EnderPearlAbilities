@@ -1,8 +1,11 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.cryptoultimate;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
-import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical.CryptoTacticalAbility;
+import io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical.CryptoTacticalAbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import net.md_5.bungee.api.ChatMessageType;
@@ -11,7 +14,6 @@ import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
@@ -29,48 +31,28 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CryptoUltimateAbility extends Ability {
+
     static final double EMP_RADIUS = 20;
     final String TACTICAL_ABILITY_NAME;
 
-    private final AbilityInfo info;
+    public CryptoUltimateAbility(Plugin plugin, CryptoUltimateAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
 
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 60);
-        config.addDefault("duration", 200);
-        config.addDefault("cooldown", 1200);
-    }
-
-    public CryptoUltimateAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("crypto-ultimate")
-                .name("EMP")
-                .origin("Apex - Crypto")
-                .description("Charge up an EMP blast from your drone (if any). Deals damage, slows entities and blocks their actions.")
-                .usage("If a drone ability is available, you must have an existing drone to use this ability. Left click while in drone view, or right click with an ender pearl in person to charge up the EMP. EMP blast affects all entities in radius, including yourself.")
-                .activation(ActivationHand.MainHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-
-        TACTICAL_ABILITY_NAME = new CryptoTacticalAbility(plugin, null, null).getInfo().codeName;
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+        TACTICAL_ABILITY_NAME = new CryptoTacticalAbilityInfo(plugin).getCodeName();
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -92,7 +74,7 @@ public class CryptoUltimateAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
     }
 
     @EventHandler
@@ -116,7 +98,7 @@ public class CryptoUltimateAbility extends Ability {
 
         new FunctionChain(
                 next -> {
-                    if (info.chargeUp <= 0) {
+                    if (info.getChargeUp() <= 0) {
                         next.run();
                         return;
                     }
@@ -136,7 +118,7 @@ public class CryptoUltimateAbility extends Ability {
                                 cancel();
                                 return;
                             }
-                            bossbar.setProgress(count / (double) info.chargeUp);
+                            bossbar.setProgress(count / (double) info.getChargeUp());
                             player.getWorld().spawnParticle(Particle.WHITE_ASH, player.getLocation(), 5, 0.5, 0.5, 0.5, 0.02);
                             WorldUtils.spawnParticleSphere(abilityTarget.getLocation(), EMP_RADIUS, Particle.END_ROD, 100, true);
                         }
@@ -148,7 +130,7 @@ public class CryptoUltimateAbility extends Ability {
                             if (this.hasCompleted())
                                 next.run();
                         }
-                    }.runTaskRepeated(this, 0, 1, info.chargeUp);
+                    }.runTaskRepeated(this, 0, 1, info.getChargeUp());
                 },
                 next -> {
                     abilityActive.set(true);
@@ -180,14 +162,14 @@ public class CryptoUltimateAbility extends Ability {
                     }
                     if (entities.isEmpty()) {
                         abilityActive.set(false);
-                        cooldown.setCooldown(info.cooldown);
+                        cooldown.setCooldown(info.getCooldown());
                         return;
                     }
                     for (Entity entity : entities) {
                         if (entity instanceof LivingEntity livingEntity) {
                             livingEntity.damage(4, abilityTarget);
                             livingEntity.addPotionEffect(PotionEffectType.SLOW.createEffect(30, 3));
-                            livingEntity.setMetadata("emp", new FixedMetadataValue(plugin, info.codeName));
+                            livingEntity.setMetadata("emp", new FixedMetadataValue(plugin, info.getCodeName()));
                         }
                         if (entity instanceof Player p) {
                             p.sendTitle(" ", ChatColor.RED + "EMP detected", 5, 30, 30);
@@ -202,9 +184,9 @@ public class CryptoUltimateAbility extends Ability {
 
                     @Override
                     protected synchronized void start() {
-                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
-                        hitBossbar = Bukkit.createBossBar(ChatColor.RED + info.name, BarColor.RED, BarStyle.SOLID);
+                        hitBossbar = Bukkit.createBossBar(ChatColor.RED + info.getName(), BarColor.RED, BarStyle.SOLID);
                         for (Entity entity : entities) {
                             if (entity instanceof Player p) {
                                 hitBossbar.addPlayer(p);
@@ -217,8 +199,8 @@ public class CryptoUltimateAbility extends Ability {
                         if (!abilityActive.get()) {
                             cancel();
                         }
-                        bossbar.setProgress(count / (double) info.duration * 10);
-                        hitBossbar.setProgress(count / (double) info.duration * 10);
+                        bossbar.setProgress(count / (double) info.getDuration() * 10);
+                        hitBossbar.setProgress(count / (double) info.getDuration() * 10);
                     }
 
                     @Override
@@ -233,10 +215,10 @@ public class CryptoUltimateAbility extends Ability {
                         }
                         entities.clear();
                         abilityActive.set(false);
-                        cooldown.setCooldown(info.cooldown);
+                        cooldown.setCooldown(info.getCooldown());
                         next.run();
                     }
-                }.runTaskRepeated(this, 0, 10, info.duration / 10)
+                }.runTaskRepeated(this, 0, 10, info.getDuration() / 10)
         ).execute();
     }
 
@@ -246,13 +228,13 @@ public class CryptoUltimateAbility extends Ability {
         if (!player.getName().equals(ownerName)) return;
 
         Optional<Ability> droneAbility = EnderPearlAbilities.getInstance().getAbilities().stream()
-                .filter(ability -> ability instanceof CryptoTacticalAbility && ability.ownerName.equals(ownerName))
+                .filter(ability -> ability instanceof CryptoTacticalAbility && ability.getOwnerName().equals(ownerName))
                 .findFirst();
 
         LivingEntity targetEntity;
 
         if (droneAbility.isEmpty()) {
-            if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+            if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
             targetEntity = player;
         } else {
             CryptoTacticalAbility tacticalAbility = (CryptoTacticalAbility) droneAbility.get();
@@ -266,11 +248,11 @@ public class CryptoUltimateAbility extends Ability {
                         return;
                     }
                 } else {
-                    if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+                    if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
                 }
                 targetEntity = droneEntity;
             } else {
-                if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+                if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.RED + "Drone required"));
                 event.setCancelled(true);
                 return;

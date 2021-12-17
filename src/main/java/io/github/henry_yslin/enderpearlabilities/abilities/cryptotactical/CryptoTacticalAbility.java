@@ -1,6 +1,8 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
@@ -14,7 +16,6 @@ import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -44,39 +45,8 @@ public class CryptoTacticalAbility extends Ability {
 
     static final float FLY_SPEED = 0.06f;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 20);
-        config.addDefault("duration", 0);
-        config.addDefault("cooldown", 800);
-    }
-
-    public CryptoTacticalAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("crypto-tactical")
-                .name("Surveillance Drone")
-                .origin("Apex - Crypto")
-                .description("Deploys an aerial drone for various purposes. Cooldown is only active if the drone is destroyed or recalled.")
-                .usage("Right click to deploy a new drone or enter an existing one. Sneak while right-clicking to recall a deployed drone. Length of cooldown depends on the drone's heath. Right click while in drone to exit drone view and leave the drone in place. Ramming the drone into entities will cause damage to both the drone and the entity. Driving the drone through walls will temporarily limit vision.")
-                .activation(ActivationHand.OffHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public CryptoTacticalAbility(Plugin plugin, CryptoTacticalAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
@@ -84,6 +54,16 @@ public class CryptoTacticalAbility extends Ability {
     final AtomicReference<LivingEntity> drone = new AtomicReference<>();
     final AtomicReference<NPC> dummy = new AtomicReference<>();
     DroneStatusRunnable droneStatusRunnable;
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     public LivingEntity getDroneEntity() {
         return drone.get();
@@ -144,7 +124,7 @@ public class CryptoTacticalAbility extends Ability {
             entity.setCustomName(ownerName + "'s drone");
             entity.setCustomNameVisible(true);
             entity.setSilent(true);
-            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
         });
         drone.set(vex);
         return vex;
@@ -165,7 +145,7 @@ public class CryptoTacticalAbility extends Ability {
         NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, player.getName());
         npc.spawn(spawn);
         LivingEntity entity = (LivingEntity) npc.getEntity();
-        entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+        entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
         entity.setHealth(player.getHealth());
         npc.setProtected(false);
         dummy.set(npc);
@@ -228,7 +208,7 @@ public class CryptoTacticalAbility extends Ability {
         }
 
         abilityActive.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
 
         if (droneStatusRunnable != null && !droneStatusRunnable.isCancelled())
             droneStatusRunnable.cancel();
@@ -294,7 +274,7 @@ public class CryptoTacticalAbility extends Ability {
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
         if (event.getEntity().equals(drone.get())) {
-            cooldown.setCooldown(info.cooldown);
+            cooldown.setCooldown(info.getCooldown());
             player.sendTitle(" ", ChatColor.LIGHT_PURPLE + "Drone destroyed", 5, 30, 20);
         } else {
             NPC npc = dummy.get();
@@ -316,7 +296,7 @@ public class CryptoTacticalAbility extends Ability {
             return;
         }
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -332,7 +312,7 @@ public class CryptoTacticalAbility extends Ability {
                     @Override
                     protected synchronized void start() {
                         chargingUp.set(true);
-                        player.setCooldown(Material.ENDER_PEARL, info.chargeUp);
+                        player.setCooldown(Material.ENDER_PEARL, info.getChargeUp());
                         bossbar = Bukkit.createBossBar("Recalling drone", BarColor.WHITE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                     }
@@ -343,7 +323,7 @@ public class CryptoTacticalAbility extends Ability {
                             cancel();
                             return;
                         }
-                        bossbar.setProgress(count / (double) info.chargeUp);
+                        bossbar.setProgress(count / (double) info.getChargeUp());
                         drone.get().getWorld().spawnParticle(Particle.PORTAL, drone.get().getLocation(), 5, 0.1, 0.5, 0.1, 0.02);
                     }
 
@@ -354,11 +334,11 @@ public class CryptoTacticalAbility extends Ability {
                         if (isDroneValid()) {
                             double maxHealth = EntityUtils.getMaxHealth(drone.get());
                             double damage = maxHealth - drone.get().getHealth();
-                            cooldown.setCooldown((int) (info.cooldown / maxHealth * damage));
+                            cooldown.setCooldown((int) (info.getCooldown() / maxHealth * damage));
                             removeDrone();
                         }
                     }
-                }.runTaskRepeated(this, 0, 1, info.chargeUp);
+                }.runTaskRepeated(this, 0, 1, info.getChargeUp());
             } else {
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("No existing drone to recall."));
             }
@@ -411,7 +391,7 @@ public class CryptoTacticalAbility extends Ability {
 
                     @Override
                     protected synchronized void tick() {
-                        bossbar.setProgress(count / (double) info.chargeUp);
+                        bossbar.setProgress(count / (double) info.getChargeUp());
                         vex.getWorld().spawnParticle(Particle.PORTAL, vex.getLocation(), 5, 0.5, 0.5, 0.5, 0.02);
                     }
 
@@ -425,7 +405,7 @@ public class CryptoTacticalAbility extends Ability {
                             removeDrone();
                         }
                     }
-                }.runTaskRepeated(this, 0, 1, info.chargeUp),
+                }.runTaskRepeated(this, 0, 1, info.getChargeUp()),
                 next -> {
                     enterDrone(player);
                     abilityActive.set(true);
@@ -438,7 +418,7 @@ public class CryptoTacticalAbility extends Ability {
 
                     @Override
                     protected void start() {
-                        bossbar = Bukkit.createBossBar(info.name, BarColor.PURPLE, BarStyle.SOLID);
+                        bossbar = Bukkit.createBossBar(info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                         d = drone.get();
                     }
