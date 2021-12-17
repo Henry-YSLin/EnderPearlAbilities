@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.gibraltartactical;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.managers.shield.EntityBlockingShieldBehavior;
 import io.github.henry_yslin.enderpearlabilities.managers.shield.Shield;
 import io.github.henry_yslin.enderpearlabilities.managers.shield.ShieldManager;
@@ -17,7 +15,6 @@ import org.bukkit.World;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
@@ -41,44 +38,23 @@ public class GibraltarTacticalAbility extends Ability {
     static final boolean PROJECTILE_GRAVITY = true;
     static final double SHIELD_RADIUS = 6;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 0);
-        config.addDefault("duration", 600);
-        config.addDefault("cooldown", 1500);
-    }
-
-    public GibraltarTacticalAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("gibraltar-tactical")
-                .name("Dome of Protection")
-                .origin("Apex - Gibraltar")
-                .description("Blocks incoming and outgoing attacks.")
-                .usage("Right click to throw a disc that projects a shield around it.")
-                .activation(ActivationHand.OffHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public GibraltarTacticalAbility(Plugin plugin, GibraltarTacticalAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -100,14 +76,14 @@ public class GibraltarTacticalAbility extends Ability {
     private void setUpPlayer(Player player) {
         abilityActive.set(false);
         blockShoot.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
     }
 
     @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -120,7 +96,7 @@ public class GibraltarTacticalAbility extends Ability {
                     PlayerUtils.consumeEnderPearl(player);
                     next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY)
         ).execute();
     }
@@ -186,7 +162,7 @@ public class GibraltarTacticalAbility extends Ability {
 
             @Override
             protected synchronized void start() {
-                bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
+                bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                 bossbar.addPlayer(player);
             }
 
@@ -195,7 +171,7 @@ public class GibraltarTacticalAbility extends Ability {
                 if (!abilityActive.get()) {
                     cancel();
                 }
-                bossbar.setProgress(count / (double) info.duration * 10);
+                bossbar.setProgress(count / (double) info.getDuration() * 10);
             }
 
             @Override
@@ -203,8 +179,8 @@ public class GibraltarTacticalAbility extends Ability {
                 bossbar.removeAll();
                 ShieldManager.getInstance().getShields().removeAll(shields);
                 abilityActive.set(false);
-                cooldown.setCooldown(info.cooldown);
+                cooldown.setCooldown(info.getCooldown());
             }
-        }.runTaskRepeated(this, 0, 10, info.duration / 10);
+        }.runTaskRepeated(this, 0, 10, info.getDuration() / 10);
     }
 }

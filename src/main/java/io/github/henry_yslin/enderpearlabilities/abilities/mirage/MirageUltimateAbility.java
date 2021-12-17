@@ -1,6 +1,8 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.mirage;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
@@ -11,7 +13,6 @@ import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -30,45 +31,24 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MirageAbility extends Ability {
+public class MirageUltimateAbility extends Ability {
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 40);
-        config.addDefault("duration", 1000);
-        config.addDefault("cooldown", 800);
-    }
-
-    public MirageAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("mirage")
-                .name("Life of the Party")
-                .origin("Apex - Mirage")
-                .description("Deploy a team of decoys to distract enemies and protect the player. Decoys last for a set amount of time and use tools on their hands with reduced efficiency.")
-                .usage("Right click to summon decoys. Decoys wear the same armor and hold the same item in their main hand as the player. Decoys attack entities that damage them or the player. They will follow the player when idling. Mobs that target the player may get distracted by decoys.")
-                .activation(ActivationHand.OffHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public MirageUltimateAbility(Plugin plugin, MirageUltimateAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     private void removeAllNPCs() {
         CitizensAPI.getNPCRegistries().forEach(registry -> {
@@ -103,7 +83,7 @@ public class MirageAbility extends Ability {
         if (player != null) {
             chargingUp.set(false);
             abilityActive.set(false);
-            cooldown.setCooldown(info.cooldown);
+            cooldown.setCooldown(info.getCooldown());
         }
         if (CitizensAPI.getTraitFactory().getRegisteredTraits().stream().anyMatch(traitInfo -> traitInfo.getTraitName().equals("clonetrait")))
             CitizensAPI.getTraitFactory().deregisterTrait(TraitInfo.create(CloneTrait.class).withName("clonetrait"));
@@ -126,7 +106,7 @@ public class MirageAbility extends Ability {
             removeAllNPCs();
             chargingUp.set(false);
             abilityActive.set(false);
-            cooldown.setCooldown(info.cooldown);
+            cooldown.setCooldown(info.getCooldown());
         }
     }
 
@@ -161,7 +141,7 @@ public class MirageAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -174,7 +154,7 @@ public class MirageAbility extends Ability {
         PlayerUtils.consumeEnderPearl(player);
 
         new FunctionChain(
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     World world = player.getWorld();
                     world.playSound(player.getLocation(), Sound.ENTITY_ILLUSIONER_CAST_SPELL, 1, 0);
@@ -189,7 +169,7 @@ public class MirageAbility extends Ability {
                         abilityActive.set(false);
                         cooldown.cancelCooldown();
                         player.sendMessage(ChatColor.RED + "No place to spawn clones!");
-                        plugin.getLogger().info("[" + info.name + "] No valid spawn locations at " + player.getLocation() + ". Cancelling.");
+                        plugin.getLogger().info("[" + info.getName() + "] No valid spawn locations at " + player.getLocation() + ". Cancelling.");
                         return;
                     }
 
@@ -199,7 +179,7 @@ public class MirageAbility extends Ability {
                         NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, player.getName());
                         npc.spawn(spawn);
                         npc.getEntity().setGravity(false);
-                        npc.getEntity().setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+                        npc.getEntity().setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
                         npc.setProtected(false);
                         npcs.add(npc);
                     }
@@ -231,7 +211,7 @@ public class MirageAbility extends Ability {
 
                     @Override
                     protected synchronized void start() {
-                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                         Objective obj = player.getScoreboard().getObjective("Clones");
                         if (obj == null)
@@ -247,7 +227,7 @@ public class MirageAbility extends Ability {
                             cancel();
                             return;
                         }
-                        bossbar.setProgress(count * 10 / (double) info.duration);
+                        bossbar.setProgress(count * 10 / (double) info.getDuration());
                         int count = countNPCs();
                         score.setScore(count);
                         if (count == 0) cancel();
@@ -259,10 +239,10 @@ public class MirageAbility extends Ability {
                         removeAllNPCs();
                         player.getScoreboard().clearSlot(DisplaySlot.SIDEBAR);
                         abilityActive.set(false);
-                        cooldown.setCooldown(info.cooldown);
+                        cooldown.setCooldown(info.getCooldown());
                         next.run();
                     }
-                }.runTaskRepeated(this, 0, 10, info.duration / 10)
+                }.runTaskRepeated(this, 0, 10, info.getDuration() / 10)
         ).execute();
     }
 }

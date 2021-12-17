@@ -1,6 +1,8 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.gibraltarultimate;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
@@ -9,7 +11,6 @@ import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
@@ -35,43 +36,22 @@ public class GibraltarUltimateAbility extends Ability {
     static final double AIRSTRIKE_RADIUS = 12;
     static final int MISSILE_DELAY = 3;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 0);
-        config.addDefault("duration", 120);
-        config.addDefault("cooldown", 1500);
-    }
-
-    public GibraltarUltimateAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("gibraltar-ultimate")
-                .name("Defensive Bombardment")
-                .origin("Apex - Gibraltar")
-                .description("Call in a concentrated mortar strike on a marked position.")
-                .usage("Right click to throw a flare that marks a radius for continuous bombardment.")
-                .activation(ActivationHand.MainHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public GibraltarUltimateAbility(Plugin plugin, GibraltarUltimateAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return false;
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -93,7 +73,7 @@ public class GibraltarUltimateAbility extends Ability {
     private void setUpPlayer(Player player) {
         abilityActive.set(false);
         blockShoot.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
     }
 
     @EventHandler
@@ -107,7 +87,7 @@ public class GibraltarUltimateAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -165,18 +145,18 @@ public class GibraltarUltimateAbility extends Ability {
                         world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, landingLocation, 5, 0.1, 0.5, 0.1, 0, null, true);
 
                         TNTPrimed tnt = world.spawn(location, TNTPrimed.class, entity -> {
-                            entity.setFuseTicks(info.duration + 10);
-                            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+                            entity.setFuseTicks(info.getDuration() + 10);
+                            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
                             entity.setVelocity(new Vector(0, -7.5 - Math.random() * 5, 0));
                         });
-                        new MissileAI(player, tnt).runTaskRepeated(executor, 0, 1, info.duration);
+                        new MissileAI(player, tnt).runTaskRepeated(executor, 0, 1, info.getDuration());
                     }
 
                     @Override
                     protected void end() {
                         abilityActive.set(false);
                     }
-                }.runTaskRepeated(this, 0, MISSILE_DELAY, info.duration / MISSILE_DELAY)
+                }.runTaskRepeated(this, 0, MISSILE_DELAY, info.getDuration() / MISSILE_DELAY)
         ).execute();
     }
 }

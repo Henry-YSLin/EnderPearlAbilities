@@ -1,12 +1,9 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.horizon;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -21,50 +18,30 @@ import org.bukkit.util.Vector;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HorizonAbility extends Ability {
+public class HorizonUltimateAbility extends Ability {
 
     static final int PROJECTILE_LIFETIME = 100;
     static final double PROJECTILE_SPEED = 2;
     static final boolean PROJECTILE_GRAVITY = true;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 20);
-        config.addDefault("duration", 200);
-        config.addDefault("cooldown", 1000);
-    }
-
-    public HorizonAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("horizon")
-                .name("Black Hole")
-                .origin("Apex - Horizon")
-                .description("Create an inescapable micro black hole that pulls all entities in towards it.\nPassive ability: Cushion your fall to reduce fall damage.")
-                .usage("Right click to throw a projectile. A black hole will be created where it lands.")
-                .activation(ActivationHand.MainHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public HorizonUltimateAbility(Plugin plugin, HorizonUltimateAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
+    final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     SpacewalkRunnable spacewalkRunnable;
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -86,7 +63,7 @@ public class HorizonAbility extends Ability {
     private void setUpPlayer(Player player) {
         abilityActive.set(false);
         blockShoot.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
         if (spacewalkRunnable != null && !spacewalkRunnable.isCancelled())
             spacewalkRunnable.cancel();
         spacewalkRunnable = new SpacewalkRunnable(player);
@@ -97,7 +74,7 @@ public class HorizonAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -134,6 +111,11 @@ public class HorizonAbility extends Ability {
         new FunctionChain(
                 nextFunction -> new AbilityRunnable() {
                     @Override
+                    protected void start() {
+                        chargingUp.set(true);
+                    }
+
+                    @Override
                     protected void tick() {
                         world.playSound(finalLocation, Sound.ENTITY_BLAZE_AMBIENT, 1, 0);
                         world.spawnParticle(Particle.EXPLOSION_NORMAL, finalLocation, 2, 0.5, 0.5, 0.5, 0.02);
@@ -141,10 +123,11 @@ public class HorizonAbility extends Ability {
 
                     @Override
                     protected void end() {
+                        chargingUp.set(false);
                         if (this.hasCompleted())
                             nextFunction.run();
                     }
-                }.runTaskRepeated(this, 0, 2, info.chargeUp / 2),
+                }.runTaskRepeated(this, 0, 2, info.getChargeUp() / 2),
                 nextFunction -> new AbilityRunnable() {
                     Location blackHoleLocation;
 
@@ -179,11 +162,11 @@ public class HorizonAbility extends Ability {
                     @Override
                     protected void end() {
                         if (this.hasCompleted())
-                            cooldown.setCooldown(info.cooldown);
+                            cooldown.setCooldown(info.getCooldown());
                         abilityActive.set(false);
                         nextFunction.run();
                     }
-                }.runTaskRepeated(this, 0, 1, info.duration)
+                }.runTaskRepeated(this, 0, 1, info.getDuration())
         ).execute();
     }
 }
