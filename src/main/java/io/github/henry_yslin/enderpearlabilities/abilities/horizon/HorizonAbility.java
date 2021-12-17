@@ -86,7 +86,7 @@ public class HorizonAbility extends Ability {
     private void setUpPlayer(Player player) {
         abilityActive.set(false);
         blockShoot.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
         if (spacewalkRunnable != null && !spacewalkRunnable.isCancelled())
             spacewalkRunnable.cancel();
         spacewalkRunnable = new SpacewalkRunnable(player);
@@ -101,7 +101,7 @@ public class HorizonAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (abilityActive.get()) return;
 
         PlayerUtils.consumeEnderPearl(player);
@@ -179,7 +179,7 @@ public class HorizonAbility extends Ability {
                     @Override
                     protected void end() {
                         if (this.hasCompleted())
-                            cooldown.startCooldown(info.cooldown);
+                            cooldown.setCooldown(info.cooldown);
                         abilityActive.set(false);
                         nextFunction.run();
                     }

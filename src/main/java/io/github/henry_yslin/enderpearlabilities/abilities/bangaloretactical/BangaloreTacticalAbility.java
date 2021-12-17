@@ -98,7 +98,7 @@ public class BangaloreTacticalAbility extends Ability {
 
     private void setUpPlayer(Player player) {
         blockShoot.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
 
         if (smokeRunnable != null && !smokeRunnable.isCancelled())
             smokeRunnable.cancel();
@@ -204,7 +204,7 @@ public class BangaloreTacticalAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
 
         PlayerUtils.consumeEnderPearl(player);
@@ -214,7 +214,7 @@ public class BangaloreTacticalAbility extends Ability {
                     Projectile projectile = AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
                     if (projectile != null)
                         projectiles.add(projectile);
-                    cooldown.startCooldown(info.cooldown);
+                    cooldown.setCooldown(info.cooldown);
                 }
         ).execute();
     }

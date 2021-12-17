@@ -91,7 +91,7 @@ public class WattsonAbility extends Ability {
         super.onEnable();
         if (player != null) {
             abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
+            cooldown.setCooldown(info.cooldown);
         }
     }
 
@@ -106,7 +106,7 @@ public class WattsonAbility extends Ability {
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
+            cooldown.setCooldown(info.cooldown);
         }
     }
 
@@ -141,7 +141,7 @@ public class WattsonAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
 
         if (abilityActive.get()) return;
 
@@ -237,7 +237,7 @@ public class WattsonAbility extends Ability {
                         if (pylon.get().isValid())
                             pylon.get().remove();
                         abilityActive.set(false);
-                        cooldown.startCooldown(info.cooldown);
+                        cooldown.setCooldown(info.cooldown);
                         next.run();
                     }
                 }.runTaskRepeated(this, 0, 1, info.duration)

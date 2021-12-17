@@ -101,7 +101,7 @@ public class ValkyrieUltimateAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
     }
 
     @EventHandler
@@ -119,7 +119,7 @@ public class ValkyrieUltimateAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (abilityActive.get()) return;
 
         if (chargingUp.get()) {
@@ -193,7 +193,7 @@ public class ValkyrieUltimateAbility extends Ability {
                             } else {
                                 chargingUp.set(false);
                                 abilityActive.set(false);
-                                cooldown.startCooldown(100);
+                                cooldown.setCooldown(100);
                                 cancel();
                             }
                         }
@@ -330,7 +330,7 @@ public class ValkyrieUltimateAbility extends Ability {
                             protected void end() {
                                 player.getInventory().setChestplate(chestplate);
                                 abilityActive.set(false);
-                                cooldown.startCooldown(info.cooldown);
+                                cooldown.setCooldown(info.cooldown);
                             }
                         }).runTaskTimer(this, 0, 1);
                     }

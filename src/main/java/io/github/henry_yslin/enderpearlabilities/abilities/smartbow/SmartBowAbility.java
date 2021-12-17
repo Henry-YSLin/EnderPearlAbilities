@@ -104,7 +104,7 @@ public class SmartBowAbility extends Ability {
         shotsLeft.set(0);
         bossbar.setVisible(false);
         bossbar.addPlayer(player);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
     }
 
     @Override
@@ -242,7 +242,7 @@ public class SmartBowAbility extends Ability {
     }
 
     private void cooldown() {
-        cooldown.startCooldown(info.cooldown + (info.duration - shotsLeft.get()) * 40);
+        cooldown.setCooldown(info.cooldown + (info.duration - shotsLeft.get()) * 40);
     }
 
     @EventHandler
@@ -263,7 +263,7 @@ public class SmartBowAbility extends Ability {
 
         if (InteractionLockManager.getInstance().isInteractionLocked(player)) return;
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
 
         new FunctionChain(

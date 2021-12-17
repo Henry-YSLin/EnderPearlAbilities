@@ -94,7 +94,7 @@ public class BangaloreUltimateAbility extends Ability {
     private void setUpPlayer(Player player) {
         abilityActive.set(false);
         blockShoot.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
     }
 
     @EventHandler
@@ -112,7 +112,7 @@ public class BangaloreUltimateAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (abilityActive.get()) return;
 
         PlayerUtils.consumeEnderPearl(player);

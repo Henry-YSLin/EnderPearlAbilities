@@ -91,7 +91,7 @@ public class AshAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
     }
 
     @EventHandler
@@ -150,7 +150,7 @@ public class AshAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (abilityActive.get()) return;
 
         if (chargingUp.get()) {
@@ -205,7 +205,7 @@ public class AshAbility extends Ability {
                                     next.run();
                             }
                             if (!abilityActive.get())
-                                cooldown.startCooldown(20);
+                                cooldown.setCooldown(20);
                         }
                     }.runTaskTimer(this, 0, 1),
                     next -> new AbilityRunnable() {
@@ -284,7 +284,7 @@ public class AshAbility extends Ability {
 
                             VoidSpaceManager.getInstance().exitVoid(player);
 
-                            cooldown.startCooldown(info.cooldown);
+                            cooldown.setCooldown(info.cooldown);
                             if (completed)
                                 next.run();
                         }

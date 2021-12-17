@@ -91,7 +91,7 @@ public class RampartAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
         if (minigun != null)
             if (!minigun.isCancelled())
                 minigun.cancel();
@@ -111,7 +111,7 @@ public class RampartAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get() && minigun != null && !minigun.isCancelled()) {
             minigun.cancel();
@@ -208,9 +208,9 @@ public class RampartAbility extends Ability {
                         abilityActive.set(false);
                         InteractionLockManager.getInstance().unlockInteraction(player);
                         if (magazine == info.duration)
-                            cooldown.startCooldown(20);
+                            cooldown.setCooldown(20);
                         else
-                            cooldown.startCooldown(info.cooldown + (info.duration - magazine) * 8);
+                            cooldown.setCooldown(info.cooldown + (info.duration - magazine) * 8);
                     }
                 }).runTaskTimer(this, 0, 1)
         ).execute();

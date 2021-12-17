@@ -26,7 +26,7 @@ public class AbilityCooldown {
      *
      * @return Whether the cooldown is currently active.
      */
-    public boolean getCoolingDown() {
+    public boolean isCoolingDown() {
         return cooldownTicks.get() > 0;
     }
 
@@ -41,7 +41,7 @@ public class AbilityCooldown {
 
     public AbilityCooldown(Ability ability, Player player, boolean visible) {
         this.ability = ability;
-        this.config = ability.plugin.getConfig();
+        this.config = ability.getPlugin().getConfig();
         this.player = player;
         this.visible = visible;
     }
@@ -51,23 +51,9 @@ public class AbilityCooldown {
     }
 
     /**
-     * Start a cooldown sequence of a specified length.
-     * The length will be ignored if the {@code no-cooldown} config is set.
-     *
-     * @param ticks The length of cooldown in ticks.
-     */
-    public void startCooldown(int ticks) {
-        if (ability.plugin.getConfig().getBoolean("no-cooldown"))
-            ticks = 20;
-        if (runnable != null && !runnable.isCancelled())
-            runnable.cancel();
-        cooldownTicks.set(ticks);
-        runnable = new AbilityCooldownRunnable();
-        runnable.runTaskTimer(ability, 0, 1);
-    }
-
-    /**
      * Cancel the cooldown, if one is currently active.
+     * <p>
+     * This is equivalent to calling setCooldown(0).
      */
     public void cancelCooldown() {
         if (runnable != null) {
@@ -77,21 +63,22 @@ public class AbilityCooldown {
     }
 
     /**
-     * Add a specified amount of ticks to the cooldown.
+     * Set current cooldown to the specified value. The cooldown sequence may start/stop depending on the new value.
      *
-     * @param ticks The number of ticks to add, can be negative.
-     * @return The new cooldown duration in ticks.
+     * @param ticks The new cooldown value.
      */
-    public int addCooldown(int ticks) {
-        int cd = Math.max(0, cooldownTicks.get() + ticks);
-        cooldownTicks.set(cd);
-        if (cd > 0) {
+    public void setCooldown(int ticks) {
+        if (ability.getPlugin().getConfig().getBoolean("no-cooldown"))
+            ticks = Math.min(20, ticks);
+        cooldownTicks.set(ticks);
+        if (ticks > 0) {
             if (runnable == null || runnable.isCancelled()) {
                 runnable = new AbilityCooldownRunnable();
                 runnable.runTaskTimer(ability, 0, 1);
             }
+        } else {
+            cancelCooldown();
         }
-        return cd;
     }
 
     class AbilityCooldownRunnable extends AbilityRunnable {
@@ -107,9 +94,9 @@ public class AbilityCooldown {
             if (!visible) return;
             boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
             boolean offHandPearl = player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
-            if (ability.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
-                    ability.getInfo().activation == ActivationHand.OffHand && offHandPearl)
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ability.getInfo().name + " in " + count / 20 + "s"));
+            if (ability.getInfo().getActivation() == ActivationHand.MainHand && mainHandPearl ||
+                    ability.getInfo().getActivation() == ActivationHand.OffHand && offHandPearl)
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ability.getInfo().getName() + " in " + count / 20 + "s"));
             else if (!mainHandPearl && !offHandPearl)
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent());
             player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation(), 2, 0.5, 0.5, 0.5, 0.02);

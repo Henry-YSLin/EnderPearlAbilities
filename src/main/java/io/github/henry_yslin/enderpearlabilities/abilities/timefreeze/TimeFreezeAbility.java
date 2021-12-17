@@ -92,7 +92,7 @@ public class TimeFreezeAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
     }
 
     @Override
@@ -123,7 +123,7 @@ public class TimeFreezeAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (abilityActive.get()) return;
         if (chargingUp.get()) return;
 
@@ -190,7 +190,7 @@ public class TimeFreezeAbility extends Ability {
                         }
                     }
 
-                    cooldown.startCooldown(info.cooldown);
+                    cooldown.setCooldown(info.cooldown);
                     next.run();
                 }
         ).execute();

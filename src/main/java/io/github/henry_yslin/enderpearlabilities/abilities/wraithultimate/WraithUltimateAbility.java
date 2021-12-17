@@ -94,7 +94,7 @@ public class WraithUltimateAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
     }
 
     @Override
@@ -120,7 +120,7 @@ public class WraithUltimateAbility extends Ability {
 
         if (abilityActive.get()) return;
         if (chargingUp.get()) return;
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
 
         Location[] locations = new Location[2];
 
@@ -193,7 +193,7 @@ public class WraithUltimateAbility extends Ability {
                         if (setPortal) {
                             if (MAX_DISTANCE - distanceRemaining <= REFUNDABLE_DISTANCE)
                                 return;
-                            cooldown.startCooldown(info.cooldown);
+                            cooldown.setCooldown(info.cooldown);
                             locations[1] = player.getLocation().add(0, 1, 0);
                             next.run();
                         }

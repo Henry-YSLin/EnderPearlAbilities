@@ -91,7 +91,7 @@ public class WraithTacticalAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
     }
 
     @Override
@@ -114,7 +114,7 @@ public class WraithTacticalAbility extends Ability {
 
         if (InteractionLockManager.getInstance().isInteractionLocked(player)) return;
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
 
         new FunctionChain(
@@ -171,7 +171,7 @@ public class WraithTacticalAbility extends Ability {
 
                     VoidSpaceManager.getInstance().exitVoid(player);
 
-                    cooldown.startCooldown(info.cooldown);
+                    cooldown.setCooldown(info.cooldown);
                     next.run();
                 }
         ).execute();

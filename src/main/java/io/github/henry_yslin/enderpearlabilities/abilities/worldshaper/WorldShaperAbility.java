@@ -72,7 +72,7 @@ public class WorldShaperAbility extends Ability {
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             chargingUp.set(false);
-            cooldown.startCooldown(info.cooldown);
+            cooldown.setCooldown(info.cooldown);
         }
     }
 
@@ -81,7 +81,7 @@ public class WorldShaperAbility extends Ability {
         super.onEnable();
         if (player != null) {
             chargingUp.set(false);
-            cooldown.startCooldown(info.cooldown);
+            cooldown.setCooldown(info.cooldown);
         }
     }
 
@@ -93,7 +93,7 @@ public class WorldShaperAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (PlayerUtils.getMainHandToolDurability(player).orElse(2) <= 1) return;
 
         new FunctionChain(
@@ -104,7 +104,7 @@ public class WorldShaperAbility extends Ability {
                 next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
                 next -> {
                     AbilityUtils.fireProjectile(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false);
-                    cooldown.startCooldown(info.cooldown);
+                    cooldown.setCooldown(info.cooldown);
                 }
         ).execute();
     }

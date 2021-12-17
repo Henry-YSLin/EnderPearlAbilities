@@ -102,7 +102,7 @@ public class PathfinderAbility extends Ability {
         if (grapple != null)
             if (!grapple.isCancelled())
                 grapple.cancel();
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
         if (slowFallRunnable != null && !slowFallRunnable.isCancelled())
             slowFallRunnable.cancel();
         slowFallRunnable = new SlowFallRunnable(player);
@@ -117,7 +117,7 @@ public class PathfinderAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
 
         if (abilityActive.get()) {
             grapple.cancel();
@@ -257,7 +257,7 @@ public class PathfinderAbility extends Ability {
                 anchor.remove();
                 InteractionLockManager.getInstance().unlockInteraction(player);
                 abilityActive.set(false);
-                cooldown.startCooldown(info.cooldown);
+                cooldown.setCooldown(info.cooldown);
             }
         }).runTaskRepeated(this, 0, 1, info.duration);
     }

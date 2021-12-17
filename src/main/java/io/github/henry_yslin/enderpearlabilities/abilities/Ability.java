@@ -1,32 +1,31 @@
 package io.github.henry_yslin.enderpearlabilities.abilities;
 
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Controls the behavior and description of a specific ability for one specified player.
- * Construct this class with a null {@code ownerName} to read description without enabling the ability.
  */
 public abstract class Ability extends AbilityListener {
 
-    public final String ownerName;
-    public Player player;
-    public AbilityCooldown cooldown;
+    protected AbilityInfo info;
+    protected final String ownerName;
+    protected Player player;
+    protected AbilityCooldown cooldown;
 
     /**
      * Create an {@link Ability} instance.
      *
      * @param plugin    The owning plugin.
      * @param ownerName Name of the player who owns this ability, null if this instance is a template.
-     * @param config    The {@link ConfigurationSection} to read {@link AbilityInfo} from, null if this instance is created to read constants only.
      */
-    public Ability(Plugin plugin, @Nullable String ownerName, @Nullable ConfigurationSection config) {
-        super(plugin, config);
+    public Ability(@NotNull Plugin plugin, @NotNull AbilityInfo info, @NotNull String ownerName) {
+        super(plugin);
         this.ownerName = ownerName;
+        this.info = info;
     }
 
     @EventHandler
@@ -42,10 +41,30 @@ public abstract class Ability extends AbilityListener {
     /**
      * Get an {@link AbilityInfo} containing descriptions of this ability.
      * Some parts of the description are not constant and change according to the configs supplied.
-     *
-     * @return A cached instance of {@link AbilityInfo}.
      */
-    public abstract AbilityInfo getInfo();
+    public AbilityInfo getInfo() {
+        return info;
+    }
+
+    /**
+     * Get the name of the player who owns this ability.
+     */
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    /**
+     * Get the cooldown instance of this ability.
+     * <p>
+     * The cooldown instance is linked to this ability instance, allowing direct control of the cooldown.
+     */
+    public AbilityCooldown getCooldown() {
+        return cooldown;
+    }
+
+    public abstract boolean isActive();
+
+    public abstract boolean isChargingUp();
 
     public void onEnable() {
         if (ownerName == null) return;

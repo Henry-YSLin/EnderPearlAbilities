@@ -103,7 +103,7 @@ public class MirageAbility extends Ability {
         if (player != null) {
             chargingUp.set(false);
             abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
+            cooldown.setCooldown(info.cooldown);
         }
         if (CitizensAPI.getTraitFactory().getRegisteredTraits().stream().anyMatch(traitInfo -> traitInfo.getTraitName().equals("clonetrait")))
             CitizensAPI.getTraitFactory().deregisterTrait(TraitInfo.create(CloneTrait.class).withName("clonetrait"));
@@ -126,7 +126,7 @@ public class MirageAbility extends Ability {
             removeAllNPCs();
             chargingUp.set(false);
             abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
+            cooldown.setCooldown(info.cooldown);
         }
     }
 
@@ -165,7 +165,7 @@ public class MirageAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
@@ -259,7 +259,7 @@ public class MirageAbility extends Ability {
                         removeAllNPCs();
                         player.getScoreboard().clearSlot(DisplaySlot.SIDEBAR);
                         abilityActive.set(false);
-                        cooldown.startCooldown(info.cooldown);
+                        cooldown.setCooldown(info.cooldown);
                         next.run();
                     }
                 }.runTaskRepeated(this, 0, 10, info.duration / 10)

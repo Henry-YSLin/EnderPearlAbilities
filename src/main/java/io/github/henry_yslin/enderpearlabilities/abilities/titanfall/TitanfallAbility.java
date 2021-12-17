@@ -86,7 +86,7 @@ public class TitanfallAbility extends Ability {
         if (player.getName().equals(ownerName)) {
             chargingUp.set(false);
             abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
+            cooldown.setCooldown(info.cooldown);
         }
     }
 
@@ -96,7 +96,7 @@ public class TitanfallAbility extends Ability {
         if (player != null) {
             chargingUp.set(false);
             abilityActive.set(false);
-            cooldown.startCooldown(info.cooldown);
+            cooldown.setCooldown(info.cooldown);
         }
     }
 
@@ -105,8 +105,8 @@ public class TitanfallAbility extends Ability {
         if (!(event.getDamager() instanceof Player player)) return;
         if (!player.getName().equals(ownerName)) return;
         if (event.getEntity().equals(titan.get())) return;
-        if (!cooldown.getCoolingDown()) return;
-        cooldown.addCooldown((int) (-event.getFinalDamage() * 20));
+        if (!cooldown.isCoolingDown()) return;
+        cooldown.setCooldown(cooldown.getCooldownTicks() - (int) (event.getFinalDamage() * 20));
         player.getWorld().spawnParticle(Particle.HEART, player.getLocation(), (int) event.getFinalDamage(), 0.5, 0.5, 0.5, 0.1);
     }
 
@@ -161,7 +161,7 @@ public class TitanfallAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
@@ -221,7 +221,7 @@ public class TitanfallAbility extends Ability {
                                 siphonChargeUp = 0;
                             } else {
                                 t.setAware(true);
-                                if (siphonCooldown.getCoolingDown()) {
+                                if (siphonCooldown.isCoolingDown()) {
                                     siphonChargeUpBar.setVisible(false);
                                 } else if (siphonChargeUp > 0) {
                                     if (siphonChargeUp < ENERGY_SIPHON_CHARGE_UP)
@@ -246,7 +246,7 @@ public class TitanfallAbility extends Ability {
                                         }
                                         WorldUtils.spawnParticleLine(t.getEyeLocation(), hit.toLocation(t.getWorld()), effective ? Particle.DRAGON_BREATH : Particle.ELECTRIC_SPARK, 3, false);
                                         siphonChargeUp = 0;
-                                        siphonCooldown.startCooldown(ENERGY_SIPHON_COOLDOWN);
+                                        siphonCooldown.setCooldown(ENERGY_SIPHON_COOLDOWN);
                                         siphonChargeUpBar.setProgress(0);
                                     }
                                 } else {
@@ -275,7 +275,7 @@ public class TitanfallAbility extends Ability {
                             if (action != null) {
                                 if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
                                     if (attackMode) {
-                                        if (!siphonCooldown.getCoolingDown())
+                                        if (!siphonCooldown.isCoolingDown())
                                             if (siphonChargeUp <= 0)
                                                 siphonChargeUp = 1;
                                     } else {
@@ -295,13 +295,13 @@ public class TitanfallAbility extends Ability {
                             } else {
                                 String statusText = "";
                                 statusText += attackMode ? "Attack mode" : "Move mode";
-                                if (siphonCooldown.getCoolingDown())
+                                if (siphonCooldown.isCoolingDown())
                                     statusText += " | Energy Siphon in " + siphonCooldown.getCooldownTicks() / 20 + "s";
                                 if (t.getTarget() != null)
                                     statusText += " | Target: " + t.getTarget().getName();
                                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(statusText));
                             }
-                            if (siphonCooldown.getCoolingDown())
+                            if (siphonCooldown.isCoolingDown())
                                 t.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, t.getLocation(), 2, 0.5, 0.5, 0.5, 0.02);
                             t.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, t.getLocation().add(0, 1, 0), 1, 0.8, 0.8, 0.8, 0.1);
                         }

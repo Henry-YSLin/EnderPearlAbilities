@@ -3,6 +3,7 @@ package io.github.henry_yslin.enderpearlabilities;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,16 +15,28 @@ import java.util.List;
 @SuppressWarnings("rawtypes")
 public abstract class ExtendedListener<TRunnable extends ExtendedRunnable, TListener extends ExtendedListener> implements Listener {
 
-    public final Plugin plugin;
-    public final List<TRunnable> runnables = Collections.synchronizedList(new ArrayList<>());
-    public final List<TListener> subListeners = Collections.synchronizedList(new ArrayList<>());
+    protected final Plugin plugin;
+    protected final List<TRunnable> runnables = Collections.synchronizedList(new ArrayList<>());
+    protected final List<TListener> subListeners = Collections.synchronizedList(new ArrayList<>());
+
+    public Plugin getPlugin() {
+        return plugin;
+    }
+
+    public List<TRunnable> getRunnables() {
+        return runnables;
+    }
+
+    public List<TListener> getSubListeners() {
+        return subListeners;
+    }
 
     /**
      * Create an {@link ExtendedListener} instance.
      *
      * @param plugin The owning plugin.
      */
-    public ExtendedListener(Plugin plugin) {
+    public ExtendedListener(@NotNull Plugin plugin) {
         this.plugin = plugin;
     }
 

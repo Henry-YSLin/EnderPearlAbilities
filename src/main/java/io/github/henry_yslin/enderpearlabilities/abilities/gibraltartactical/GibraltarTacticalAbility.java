@@ -100,7 +100,7 @@ public class GibraltarTacticalAbility extends Ability {
     private void setUpPlayer(Player player) {
         abilityActive.set(false);
         blockShoot.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
     }
 
     @EventHandler
@@ -111,7 +111,7 @@ public class GibraltarTacticalAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
@@ -203,7 +203,7 @@ public class GibraltarTacticalAbility extends Ability {
                 bossbar.removeAll();
                 ShieldManager.getInstance().getShields().removeAll(shields);
                 abilityActive.set(false);
-                cooldown.startCooldown(info.cooldown);
+                cooldown.setCooldown(info.cooldown);
             }
         }.runTaskRepeated(this, 0, 10, info.duration / 10);
     }

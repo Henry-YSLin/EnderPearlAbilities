@@ -31,7 +31,7 @@ public class DroneStatusRunnable extends AbilityRunnable {
 
     @Override
     public void tick() {
-        if (ability.cooldown.getCoolingDown()) return;
+        if (ability.cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
         boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;

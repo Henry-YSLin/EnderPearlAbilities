@@ -108,7 +108,7 @@ public class SeerAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (abilityActive.get()) return;
 
         abilityActive.set(true);
@@ -150,7 +150,7 @@ public class SeerAbility extends Ability {
 
                     if (entities.size() == 0) {
                         abilityActive.set(false);
-                        cooldown.startCooldown(info.cooldown);
+                        cooldown.setCooldown(info.cooldown);
                         return;
                     }
 
@@ -213,7 +213,7 @@ public class SeerAbility extends Ability {
                             if (team != null)
                                 team.unregister();
                             abilityActive.set(false);
-                            cooldown.startCooldown(info.cooldown);
+                            cooldown.setCooldown(info.cooldown);
                             next.run();
                         }
                     }.runTaskRepeated(this, 0, 10, info.duration / 10);

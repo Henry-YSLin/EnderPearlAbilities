@@ -85,7 +85,7 @@ public class FragAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
 
         if (fragPredictionRunnable != null && !fragPredictionRunnable.isCancelled())
             fragPredictionRunnable.cancel();
@@ -105,7 +105,7 @@ public class FragAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
@@ -172,7 +172,7 @@ public class FragAbility extends Ability {
                             snowball.remove();
                         }
                         abilityActive.set(false);
-                        cooldown.startCooldown(info.cooldown);
+                        cooldown.setCooldown(info.cooldown);
                     }
                 }.runTaskRepeated(this, 0, 1, info.duration)
         ).execute();

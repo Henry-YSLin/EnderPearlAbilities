@@ -87,7 +87,7 @@ public class OctaneAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
 
         if (swiftMendRunnable != null && !swiftMendRunnable.isCancelled())
             swiftMendRunnable.cancel();
@@ -120,7 +120,7 @@ public class OctaneAbility extends Ability {
 
         if (abilityActive.get()) return;
         if (chargingUp.get()) return;
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
 
         new FunctionChain(
                 next -> {
@@ -173,7 +173,7 @@ public class OctaneAbility extends Ability {
                     abilityActive.set(false);
                     player.removePotionEffect(PotionEffectType.SPEED);
                     player.removePotionEffect(PotionEffectType.JUMP);
-                    cooldown.startCooldown(info.cooldown);
+                    cooldown.setCooldown(info.cooldown);
                     next.run();
                 }
         ).execute();

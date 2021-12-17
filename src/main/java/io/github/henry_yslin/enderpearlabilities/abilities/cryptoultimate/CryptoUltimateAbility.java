@@ -92,7 +92,7 @@ public class CryptoUltimateAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
     }
 
     @EventHandler
@@ -180,7 +180,7 @@ public class CryptoUltimateAbility extends Ability {
                     }
                     if (entities.isEmpty()) {
                         abilityActive.set(false);
-                        cooldown.startCooldown(info.cooldown);
+                        cooldown.setCooldown(info.cooldown);
                         return;
                     }
                     for (Entity entity : entities) {
@@ -233,7 +233,7 @@ public class CryptoUltimateAbility extends Ability {
                         }
                         entities.clear();
                         abilityActive.set(false);
-                        cooldown.startCooldown(info.cooldown);
+                        cooldown.setCooldown(info.cooldown);
                         next.run();
                     }
                 }.runTaskRepeated(this, 0, 10, info.duration / 10)
@@ -279,7 +279,7 @@ public class CryptoUltimateAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 

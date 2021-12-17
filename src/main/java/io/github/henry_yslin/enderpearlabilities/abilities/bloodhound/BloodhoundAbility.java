@@ -90,7 +90,7 @@ public class BloodhoundAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
     }
 
     @EventHandler
@@ -101,7 +101,7 @@ public class BloodhoundAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
@@ -178,7 +178,7 @@ public class BloodhoundAbility extends Ability {
                             team.unregister();
                         entities.clear();
                         abilityActive.set(false);
-                        cooldown.startCooldown(info.cooldown);
+                        cooldown.setCooldown(info.cooldown);
                         next.run();
                     }
                 }.runTaskRepeated(this, 0, 10, info.duration / 10)

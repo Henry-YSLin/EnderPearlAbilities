@@ -91,7 +91,7 @@ public class ValkyrieTacticalAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
 
         if (vtolJetsRunnable != null && !vtolJetsRunnable.isCancelled())
             vtolJetsRunnable.cancel();
@@ -107,7 +107,7 @@ public class ValkyrieTacticalAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
@@ -213,7 +213,7 @@ public class ValkyrieTacticalAbility extends Ability {
             protected void end() {
                 super.end();
                 abilityActive.set(false);
-                cooldown.startCooldown(info.cooldown);
+                cooldown.setCooldown(info.cooldown);
             }
         }.runTaskRepeated(this, 0, 1, info.duration);
     }

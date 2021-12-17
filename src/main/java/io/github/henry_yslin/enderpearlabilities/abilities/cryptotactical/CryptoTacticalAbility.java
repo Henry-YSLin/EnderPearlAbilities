@@ -228,7 +228,7 @@ public class CryptoTacticalAbility extends Ability {
         }
 
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
 
         if (droneStatusRunnable != null && !droneStatusRunnable.isCancelled())
             droneStatusRunnable.cancel();
@@ -294,7 +294,7 @@ public class CryptoTacticalAbility extends Ability {
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
         if (event.getEntity().equals(drone.get())) {
-            cooldown.startCooldown(info.cooldown);
+            cooldown.setCooldown(info.cooldown);
             player.sendTitle(" ", ChatColor.LIGHT_PURPLE + "Drone destroyed", 5, 30, 20);
         } else {
             NPC npc = dummy.get();
@@ -320,7 +320,7 @@ public class CryptoTacticalAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
@@ -354,7 +354,7 @@ public class CryptoTacticalAbility extends Ability {
                         if (isDroneValid()) {
                             double maxHealth = EntityUtils.getMaxHealth(drone.get());
                             double damage = maxHealth - drone.get().getHealth();
-                            cooldown.startCooldown((int) (info.cooldown / maxHealth * damage));
+                            cooldown.setCooldown((int) (info.cooldown / maxHealth * damage));
                             removeDrone();
                         }
                     }

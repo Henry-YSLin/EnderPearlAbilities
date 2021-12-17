@@ -90,7 +90,7 @@ public class NecromancerAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
         if (playerTargetTracker != null && !playerTargetTracker.isCancelled())
             playerTargetTracker.cancel();
         playerTargetTracker = new PlayerTargetTracker(player, () -> {
@@ -130,13 +130,13 @@ public class NecromancerAbility extends Ability {
 
         event.setCancelled(true);
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
         new FunctionChain(
                 next -> {
-                    cooldown.startCooldown(info.cooldown);
+                    cooldown.setCooldown(info.cooldown);
                     PlayerUtils.consumeEnderPearl(player);
                     next.run();
                 },
@@ -194,7 +194,7 @@ public class NecromancerAbility extends Ability {
                         if (abilityActive.get()) {
                             abilityActive.set(false);
                             if (this.hasCompleted())
-                                cooldown.startCooldown(info.cooldown);
+                                cooldown.setCooldown(info.cooldown);
                             else {
                                 for (Skeleton skeleton : slaves) {
                                     skeleton.setCustomName(null);

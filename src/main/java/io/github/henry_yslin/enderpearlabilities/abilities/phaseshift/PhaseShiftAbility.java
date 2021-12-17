@@ -87,7 +87,7 @@ public class PhaseShiftAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.startCooldown(info.cooldown);
+        cooldown.setCooldown(info.cooldown);
     }
 
     @Override
@@ -117,7 +117,7 @@ public class PhaseShiftAbility extends Ability {
 
         if (InteractionLockManager.getInstance().isInteractionLocked(player)) return;
 
-        if (cooldown.getCoolingDown()) return;
+        if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
 
         new FunctionChain(
@@ -179,7 +179,7 @@ public class PhaseShiftAbility extends Ability {
                         player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 5, 0.5, 1, 0.5, 0.02, null, true);
                     }, true);
 
-                    cooldown.startCooldown(info.cooldown);
+                    cooldown.setCooldown(info.cooldown);
                     next.run();
                 }
         ).execute();
