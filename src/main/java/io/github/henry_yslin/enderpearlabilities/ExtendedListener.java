@@ -14,12 +14,12 @@ import java.util.List;
  * A {@link Listener} with onEnable and onDisable methods, runnables management and configuration loading.
  */
 @SuppressWarnings("rawtypes")
-public abstract class ExtendedListener<TRunnable extends ExtendedRunnable> implements Listener {
+public abstract class ExtendedListener<TRunnable extends ExtendedRunnable, TListener extends ExtendedListener> implements Listener {
 
     public final Plugin plugin;
     protected final ConfigurationSection config;
     public final List<TRunnable> runnables = Collections.synchronizedList(new ArrayList<>());
-    public final List<BasicExtendedListener> subListeners = Collections.synchronizedList(new ArrayList<>());
+    public final List<TListener> subListeners = Collections.synchronizedList(new ArrayList<>());
 
     /**
      * Create an {@link ExtendedListener} instance.
@@ -39,20 +39,20 @@ public abstract class ExtendedListener<TRunnable extends ExtendedRunnable> imple
      * @param config The {@link ConfigurationSection} to be populated.
      */
     public void setConfigDefaults(ConfigurationSection config) {
-        for (BasicExtendedListener subListener : subListeners) {
+        for (TListener subListener : subListeners) {
             subListener.setConfigDefaults(config);
         }
     }
 
     public void onEnable() {
-        for (BasicExtendedListener subListener : subListeners) {
+        for (TListener subListener : subListeners) {
             plugin.getServer().getPluginManager().registerEvents(subListener, plugin);
             subListener.onEnable();
         }
     }
 
     public void onDisable() {
-        for (BasicExtendedListener subListener : subListeners) {
+        for (TListener subListener : subListeners) {
             subListener.onDisable();
             HandlerList.unregisterAll(subListener);
         }

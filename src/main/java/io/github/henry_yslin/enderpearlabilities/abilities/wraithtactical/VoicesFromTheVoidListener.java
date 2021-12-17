@@ -1,8 +1,8 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.wraithtactical;
 
-import io.github.henry_yslin.enderpearlabilities.BasicExtendedListener;
-import io.github.henry_yslin.enderpearlabilities.BasicExtendedRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityListener;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.BlockUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.ListUtils;
 import org.bukkit.ChatColor;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-public class VoicesFromTheVoidListener extends BasicExtendedListener {
+public class VoicesFromTheVoidListener extends AbilityListener {
 
     static final int COOLDOWN = 20;
     static final List<String> SHOOTERS_VOICELINES = List.of(
@@ -122,7 +122,7 @@ public class VoicesFromTheVoidListener extends BasicExtendedListener {
     }
 
     final AtomicInteger lastWarningTick = new AtomicInteger(0);
-    BasicExtendedRunnable warningRunnable;
+    AbilityRunnable warningRunnable;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -142,7 +142,7 @@ public class VoicesFromTheVoidListener extends BasicExtendedListener {
     private void setUpPlayer(Player player) {
         if (warningRunnable != null && !warningRunnable.isCancelled())
             warningRunnable.cancel();
-        (warningRunnable = new BasicExtendedRunnable() {
+        (warningRunnable = new AbilityRunnable() {
             Location lastWarningLocation = null;
             Location lastHotZone = null;
 

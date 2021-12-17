@@ -1,6 +1,5 @@
 package io.github.henry_yslin.enderpearlabilities.abilities;
 
-import io.github.henry_yslin.enderpearlabilities.ExtendedListener;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
  * Controls the behavior and description of a specific ability for one specified player.
  * Construct this class with a null {@code ownerName} to read description without enabling the ability.
  */
-public abstract class Ability extends ExtendedListener<AbilityRunnable> {
+public abstract class Ability extends AbilityListener {
 
     public final String ownerName;
     public Player player;

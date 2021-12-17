@@ -185,7 +185,7 @@ public class NecromancerAbility extends Ability {
                         });
                         slaves.add(skeleton);
                         skeleton.getWorld().playSound(skeleton.getLocation(), Sound.ENTITY_SKELETON_HORSE_AMBIENT, 1, 0);
-                        new SlaveSpawning(executor, player, skeleton, playerTarget).runTaskRepeated(executor, 0, 2, 11);
+                        new SlaveSpawning(player, skeleton, playerTarget).runTaskRepeated(executor, 0, 2, 11);
                     }
 
                     @Override

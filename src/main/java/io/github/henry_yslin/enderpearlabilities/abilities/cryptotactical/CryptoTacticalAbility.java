@@ -232,7 +232,7 @@ public class CryptoTacticalAbility extends Ability {
 
         if (droneStatusRunnable != null && !droneStatusRunnable.isCancelled())
             droneStatusRunnable.cancel();
-        droneStatusRunnable = new DroneStatusRunnable(player, drone, chargingUp, abilityActive);
+        droneStatusRunnable = new DroneStatusRunnable(this, player, drone, chargingUp, abilityActive);
         droneStatusRunnable.runTaskTimer(this, 0, 5);
     }
 

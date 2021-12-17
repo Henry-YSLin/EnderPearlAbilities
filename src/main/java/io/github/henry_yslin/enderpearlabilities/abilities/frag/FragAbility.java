@@ -89,7 +89,7 @@ public class FragAbility extends Ability {
 
         if (fragPredictionRunnable != null && !fragPredictionRunnable.isCancelled())
             fragPredictionRunnable.cancel();
-        fragPredictionRunnable = new FragPredictionRunnable(player);
+        fragPredictionRunnable = new FragPredictionRunnable(this, player);
         fragPredictionRunnable.runTaskTimer(this, 0, 5);
     }
 

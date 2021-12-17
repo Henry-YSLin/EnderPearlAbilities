@@ -182,6 +182,7 @@ public class TitanfallAbility extends Ability {
                     pendingAction.set(null);
                     actionCooldown.set(ACTION_COOLDOWN);
 
+                    Ability ability = this;
                     (titanControlRunnable = new AbilityRunnable() {
                         boolean attackMode = false;
                         boolean landed = false;
@@ -193,7 +194,7 @@ public class TitanfallAbility extends Ability {
                         @Override
                         protected void start() {
                             super.start();
-                            siphonCooldown = new AbilityCooldown(executor, player, false);
+                            siphonCooldown = new AbilityCooldown(ability, player, false);
                             t = titan.get();
                             siphonChargeUpBar = Bukkit.createBossBar(ChatColor.WHITE + "Energy Siphon", BarColor.WHITE, BarStyle.SOLID);
                             siphonChargeUpBar.addPlayer(player);

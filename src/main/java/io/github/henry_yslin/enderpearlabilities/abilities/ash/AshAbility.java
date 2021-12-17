@@ -160,6 +160,7 @@ public class AshAbility extends Ability {
             final Location[] lastLocation = new Location[1];
             final Location[] startLocation = new Location[1];
 
+            Ability ability = this;
             new FunctionChain(
                     next -> new AbilityRunnable() {
                         @Override
@@ -175,8 +176,8 @@ public class AshAbility extends Ability {
                             }
                             boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
                             boolean offHandPearl = player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
-                            boolean shouldContinue = executor.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
-                                    executor.getInfo().activation == ActivationHand.OffHand && offHandPearl;
+                            boolean shouldContinue = ability.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
+                                    ability.getInfo().activation == ActivationHand.OffHand && offHandPearl;
                             if (!player.isValid()) shouldContinue = false;
                             if (shouldContinue) {
                                 Optional<Location> targetLocation = getTargetLocation(player);

@@ -128,6 +128,7 @@ public class ValkyrieUltimateAbility extends Ability {
                 abilityActive.set(true);
             }
         } else if (!InteractionLockManager.getInstance().isInteractionLocked(player)) {
+            Ability ability = this;
             new FunctionChain(
                     next -> new AbilityRunnable() {
                         BossBar bossbar;
@@ -154,8 +155,8 @@ public class ValkyrieUltimateAbility extends Ability {
                             bossbar.setProgress(Math.min(1, chargeUpDuration.incrementAndGet() / (double) info.chargeUp));
                             boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
                             boolean offHandPearl = player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
-                            boolean shouldContinue = executor.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
-                                    executor.getInfo().activation == ActivationHand.OffHand && offHandPearl;
+                            boolean shouldContinue = ability.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
+                                    ability.getInfo().activation == ActivationHand.OffHand && offHandPearl;
                             if (!player.isValid()) shouldContinue = false;
                             if (!player.isOnline()) shouldContinue = false;
                             if (!player.getWorld().equals(groundLocation.getWorld())) shouldContinue = false;

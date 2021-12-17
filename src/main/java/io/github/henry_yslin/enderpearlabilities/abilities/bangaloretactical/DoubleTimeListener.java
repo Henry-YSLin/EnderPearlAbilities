@@ -1,8 +1,8 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.bangaloretactical;
 
-import io.github.henry_yslin.enderpearlabilities.BasicExtendedListener;
-import io.github.henry_yslin.enderpearlabilities.BasicExtendedRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityListener;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -15,12 +15,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public class DoubleTimeListener extends BasicExtendedListener {
+public class DoubleTimeListener extends AbilityListener {
 
     static final int SPEED_DURATION = 40;
     static final double DETECT_RANGE = 2;
 
-    private final Ability ability;
+    protected final Ability ability;
 
     public DoubleTimeListener(Plugin plugin, Ability ability, @Nullable ConfigurationSection config) {
         super(plugin, config);
@@ -32,7 +32,7 @@ public class DoubleTimeListener extends BasicExtendedListener {
         super.setConfigDefaults(config);
     }
 
-    BasicExtendedRunnable projectileRunnable;
+    AbilityRunnable projectileRunnable;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -52,7 +52,7 @@ public class DoubleTimeListener extends BasicExtendedListener {
     private void setUpPlayer(Player player) {
         if (projectileRunnable != null && !projectileRunnable.isCancelled())
             projectileRunnable.cancel();
-        (projectileRunnable = new BasicExtendedRunnable() {
+        (projectileRunnable = new AbilityRunnable() {
             @Override
             protected void tick() {
                 super.tick();

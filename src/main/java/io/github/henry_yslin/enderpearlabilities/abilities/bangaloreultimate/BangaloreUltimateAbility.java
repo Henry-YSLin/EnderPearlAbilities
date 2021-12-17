@@ -116,6 +116,7 @@ public class BangaloreUltimateAbility extends Ability {
         if (abilityActive.get()) return;
 
         PlayerUtils.consumeEnderPearl(player);
+        Ability ability = this;
         new AbilityRunnable() {
             Projectile projectile;
             int ticksToCancel;
@@ -123,7 +124,7 @@ public class BangaloreUltimateAbility extends Ability {
             @Override
             protected void start() {
                 ticksToCancel = info.chargeUp;
-                projectile = AbilityUtils.fireProjectile(executor, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
+                projectile = AbilityUtils.fireProjectile(ability, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
             }
 
             @Override

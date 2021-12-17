@@ -1,5 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.frag;
 
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import org.bukkit.Location;
@@ -11,13 +12,15 @@ import org.bukkit.util.Vector;
 public class FragPredictionRunnable extends AbilityRunnable {
 
     final Player player;
+    final Ability ability;
 
-    public FragPredictionRunnable(Player player) {
+    public FragPredictionRunnable(Ability ability, Player player) {
+        this.ability = ability;
         this.player = player;
     }
 
     private boolean shouldActivate(Player player) {
-        if (executor.cooldown.getCoolingDown()) return false;
+        if (ability.cooldown.getCoolingDown()) return false;
         return player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
     }
 
@@ -33,7 +36,7 @@ public class FragPredictionRunnable extends AbilityRunnable {
         Location location = getFirePosition(player);
         Location lastLocation = location.clone();
 
-        for (int i = 0; i < executor.getInfo().duration; i++) {
+        for (int i = 0; i < ability.getInfo().duration; i++) {
             location.add(velocity);
             velocity.multiply(0.98);
             velocity.add(new Vector(0, -0.1, 0));

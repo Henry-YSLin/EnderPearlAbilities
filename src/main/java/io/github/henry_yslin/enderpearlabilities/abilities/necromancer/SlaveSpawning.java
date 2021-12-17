@@ -1,6 +1,5 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.necromancer;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -12,14 +11,12 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class SlaveSpawning extends AbilityRunnable {
 
-    final Ability ability;
     final Player player;
     final Skeleton skeleton;
     final AtomicReference<LivingEntity> playerTarget;
     Location particleLocation;
 
-    public SlaveSpawning(Ability ability, Player player, Skeleton skeleton, AtomicReference<LivingEntity> playerTarget) {
-        this.ability = ability;
+    public SlaveSpawning(Player player, Skeleton skeleton, AtomicReference<LivingEntity> playerTarget) {
         this.player = player;
         this.skeleton = skeleton;
         this.playerTarget = playerTarget;
@@ -45,11 +42,11 @@ public class SlaveSpawning extends AbilityRunnable {
         if (!skeleton.isValid()) return;
         skeleton.setAI(true);
         if (this.hasCompleted())
-            new SlaveAI(player, skeleton, playerTarget).runTaskTimer(ability, 0, 10);
+            new SlaveAI(player, skeleton, playerTarget).runTaskTimer(executor, 0, 10);
         else {
             skeleton.setCustomName(null);
             skeleton.setCustomNameVisible(false);
-            skeleton.removeMetadata("ability", ability.plugin);
+            skeleton.removeMetadata("ability", executor.plugin);
             skeleton.setAI(true);
         }
     }
