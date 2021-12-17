@@ -69,17 +69,19 @@ public final class EnderPearlAbilities extends JavaPlugin {
         // Plugin startup logic
         Reflections reflections = new Reflections("io.github.henry_yslin.enderpearlabilities");
         List<Class<?>> managerSubTypes =
-                reflections.get(SubTypes.of(Manager.class).asClass()).stream().sorted(Comparator.comparing(Class::getName)).toList();
+                reflections.get(SubTypes.of(Manager.class).asClass()).stream().filter(c -> c.isAnnotationPresent(Instantiable.class)).sorted(Comparator.comparing(Class::getName)).toList();
         for (Class<?> subType : managerSubTypes) {
             try {
-                Manager manager = (Manager) subType.getDeclaredConstructor(Plugin.class, ConfigurationSection.class).newInstance(this, null);
-                String name = manager.getName();
-                getLogger().info("Setting config defaults for " + name + " manager");
+                Manager manager = (Manager) subType.getDeclaredConstructor(Plugin.class).newInstance(this);
+                String name = manager.getCodeName();
+                getLogger().info("Setting config defaults for manager: " + name);
                 ConfigurationSection section = config.getConfigurationSection(name);
-                if (section == null) section = config.createSection(name);
-                manager.setConfigDefaults(section);
-                Manager instance = manager.getClass().getDeclaredConstructor(Plugin.class, ConfigurationSection.class).newInstance(this, section);
-                internalManagers.add(instance);
+                if (section == null) {
+                    section = config.createSection(name);
+                }
+                manager.writeConfigDefaults(section);
+                manager.loadConfig(section);
+                internalManagers.add(manager);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -116,7 +118,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
         for (Manager manager : managers) {
             try {
                 getServer().getPluginManager().registerEvents(manager, this);
-                getLogger().info("Setting up \"" + manager.getName() + "\"");
+                getLogger().info("Setting up \"" + manager.getCodeName() + "\"");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -158,7 +160,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
             public void run() {
                 synchronized (abilities) {
                     for (Manager manager : managers) {
-                        getLogger().info("Calling onEnable for \"" + manager.getName() + "\"");
+                        getLogger().info("Calling onEnable for \"" + manager.getCodeName() + "\"");
                         manager.onEnable();
                     }
                     for (Ability ability : abilities) {
@@ -184,7 +186,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
 
         synchronized (managers) {
             for (Manager manager : managers) {
-                getLogger().info("Calling onDisable for \"" + manager.getName() + "\"");
+                getLogger().info("Calling onDisable for \"" + manager.getCodeName() + "\"");
                 manager.onDisable();
             }
         }

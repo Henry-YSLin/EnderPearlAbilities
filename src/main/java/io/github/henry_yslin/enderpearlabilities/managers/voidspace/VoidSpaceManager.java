@@ -1,5 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.managers.voidspace;
 
+import io.github.henry_yslin.enderpearlabilities.Instantiable;
 import io.github.henry_yslin.enderpearlabilities.managers.Manager;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import org.bukkit.configuration.ConfigurationSection;
@@ -17,10 +18,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Instantiable
 public class VoidSpaceManager extends Manager {
 
     @Override
-    public String getName() {
+    public String getCodeName() {
         return "void-space";
     }
 
@@ -30,19 +32,22 @@ public class VoidSpaceManager extends Manager {
         return instance;
     }
 
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-    }
-
-    public VoidSpaceManager(Plugin plugin, ConfigurationSection config) {
-        super(plugin, config);
-
-        if (config == null) return; // do not assign instance if config is null since this is a template
+    public VoidSpaceManager(Plugin plugin) {
+        super(plugin);
 
         if (instance != null)
             throw new RuntimeException("VoidSpaceManager already exists!");
         instance = this;
+    }
+
+    @Override
+    protected void readFromConfig(ConfigurationSection config) {
+        // no configs yet
+    }
+
+    @Override
+    public void writeConfigDefaults(ConfigurationSection config) {
+        // no configs yet
     }
 
     private final List<Player> playersInVoid = Collections.synchronizedList(new ArrayList<>());

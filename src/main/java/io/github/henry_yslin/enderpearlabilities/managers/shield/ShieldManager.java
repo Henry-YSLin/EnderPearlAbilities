@@ -1,5 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.managers.shield;
 
+import io.github.henry_yslin.enderpearlabilities.Instantiable;
 import io.github.henry_yslin.enderpearlabilities.managers.Manager;
 import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
 import org.bukkit.Location;
@@ -17,10 +18,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+@Instantiable
 public class ShieldManager extends Manager {
 
     @Override
-    public String getName() {
+    public String getCodeName() {
         return "shield";
     }
 
@@ -30,19 +32,22 @@ public class ShieldManager extends Manager {
         return instance;
     }
 
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-    }
-
-    public ShieldManager(Plugin plugin, ConfigurationSection config) {
-        super(plugin, config);
-
-        if (config == null) return; // do not assign instance if config is null since this is a template
+    public ShieldManager(Plugin plugin) {
+        super(plugin);
 
         if (instance != null)
             throw new RuntimeException("ShieldManager already exists!");
         instance = this;
+    }
+
+    @Override
+    protected void readFromConfig(ConfigurationSection config) {
+        // no configs yet
+    }
+
+    @Override
+    public void writeConfigDefaults(ConfigurationSection config) {
+        // no configs yet
     }
 
     private final List<Shield> shields = Collections.synchronizedList(new ArrayList<>());

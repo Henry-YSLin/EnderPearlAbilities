@@ -1,5 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.managers.interactionlock;
 
+import io.github.henry_yslin.enderpearlabilities.Instantiable;
 import io.github.henry_yslin.enderpearlabilities.managers.Manager;
 import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
 import org.bukkit.configuration.ConfigurationSection;
@@ -12,12 +13,8 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.Optional;
 
+@Instantiable
 public class InteractionLockManager extends Manager {
-
-    @Override
-    public String getName() {
-        return "interaction-lock";
-    }
 
     private static InteractionLockManager instance = null;
 
@@ -26,18 +23,26 @@ public class InteractionLockManager extends Manager {
     }
 
     @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
+    public String getCodeName() {
+        return "interaction-lock";
     }
 
-    public InteractionLockManager(Plugin plugin, ConfigurationSection config) {
-        super(plugin, config);
-
-        if (config == null) return; // do not assign instance if config is null since this is a template
+    public InteractionLockManager(Plugin plugin) {
+        super(plugin);
 
         if (instance != null)
             throw new RuntimeException("InteractionLockManager already exists!");
         instance = this;
+    }
+
+    @Override
+    protected void readFromConfig(ConfigurationSection config) {
+        // no configs yet
+    }
+
+    @Override
+    public void writeConfigDefaults(ConfigurationSection config) {
+        // no configs yet
     }
 
     public boolean isInteractionLocked(Player player) {
