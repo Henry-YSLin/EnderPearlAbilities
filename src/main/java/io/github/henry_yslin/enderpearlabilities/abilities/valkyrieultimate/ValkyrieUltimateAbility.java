@@ -1,7 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.valkyrieultimate;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
@@ -15,7 +14,6 @@ import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -32,7 +30,7 @@ import org.bukkit.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ValkyrieUltimateAbility extends Ability {
+public class ValkyrieUltimateAbility extends Ability<ValkyrieUltimateAbilityInfo> {
 
     static final int MAX_LAUNCH_HEIGHT = 64;
     static final int MIN_LAUNCH_HEIGHT = 30;
@@ -41,45 +39,24 @@ public class ValkyrieUltimateAbility extends Ability {
     static final double MIN_SCAN_RANGE = 30;
     static final double MAX_SCAN_RANGE = 250;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 40);
-        config.addDefault("duration", 200);
-        config.addDefault("cooldown", 1200);
-    }
-
-    public ValkyrieUltimateAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("valkyrie-ultimate")
-                .name("Skyward Dive")
-                .origin("Apex - Valkyrie")
-                .description("Press once to prepare for launch. Press again to launch into the air and skydive. Living entities are pinged with flashing light while you are in flight.")
-                .usage("Right click to prepare for launch. Right click again to launch. Switch away from ender pearl to cancel.")
-                .activation(ActivationHand.MainHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public ValkyrieUltimateAbility(Plugin plugin, ValkyrieUltimateAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicInteger chargeUpDuration = new AtomicInteger(0);
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityRunnable flightRunnable;
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -101,7 +78,7 @@ public class ValkyrieUltimateAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
     }
 
     @EventHandler
@@ -115,7 +92,7 @@ public class ValkyrieUltimateAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation, true)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation(), true)) return;
 
         event.setCancelled(true);
 
@@ -123,12 +100,12 @@ public class ValkyrieUltimateAbility extends Ability {
         if (abilityActive.get()) return;
 
         if (chargingUp.get()) {
-            if (chargeUpDuration.get() >= info.chargeUp) {
+            if (chargeUpDuration.get() >= info.getChargeUp()) {
                 chargingUp.set(false);
                 abilityActive.set(true);
             }
         } else if (!InteractionLockManager.getInstance().isInteractionLocked(player)) {
-            Ability ability = this;
+            Ability<?> ability = this;
             new FunctionChain(
                     next -> new AbilityRunnable() {
                         BossBar bossbar;
@@ -152,11 +129,11 @@ public class ValkyrieUltimateAbility extends Ability {
                                 cancel();
                                 return;
                             }
-                            bossbar.setProgress(Math.min(1, chargeUpDuration.incrementAndGet() / (double) info.chargeUp));
+                            bossbar.setProgress(Math.min(1, chargeUpDuration.incrementAndGet() / (double) info.getChargeUp()));
                             boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
                             boolean offHandPearl = player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
-                            boolean shouldContinue = ability.getInfo().activation == ActivationHand.MainHand && mainHandPearl ||
-                                    ability.getInfo().activation == ActivationHand.OffHand && offHandPearl;
+                            boolean shouldContinue = ability.getInfo().getActivation() == ActivationHand.MainHand && mainHandPearl ||
+                                    ability.getInfo().getActivation() == ActivationHand.OffHand && offHandPearl;
                             if (!player.isValid()) shouldContinue = false;
                             if (!player.isOnline()) shouldContinue = false;
                             if (!player.getWorld().equals(groundLocation.getWorld())) shouldContinue = false;
@@ -228,14 +205,14 @@ public class ValkyrieUltimateAbility extends Ability {
                                 return;
                             }
                             double propulsion;
-                            if (info.duration - count == INITIAL_BURN_DURATION) {
+                            if (info.getDuration() - count == INITIAL_BURN_DURATION) {
                                 player.setVelocity(player.getVelocity().add(new Vector(0, 0.2, 0)));
                                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_BLAST, 1, 0);
                             }
-                            if (info.duration - count >= INITIAL_BURN_DURATION)
+                            if (info.getDuration() - count >= INITIAL_BURN_DURATION)
                                 propulsion = 0.2;
                             else {
-                                propulsion = Math.min((info.duration - count) * 0.0005 + 0.075, 0.09);
+                                propulsion = Math.min((info.getDuration() - count) * 0.0005 + 0.075, 0.09);
                                 player.getWorld().spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 2, 0.1, 0.1, 0.1, 0.05);
                             }
                             boolean shouldPropel = player.getLocation().getY() - groundLocation.getY() < MAX_LAUNCH_HEIGHT;
@@ -272,7 +249,7 @@ public class ValkyrieUltimateAbility extends Ability {
                             else
                                 abilityActive.set(false);
                         }
-                    }.runTaskRepeated(this, 0, 1, info.duration),
+                    }.runTaskRepeated(this, 0, 1, info.getDuration()),
                     next -> {
                         if (flightRunnable != null && !flightRunnable.isCancelled())
                             flightRunnable.cancel();
@@ -330,7 +307,7 @@ public class ValkyrieUltimateAbility extends Ability {
                             protected void end() {
                                 player.getInventory().setChestplate(chestplate);
                                 abilityActive.set(false);
-                                cooldown.setCooldown(info.cooldown);
+                                cooldown.setCooldown(info.getCooldown());
                             }
                         }).runTaskTimer(this, 0, 1);
                     }

@@ -1,6 +1,9 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.titanfall;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCooldown;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -8,7 +11,6 @@ import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.LivingEntity;
@@ -31,45 +33,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class TitanfallAbility extends Ability {
+public class TitanfallAbility extends Ability<TitanfallAbilityInfo> {
 
     static final int ACTION_COOLDOWN = 5;
     static final int ENERGY_SIPHON_COOLDOWN = 200;
     static final int ENERGY_SIPHON_CHARGE_UP = 20;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 10);
-        config.addDefault("duration", 0);
-        config.addDefault("cooldown", 12000);
-    }
-
-    public TitanfallAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("titanfall")
-                .name("Titanfall")
-                .origin("Titanfall")
-                .description("Deploy and pilot a titan for combat.\nTitan ability: Fire an electric blast that slows entity and regenerates health.\nPassive ability: dealing damage reduces titan cooldown.")
-                .usage("Right click to summon a titan at your location. Use vehicle controls to mount and dismount the titan. While mounted, right click to switch between attack and move mode. Left click an entity in attack mode to lock target. Left click in move mode to jump. You are invincible while controlling the titan, but you will be ejected upwards when the titan is destroyed.")
-                .activation(ActivationHand.MainHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public TitanfallAbility(Plugin plugin, TitanfallAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
@@ -79,6 +50,16 @@ public class TitanfallAbility extends Ability {
     final AtomicReference<IronGolem> titan = new AtomicReference<>();
     AbilityRunnable titanControlRunnable;
 
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         super.onPlayerJoin(event);
@@ -86,7 +67,7 @@ public class TitanfallAbility extends Ability {
         if (player.getName().equals(ownerName)) {
             chargingUp.set(false);
             abilityActive.set(false);
-            cooldown.setCooldown(info.cooldown);
+            cooldown.setCooldown(info.getCooldown());
         }
     }
 
@@ -96,7 +77,7 @@ public class TitanfallAbility extends Ability {
         if (player != null) {
             chargingUp.set(false);
             abilityActive.set(false);
-            cooldown.setCooldown(info.cooldown);
+            cooldown.setCooldown(info.getCooldown());
         }
     }
 
@@ -157,7 +138,7 @@ public class TitanfallAbility extends Ability {
             }
         }
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -170,19 +151,19 @@ public class TitanfallAbility extends Ability {
         PlayerUtils.consumeEnderPearl(player);
 
         new FunctionChain(
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     if (titanControlRunnable != null && !titanControlRunnable.isCancelled())
                         titanControlRunnable.cancel();
 
-                    titan.set(player.getWorld().spawn(player.getLocation().add(0, 300, 0), IronGolem.class, entity -> entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)))));
+                    titan.set(player.getWorld().spawn(player.getLocation().add(0, 300, 0), IronGolem.class, entity -> entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)))));
 
                     WorldUtils.spawnParticleCubeOutline(player.getLocation().subtract(1.5, 0, 1.5), player.getLocation().add(1.5, 3, 1.5), Particle.END_ROD, 3, false);
 
                     pendingAction.set(null);
                     actionCooldown.set(ACTION_COOLDOWN);
 
-                    Ability ability = this;
+                    Ability<?> ability = this;
                     (titanControlRunnable = new AbilityRunnable() {
                         boolean attackMode = false;
                         boolean landed = false;

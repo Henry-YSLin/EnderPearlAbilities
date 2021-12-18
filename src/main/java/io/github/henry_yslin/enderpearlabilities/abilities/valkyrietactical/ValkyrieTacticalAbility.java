@@ -1,11 +1,12 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.valkyrietactical;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
@@ -26,50 +27,29 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class ValkyrieTacticalAbility extends Ability {
+public class ValkyrieTacticalAbility extends Ability<ValkyrieTacticalAbilityInfo> {
 
     static final int TARGET_RANGE = 100;
     static final int ARROW_PER_TICK = 4;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 0);
-        config.addDefault("duration", 15);
-        config.addDefault("cooldown", 400);
-    }
-
-    public ValkyrieTacticalAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("valkyrie-tactical")
-                .name("Missile Swarm")
-                .origin("Apex - Valkyrie")
-                .description("Fire a swarm of missiles that damage and slow entities.\nPassive ability: Double-tap and hold the jump key to engage jetpack. Jetpack is disabled while you are falling or when elytra are equipped.")
-                .usage("Right click to fire homing missiles towards your crosshair location. Entities hit by missiles will be slowed for a brief moment.")
-                .activation(ActivationHand.OffHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public ValkyrieTacticalAbility(Plugin plugin, ValkyrieTacticalAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final Random random = new Random();
     VTOLJetsRunnable vtolJetsRunnable;
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -91,7 +71,7 @@ public class ValkyrieTacticalAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
 
         if (vtolJetsRunnable != null && !vtolJetsRunnable.isCancelled())
             vtolJetsRunnable.cancel();
@@ -103,7 +83,7 @@ public class ValkyrieTacticalAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -124,7 +104,7 @@ public class ValkyrieTacticalAbility extends Ability {
                     WorldUtils.spawnParticleCubeOutline(targetLocation.get().clone().add(-2.5, -2.5, -2.5), targetLocation.get().clone().add(2.5, 2.5, 2.5), Particle.SMOKE_NORMAL, 5, true);
                     next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> fireMissiles(targetLocation.get())
         ).execute();
     }
@@ -201,7 +181,7 @@ public class ValkyrieTacticalAbility extends Ability {
                         entity.setBounce(false);
                         entity.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
                         entity.setBasePotionData(new PotionData(PotionType.SLOWNESS, false, true));
-                        entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+                        entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
                         entity.setMetadata("homing", new FixedMetadataValue(plugin, 0));
                         entity.setMetadata("target", new FixedMetadataValue(plugin, targetLocation.toVector().add(new Vector(random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d, random.nextDouble() * 5d - 2.5d))));
                     });
@@ -213,8 +193,8 @@ public class ValkyrieTacticalAbility extends Ability {
             protected void end() {
                 super.end();
                 abilityActive.set(false);
-                cooldown.setCooldown(info.cooldown);
+                cooldown.setCooldown(info.getCooldown());
             }
-        }.runTaskRepeated(this, 0, 1, info.duration);
+        }.runTaskRepeated(this, 0, 1, info.getDuration());
     }
 }

@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.smartbow;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
@@ -15,7 +13,6 @@ import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -33,52 +30,31 @@ import org.bukkit.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class SmartBowAbility extends Ability {
+public class SmartBowAbility extends Ability<SmartBowAbilityInfo> {
 
     static final int MAX_AIR_TIME = 100;
     static final double LOCK_ON_RANGE = 100;
     static final double LOCK_ON_RADIUS = 10;
     static final double LOCK_ON_ANGLE = 45d / 180 * Math.PI;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 10);
-        config.addDefault("duration", 12);
-        config.addDefault("cooldown", 100);
-    }
-
-    public SmartBowAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("smart-bow")
-                .name("Smart Bow")
-                .origin("Titanfall")
-                .description("Enhance your bow-type weapons with advanced automatic aim correction that greatly increases the chance of hitting your target.")
-                .usage("Right click with an ender pearl to activate. Right click again to cancel. Cooldown depends on the number of shots fired.")
-                .activation(ActivationHand.OffHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public SmartBowAbility(Plugin plugin, SmartBowAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicInteger shotsLeft = new AtomicInteger(0);
     final BossBar bossbar = Bukkit.createBossBar("", BarColor.BLUE, BarStyle.SEGMENTED_12);
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -98,13 +74,13 @@ public class SmartBowAbility extends Ability {
     }
 
     private void setUpPlayer(Player player) {
-        bossbar.setTitle(ChatColor.BLUE + info.name);
+        bossbar.setTitle(ChatColor.BLUE + info.getName());
         chargingUp.set(false);
         abilityActive.set(false);
         shotsLeft.set(0);
         bossbar.setVisible(false);
         bossbar.addPlayer(player);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
     }
 
     @Override
@@ -196,7 +172,7 @@ public class SmartBowAbility extends Ability {
         if (!abilityActive.get()) return;
 
         int shots = shotsLeft.decrementAndGet();
-        bossbar.setProgress(shots / (double) info.duration);
+        bossbar.setProgress(shots / (double) info.getDuration());
 
         if (shots <= 0) {
             abilityActive.set(false);
@@ -242,14 +218,14 @@ public class SmartBowAbility extends Ability {
     }
 
     private void cooldown() {
-        cooldown.setCooldown(info.cooldown + (info.duration - shotsLeft.get()) * 40);
+        cooldown.setCooldown(info.getCooldown() + (info.getDuration() - shotsLeft.get()) * 40);
     }
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation, true)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation(), true)) return;
 
         event.setCancelled(true);
 
@@ -271,12 +247,12 @@ public class SmartBowAbility extends Ability {
                     PlayerUtils.consumeEnderPearl(player);
                     next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     abilityActive.set(true);
                     bossbar.setVisible(true);
                     bossbar.setProgress(1);
-                    shotsLeft.set(info.duration);
+                    shotsLeft.set(info.getDuration());
                 }
         ).execute();
     }

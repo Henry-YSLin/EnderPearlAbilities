@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.timefreeze;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
@@ -14,7 +12,6 @@ import org.bukkit.Particle;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -30,47 +27,26 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 // TODO: name subject to change
-public class TimeFreezeAbility extends Ability {
+public class TimeFreezeAbility extends Ability<TimeFreezeAbilityInfo> {
 
     static final int FREEZE_RANGE = 30;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 0);
-        config.addDefault("duration", 100);
-        config.addDefault("cooldown", 600);
-    }
-
-    public TimeFreezeAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("time-freeze")
-                .name("Time Freeze")
-                .origin("Original")
-                .description("Locally freeze time for a short duration.")
-                .usage("Right click with an ender pearl to activate the ability. Frozen entities are invulnerable. Players are not affected by the freeze.")
-                .activation(ActivationHand.MainHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public TimeFreezeAbility(Plugin plugin, TimeFreezeAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -92,7 +68,7 @@ public class TimeFreezeAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
     }
 
     @Override
@@ -119,7 +95,7 @@ public class TimeFreezeAbility extends Ability {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -134,7 +110,7 @@ public class TimeFreezeAbility extends Ability {
                     PlayerUtils.consumeEnderPearl(player);
                     next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     abilityActive.set(true);
 
@@ -150,7 +126,7 @@ public class TimeFreezeAbility extends Ability {
 
                     @Override
                     protected synchronized void start() {
-                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                     }
 
@@ -159,7 +135,7 @@ public class TimeFreezeAbility extends Ability {
                         if (!abilityActive.get() || !player.isValid()) {
                             cancel();
                         }
-                        bossbar.setProgress(count / (double) info.duration);
+                        bossbar.setProgress(count / (double) info.getDuration());
                         for (FreezeRecord record : entities) {
                             record.entity.setVelocity(new Vector(0, 0, 0));
                             if (record.entity instanceof Creeper creeper) {
@@ -176,7 +152,7 @@ public class TimeFreezeAbility extends Ability {
                         bossbar.removeAll();
                         next.run();
                     }
-                }.runTaskRepeated(this, 0, 1, info.duration),
+                }.runTaskRepeated(this, 0, 1, info.getDuration()),
                 next -> {
                     abilityActive.set(false);
 
@@ -190,7 +166,7 @@ public class TimeFreezeAbility extends Ability {
                         }
                     }
 
-                    cooldown.setCooldown(info.cooldown);
+                    cooldown.setCooldown(info.getCooldown());
                     next.run();
                 }
         ).execute();
