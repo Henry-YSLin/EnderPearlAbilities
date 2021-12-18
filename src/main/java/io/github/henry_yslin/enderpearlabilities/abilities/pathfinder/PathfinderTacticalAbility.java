@@ -1,6 +1,8 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.pathfinder;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
@@ -10,7 +12,6 @@ import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -28,44 +29,13 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class PathfinderAbility extends Ability {
+public class PathfinderTacticalAbility extends Ability<PathfinderTacticalAbilityInfo> {
 
     static final int PROJECTILE_LIFETIME = 20;
     static final double PROJECTILE_SPEED = 4;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 0);
-        config.addDefault("duration", 100);
-        config.addDefault("cooldown", 20);
-    }
-
-    public PathfinderAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("pathfinder")
-                .name("Grappling Hook")
-                .origin("Apex - Pathfinder")
-                .description("Shoot a grappling hook to swing around, pull yourself up, or pull other entities close to you.\nPassive ability: Break your fall for a brief moment if the fall will be lethal.")
-                .usage("Right click to throw a grapple. The grapple will anchor to where it hits. Look at the anchor while grappling to pull yourself towards the anchor. Look sideways to swing. Right click again to cancel the grapple.")
-                .activation(ActivationHand.OffHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public PathfinderTacticalAbility(Plugin plugin, PathfinderTacticalAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
@@ -74,8 +44,14 @@ public class PathfinderAbility extends Ability {
     AbilityRunnable grapple;
     SlowFallRunnable slowFallRunnable;
 
-    public boolean isAbilityActive() {
+    @Override
+    public boolean isActive() {
         return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
     }
 
     @EventHandler
@@ -102,7 +78,7 @@ public class PathfinderAbility extends Ability {
         if (grapple != null)
             if (!grapple.isCancelled())
                 grapple.cancel();
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
         if (slowFallRunnable != null && !slowFallRunnable.isCancelled())
             slowFallRunnable.cancel();
         slowFallRunnable = new SlowFallRunnable(player);
@@ -113,7 +89,7 @@ public class PathfinderAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation, true)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation(), true)) return;
 
         event.setCancelled(true);
 
@@ -129,7 +105,7 @@ public class PathfinderAbility extends Ability {
         PlayerUtils.consumeEnderPearl(player);
 
         new FunctionChain(
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false)
         ).execute();
     }
@@ -152,7 +128,7 @@ public class PathfinderAbility extends Ability {
             entity.setInvulnerable(true);
             entity.setInvisible(true);
             entity.setSize(0);
-            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
         });
     }
 
@@ -200,7 +176,7 @@ public class PathfinderAbility extends Ability {
                 abilityActive.set(true);
                 blockShoot.set(false);
                 InteractionLockManager.getInstance().lockInteraction(player);
-                bossbar = Bukkit.createBossBar(info.name, BarColor.PURPLE, BarStyle.SOLID);
+                bossbar = Bukkit.createBossBar(info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                 bossbar.addPlayer(player);
                 anchorLocation = anchor.getLocation();
             }
@@ -211,7 +187,7 @@ public class PathfinderAbility extends Ability {
                     cancel();
                     return;
                 }
-                bossbar.setProgress(count / (double) info.duration);
+                bossbar.setProgress(count / (double) info.getDuration());
                 if (hitEntity != null)
                     anchorLocation = hitEntity.getLocation();
                 anchor.teleport(anchorLocation);
@@ -257,9 +233,9 @@ public class PathfinderAbility extends Ability {
                 anchor.remove();
                 InteractionLockManager.getInstance().unlockInteraction(player);
                 abilityActive.set(false);
-                cooldown.setCooldown(info.cooldown);
+                cooldown.setCooldown(info.getCooldown());
             }
-        }).runTaskRepeated(this, 0, 1, info.duration);
+        }).runTaskRepeated(this, 0, 1, info.getDuration());
     }
 
     @EventHandler
