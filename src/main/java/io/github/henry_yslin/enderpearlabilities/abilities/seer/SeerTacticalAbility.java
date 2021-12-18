@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.seer;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
@@ -12,7 +10,6 @@ import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -30,50 +27,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class SeerAbility extends Ability {
+public class SeerTacticalAbility extends Ability<SeerTacticalAbilityInfo> {
+
     static final double SCAN_RADIUS = 5;
     static final double SCAN_RANGE = 75;
     static final int PARTICLE_COUNT = 750;
     static final double ANGLE_DELTA = 1;
     static final int SPREAD_TIME = 5;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 30);
-        config.addDefault("duration", 200);
-        config.addDefault("cooldown", 500);
+    public SeerTacticalAbility(Plugin plugin, SeerTacticalAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
-    public SeerAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("seer")
-                .name("Focus of Attention")
-                .origin("Apex - Seer")
-                .description("Summon micro-drones to emit a delayed blast that goes through walls blinding and revealing entities.\nPassive ability: Visualize the heartbeats of nearby entities when sneaking.")
-                .usage("Right click to activate. Entities hit by the blast receive debuffs and remain revealed for the duration of the ability. If no entities are hit, the ability goes into cooldown early.")
-                .activation(ActivationHand.MainHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
-    }
-
+    final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     HeartSeekerRunnable heartSeekerRunnable;
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -104,11 +82,12 @@ public class SeerAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
         if (cooldown.isCoolingDown()) return;
+        if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
         abilityActive.set(true);
@@ -122,9 +101,11 @@ public class SeerAbility extends Ability {
                             .runTaskRepeated(this, 0, 1, SPREAD_TIME);
                     new SeerTacticalEffect(Particle.DRAGON_BREATH, origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, ANGLE_DELTA, PARTICLE_COUNT, false)
                             .runTaskRepeated(this, 0, 1, SPREAD_TIME);
+                    chargingUp.set(true);
                     next.run();
                 },
-                next -> AbilityUtils.delay(this, info.chargeUp, () -> {
+                next -> AbilityUtils.delay(this, info.getChargeUp(), () -> {
+                    chargingUp.set(false);
                     new SeerTacticalEffect(Particle.END_ROD, origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, ANGLE_DELTA, PARTICLE_COUNT, false)
                             .runTaskRepeated(this, 0, 1, 1);
                     if (origin.getWorld() != null)
@@ -150,7 +131,7 @@ public class SeerAbility extends Ability {
 
                     if (entities.size() == 0) {
                         abilityActive.set(false);
-                        cooldown.setCooldown(info.cooldown);
+                        cooldown.setCooldown(info.getCooldown());
                         return;
                     }
 
@@ -171,10 +152,10 @@ public class SeerAbility extends Ability {
                         if (entity instanceof LivingEntity livingEntity) {
                             if (team != null)
                                 team.addEntry(entity.getUniqueId().toString());
-                            livingEntity.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(info.duration / 2, 1));
-                            livingEntity.addPotionEffect(PotionEffectType.WEAKNESS.createEffect(info.duration, 1));
-                            livingEntity.addPotionEffect(PotionEffectType.SLOW.createEffect(info.duration, 2));
-                            livingEntity.addPotionEffect(PotionEffectType.GLOWING.createEffect(info.duration, 1));
+                            livingEntity.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(info.getDuration() / 2, 1));
+                            livingEntity.addPotionEffect(PotionEffectType.WEAKNESS.createEffect(info.getDuration(), 1));
+                            livingEntity.addPotionEffect(PotionEffectType.SLOW.createEffect(info.getDuration(), 2));
+                            livingEntity.addPotionEffect(PotionEffectType.GLOWING.createEffect(info.getDuration(), 1));
                         } else {
                             entity.setGlowing(true);
                         }
@@ -189,7 +170,7 @@ public class SeerAbility extends Ability {
 
                         @Override
                         protected synchronized void start() {
-                            bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
+                            bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                             bossbar.addPlayer(player);
                         }
 
@@ -198,7 +179,7 @@ public class SeerAbility extends Ability {
                             if (!abilityActive.get()) {
                                 cancel();
                             }
-                            bossbar.setProgress(count / (double) info.duration * 10);
+                            bossbar.setProgress(count / (double) info.getDuration() * 10);
                         }
 
                         @Override
@@ -213,10 +194,10 @@ public class SeerAbility extends Ability {
                             if (team != null)
                                 team.unregister();
                             abilityActive.set(false);
-                            cooldown.setCooldown(info.cooldown);
+                            cooldown.setCooldown(info.getCooldown());
                             next.run();
                         }
-                    }.runTaskRepeated(this, 0, 10, info.duration / 10);
+                    }.runTaskRepeated(this, 0, 10, info.getDuration() / 10);
                 }
         ).execute();
     }
