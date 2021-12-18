@@ -46,7 +46,7 @@ public class SlaveSpawning extends AbilityRunnable {
         else {
             skeleton.setCustomName(null);
             skeleton.setCustomNameVisible(false);
-            skeleton.removeMetadata("ability", executor.plugin);
+            skeleton.removeMetadata("ability", executor.getPlugin());
             skeleton.setAI(true);
         }
     }

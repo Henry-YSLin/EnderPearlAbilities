@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.octane;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
@@ -14,7 +12,6 @@ import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -26,46 +23,25 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class OctaneAbility extends Ability {
+public class OctaneTacticalAbility extends Ability<OctaneTacticalAbilityInfo> {
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 0);
-        config.addDefault("duration", 200);
-        config.addDefault("cooldown", 60);
-    }
-
-    public OctaneAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("octane")
-                .name("Stim")
-                .origin("Apex - Octane")
-                .description("Boost sprinting and jumping and cancel slowing effects. Costs health to use.\nPassive ability: Automatically restores health over time.")
-                .usage("Right click with an ender pearl to activate the ability.")
-                .activation(ActivationHand.OffHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public OctaneTacticalAbility(Plugin plugin, OctaneTacticalAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     SwiftMendRunnable swiftMendRunnable;
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -87,7 +63,7 @@ public class OctaneAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
 
         if (swiftMendRunnable != null && !swiftMendRunnable.isCancelled())
             swiftMendRunnable.cancel();
@@ -114,7 +90,7 @@ public class OctaneAbility extends Ability {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -130,12 +106,12 @@ public class OctaneAbility extends Ability {
                     player.setHealth(Math.max(1, player.getHealth() - 4));
                     next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     abilityActive.set(true);
                     player.addPotionEffect(PotionEffectType.NIGHT_VISION.createEffect(10, 0));
                     player.addPotionEffect(PotionEffectType.CONDUIT_POWER.createEffect(10, 0));
-                    player.addPotionEffect(PotionEffectType.JUMP.createEffect(info.duration, 1));
+                    player.addPotionEffect(PotionEffectType.JUMP.createEffect(info.getDuration(), 1));
                     if (player.isSprinting())
                         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 1000000, 2, true, true));
                     next.run();
@@ -145,7 +121,7 @@ public class OctaneAbility extends Ability {
 
                     @Override
                     protected synchronized void start() {
-                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                     }
 
@@ -154,7 +130,7 @@ public class OctaneAbility extends Ability {
                         if (!abilityActive.get() || !player.isValid()) {
                             cancel();
                         }
-                        bossbar.setProgress(count / (double) info.duration);
+                        bossbar.setProgress(count / (double) info.getDuration());
                         if (player.hasPotionEffect(PotionEffectType.SLOW))
                             player.removePotionEffect(PotionEffectType.SLOW);
                         player.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation().add(0, 1, 0), 2, 0.1, 0.1, 0.1, 0);
@@ -165,7 +141,7 @@ public class OctaneAbility extends Ability {
                         bossbar.removeAll();
                         next.run();
                     }
-                }.runTaskRepeated(this, 0, 1, info.duration),
+                }.runTaskRepeated(this, 0, 1, info.getDuration()),
                 next -> {
                     for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
                         onlinePlayer.showPlayer(plugin, player);
@@ -173,7 +149,7 @@ public class OctaneAbility extends Ability {
                     abilityActive.set(false);
                     player.removePotionEffect(PotionEffectType.SPEED);
                     player.removePotionEffect(PotionEffectType.JUMP);
-                    cooldown.setCooldown(info.cooldown);
+                    cooldown.setCooldown(info.getCooldown());
                     next.run();
                 }
         ).execute();
