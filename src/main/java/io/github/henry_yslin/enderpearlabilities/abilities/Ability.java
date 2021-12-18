@@ -10,9 +10,9 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Controls the behavior and description of a specific ability for one specified player.
  */
-public abstract class Ability extends AbilityListener {
+public abstract class Ability<TInfo extends AbilityInfo> extends AbilityListener {
 
-    protected AbilityInfo info;
+    protected TInfo info;
     protected final String ownerName;
     protected Player player;
     protected AbilityCooldown cooldown;
@@ -23,7 +23,7 @@ public abstract class Ability extends AbilityListener {
      * @param plugin    The owning plugin.
      * @param ownerName Name of the player who owns this ability, null if this instance is a template.
      */
-    public Ability(@NotNull Plugin plugin, @NotNull AbilityInfo info, @NotNull String ownerName) {
+    public Ability(@NotNull Plugin plugin, @NotNull TInfo info, @NotNull String ownerName) {
         super(plugin);
         this.ownerName = ownerName;
         this.info = info;
@@ -43,7 +43,7 @@ public abstract class Ability extends AbilityListener {
      * Get an {@link AbilityInfo} containing descriptions of this ability.
      * Some parts of the description are not constant and change according to the configs supplied.
      */
-    public AbilityInfo getInfo() {
+    public TInfo getInfo() {
         return info;
     }
 

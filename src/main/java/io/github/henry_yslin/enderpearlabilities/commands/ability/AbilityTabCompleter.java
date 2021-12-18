@@ -1,6 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.commands.ability;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -38,25 +39,25 @@ public class AbilityTabCompleter implements TabCompleter {
                 StringUtil.copyPartialMatches(partialPlayer, players, completions);
             } else if (Arrays.stream(ABILITY_COMMANDS).anyMatch(cmd -> cmd.equals(args[0]))) {
                 String partialAbility = args[1];
-                List<String> abilities = EnderPearlAbilities.getInstance().getTemplateAbilities().stream().map(ability -> ability.getInfo().codeName).toList();
+                List<String> abilities = EnderPearlAbilities.getInstance().getAbilityInfos().stream().map(AbilityInfo::getCodeName).toList();
                 StringUtil.copyPartialMatches(partialAbility, abilities, completions);
             } else if (args[0].equals("register")) {
                 String partialAbility = args[1];
                 List<ActivationHand> occupiedHands = EnderPearlAbilities.getInstance().getAbilities().stream()
-                        .filter(ability -> Objects.equals(ability.ownerName, sender.getName()))
-                        .map(ability -> ability.getInfo().activation)
+                        .filter(ability -> Objects.equals(ability.getOwnerName(), sender.getName()))
+                        .map(ability -> ability.getInfo().getActivation())
                         .distinct()
                         .toList();
-                List<String> abilities = EnderPearlAbilities.getInstance().getTemplateAbilities().stream()
-                        .filter(ability -> !occupiedHands.contains(ability.getInfo().activation))
-                        .map(ability -> ability.getInfo().codeName)
+                List<String> abilities = EnderPearlAbilities.getInstance().getAbilityInfos().stream()
+                        .filter(ability -> !occupiedHands.contains(ability.getActivation()))
+                        .map(AbilityInfo::getCodeName)
                         .toList();
                 StringUtil.copyPartialMatches(partialAbility, abilities, completions);
             } else if (args[0].equals("unregister")) {
                 String partialAbility = args[1];
                 List<String> abilities = EnderPearlAbilities.getInstance().getAbilities().stream()
-                        .filter(ability -> Objects.equals(ability.ownerName, sender.getName()))
-                        .map(ability -> ability.getInfo().codeName)
+                        .filter(ability -> Objects.equals(ability.getOwnerName(), sender.getName()))
+                        .map(ability -> ability.getInfo().getCodeName())
                         .toList();
                 StringUtil.copyPartialMatches(partialAbility, abilities, completions);
             }

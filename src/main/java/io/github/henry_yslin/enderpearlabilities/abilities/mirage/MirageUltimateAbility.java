@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MirageUltimateAbility extends Ability {
+public class MirageUltimateAbility extends Ability<MirageUltimateAbilityInfo> {
 
     public MirageUltimateAbility(Plugin plugin, MirageUltimateAbilityInfo info, String ownerName) {
         super(plugin, info, ownerName);

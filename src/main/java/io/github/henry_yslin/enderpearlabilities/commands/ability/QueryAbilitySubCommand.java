@@ -10,7 +10,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class QueryAbilitySubCommand extends SubCommand {
@@ -31,15 +30,15 @@ public class QueryAbilitySubCommand extends SubCommand {
             return false;
 
         String finalLookupPlayer = lookupPlayer;
-        List<Ability> abilities;
-        List<Ability> targetAbilities;
+        List<Ability<?>> abilities;
+        List<Ability<?>> targetAbilities;
         synchronized (abilities = EnderPearlAbilities.getInstance().getAbilities()) {
-            targetAbilities = abilities.stream().filter(x -> Objects.equals(x.ownerName, finalLookupPlayer)).collect(Collectors.toList());
+            targetAbilities = abilities.stream().filter(x -> x.getOwnerName().equalsIgnoreCase(finalLookupPlayer)).collect(Collectors.toList());
         }
         if (targetAbilities.isEmpty()) {
             sender.sendMessage(ChatColor.RED + "Cannot find " + finalLookupPlayer + "'s ability");
         } else {
-            for (Ability ability : targetAbilities) {
+            for (Ability<?> ability : targetAbilities) {
                 sender.sendMessage(AbilityUtils.formatAbilityInfo(ability, false));
             }
         }

@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class BangaloreUltimateAbility extends Ability {
+public class BangaloreUltimateAbility extends Ability<BangaloreUltimateAbilityInfo> {
 
     static final int PROJECTILE_LIFETIME = 100;
     static final double PROJECTILE_SPEED = 2;
@@ -96,7 +96,7 @@ public class BangaloreUltimateAbility extends Ability {
         if (abilityActive.get()) return;
 
         PlayerUtils.consumeEnderPearl(player);
-        Ability ability = this;
+        Ability<?> ability = this;
         new AbilityRunnable() {
             Projectile projectile;
             int ticksToCancel;

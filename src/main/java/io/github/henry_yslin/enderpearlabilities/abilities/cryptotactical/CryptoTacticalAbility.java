@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class CryptoTacticalAbility extends Ability {
+public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
 
     static final float FLY_SPEED = 0.06f;
 

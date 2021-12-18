@@ -28,7 +28,7 @@ import org.bukkit.util.Vector;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class GibraltarUltimateAbility extends Ability {
+public class GibraltarUltimateAbility extends Ability<GibraltarUltimateAbilityInfo> {
 
     static final int PROJECTILE_LIFETIME = 100;
     static final double PROJECTILE_SPEED = 2;

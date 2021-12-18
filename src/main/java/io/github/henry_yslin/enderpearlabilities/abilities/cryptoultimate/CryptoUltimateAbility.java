@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class CryptoUltimateAbility extends Ability {
+public class CryptoUltimateAbility extends Ability<CryptoUltimateAbilityInfo> {
 
     static final double EMP_RADIUS = 20;
     final String TACTICAL_ABILITY_NAME;
@@ -227,7 +227,7 @@ public class CryptoUltimateAbility extends Ability {
         Player player = event.getPlayer();
         if (!player.getName().equals(ownerName)) return;
 
-        Optional<Ability> droneAbility = EnderPearlAbilities.getInstance().getAbilities().stream()
+        Optional<Ability<?>> droneAbility = EnderPearlAbilities.getInstance().getAbilities().stream()
                 .filter(ability -> ability instanceof CryptoTacticalAbility && ability.getOwnerName().equals(ownerName))
                 .findFirst();
 

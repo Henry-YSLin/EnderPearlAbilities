@@ -35,7 +35,7 @@ public abstract class AbilityInfo implements HasConfig {
 
     public abstract int getCooldown();
 
-    public abstract Ability createInstance(String ownerName);
+    public abstract Ability<?> createInstance(String ownerName);
 
     public AbilityInfo(Plugin plugin) {
         this.plugin = plugin;

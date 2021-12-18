@@ -21,7 +21,7 @@ import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class BangaloreTacticalAbility extends Ability {
+public class BangaloreTacticalAbility extends Ability<BangaloreTacticalAbilityInfo> {
 
     static final int PROJECTILE_LIFETIME = 100;
     static final int SMOKE_PELLET_LIFETIME = 20;

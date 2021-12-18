@@ -18,7 +18,7 @@ import org.bukkit.util.Vector;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HorizonUltimateAbility extends Ability {
+public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> {
 
     static final int PROJECTILE_LIFETIME = 100;
     static final double PROJECTILE_SPEED = 2;

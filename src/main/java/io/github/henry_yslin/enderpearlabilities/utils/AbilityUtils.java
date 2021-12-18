@@ -33,7 +33,7 @@ public class AbilityUtils {
      * @param chargeUp The duration of charge-up in ticks.
      * @param next     The runnable to run when the charge-up is complete.
      */
-    public static void chargeUpSequence(Ability ability, Player player, int chargeUp, AtomicBoolean chargingUp, Runnable next) {
+    public static void chargeUpSequence(Ability<?> ability, Player player, int chargeUp, AtomicBoolean chargingUp, Runnable next) {
         chargeUpSequence(ability, player, chargeUp, chargingUp, next, null);
     }
 
@@ -47,7 +47,7 @@ public class AbilityUtils {
      * @param next       The runnable to run when the charge-up is complete.
      * @param onTick     Additional actions on charge up tick, given {@code count} as argument.
      */
-    public static void chargeUpSequence(Ability ability, Player player, int chargeUp, AtomicBoolean chargingUp, Runnable next, @Nullable Consumer<Long> onTick) {
+    public static void chargeUpSequence(Ability<?> ability, Player player, int chargeUp, AtomicBoolean chargingUp, Runnable next, @Nullable Consumer<Long> onTick) {
         if (chargeUp <= 0) {
             next.run();
             return;
@@ -135,7 +135,7 @@ public class AbilityUtils {
      * @param gravity            Whether the projectile is affected by gravity.
      * @return The projectile that is fired.
      */
-    public static Projectile fireProjectile(Ability ability, Player player, AtomicBoolean inFlight, int projectileLifetime, double projectileSpeed, boolean gravity) {
+    public static Projectile fireProjectile(Ability<?> ability, Player player, AtomicBoolean inFlight, int projectileLifetime, double projectileSpeed, boolean gravity) {
         if (inFlight != null) {
             if (inFlight.get()) return null;
             inFlight.set(true);
@@ -144,7 +144,7 @@ public class AbilityUtils {
         Projectile projectile = player.launchProjectile(Snowball.class, player.getLocation().getDirection().normalize().multiply(projectileSpeed));
         projectile.setGravity(gravity);
 
-        projectile.setMetadata("ability", new FixedMetadataValue(ability.plugin, new AbilityCouple(ability.getInfo().codeName, player.getName())));
+        projectile.setMetadata("ability", new FixedMetadataValue(ability.getPlugin(), new AbilityCouple(ability.getInfo().getCodeName(), player.getName())));
 
         player.setCooldown(Material.ENDER_PEARL, 1);
 
@@ -168,9 +168,9 @@ public class AbilityUtils {
      * @param couple  The {@link AbilityCouple}.
      * @return Whether the {@link AbilityCouple} belongs to the given {@link Ability}.
      */
-    public static boolean verifyAbilityCouple(Ability ability, AbilityCouple couple) {
-        if (!Objects.equals(ability.getInfo().codeName, couple.ability())) return false;
-        return Objects.equals(ability.ownerName, couple.player());
+    public static boolean verifyAbilityCouple(Ability<?> ability, AbilityCouple couple) {
+        if (!Objects.equals(ability.getInfo().getCodeName(), couple.ability())) return false;
+        return Objects.equals(ability.getOwnerName(), couple.player());
     }
 
     /**
@@ -181,7 +181,7 @@ public class AbilityUtils {
      * @param entity  The target entity.
      * @return Whether the entity belongs to the given {@link Ability} instance.
      */
-    public static boolean verifyAbilityCouple(Ability ability, Entity entity) {
+    public static boolean verifyAbilityCouple(Ability<?> ability, Entity entity) {
         Optional<Object> couple = EntityUtils.getMetadata(entity, "ability");
         if (couple.isEmpty()) return false;
         if (!(couple.get() instanceof AbilityCouple abilityCouple)) return false;
@@ -196,7 +196,7 @@ public class AbilityUtils {
      * @param next           The runnable to execute after the delay.
      * @param runIfCancelled Whether to execute the runnable immediately if the delay is cancelled.
      */
-    public static void delay(Ability ability, int delay, Runnable next, boolean runIfCancelled) {
+    public static void delay(Ability<?> ability, int delay, Runnable next, boolean runIfCancelled) {
         new AbilityRunnable() {
             @Override
             protected void tick() {
@@ -240,26 +240,33 @@ public class AbilityUtils {
     /**
      * Generate a formatted description of an ability.
      *
-     * @param ability The ability to describe.
+     * @param abilityInfo The ability to describe.
      * @return A description of the ability, formatted with special format characters.
      */
-    public static String formatAbilityInfo(Ability ability, boolean showUsage) {
-        AbilityInfo info = ability.getInfo();
+    public static String formatAbilityInfo(AbilityInfo abilityInfo, @Nullable String ownerName, boolean showUsage) {
         String s;
-        if (ability.ownerName != null)
-            s = String.format("%s - %s%s%s - %s", ability.ownerName, ChatColor.LIGHT_PURPLE, ChatColor.BOLD, info.origin, info.name);
+        if (ownerName != null)
+            s = String.format("%s - %s%s%s - %s", ownerName, ChatColor.LIGHT_PURPLE, ChatColor.BOLD, abilityInfo.getOrigin(), abilityInfo.getName());
         else
-            s = String.format("%s%s%s - %s", ChatColor.LIGHT_PURPLE, ChatColor.BOLD, info.origin, info.name);
+            s = String.format("%s%s%s - %s", ChatColor.LIGHT_PURPLE, ChatColor.BOLD, abilityInfo.getOrigin(), abilityInfo.getName());
         s += "\n" +
-                ChatColor.RESET + ChatColor.WHITE + info.description +
+                ChatColor.RESET + ChatColor.WHITE + abilityInfo.getDescription() +
                 "\n";
         if (showUsage)
-            s += ChatColor.BOLD + "Usage: " + ChatColor.RESET + info.usage +
+            s += ChatColor.BOLD + "Usage: " + ChatColor.RESET + abilityInfo.getUsage() +
                     "\n";
-        s += String.format("%sActivation: %s", ChatColor.GRAY, info.activation == ActivationHand.MainHand ? "main hand" : "off hand") +
+        s += String.format("%sActivation: %s", ChatColor.GRAY, abilityInfo.getActivation() == ActivationHand.MainHand ? "main hand" : "off hand") +
                 "\n" +
-                String.format("%sCharge up: %ss   Duration: %ss   Cool down: %ss", ChatColor.GRAY, friendlyNumber(info.chargeUp), friendlyNumber(info.duration), friendlyNumber(info.cooldown)) +
+                String.format("%sCharge up: %ss   Duration: %ss   Cool down: %ss", ChatColor.GRAY, friendlyNumber(abilityInfo.getChargeUp()), friendlyNumber(abilityInfo.getDuration()), friendlyNumber(abilityInfo.getCooldown())) +
                 "\n";
         return s;
+    }
+
+    public static String formatAbilityInfo(Ability<?> ability, boolean showUsage) {
+        return formatAbilityInfo(ability.getInfo(), ability.getOwnerName(), showUsage);
+    }
+
+    public static String formatAbilityInfo(AbilityInfo abilityInfo, boolean showUsage) {
+        return formatAbilityInfo(abilityInfo, null, showUsage);
     }
 }

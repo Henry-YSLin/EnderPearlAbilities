@@ -27,13 +27,13 @@ public class UnregisterAbilitySubCommand extends SubCommand {
         if (args.size() <= 0) return false;
         if (!(sender instanceof Player)) return false;
 
-        List<Ability> abilities;
+        List<Ability<?>> abilities;
         synchronized (abilities = EnderPearlAbilities.getInstance().getAbilities()) {
-            for (Ability ability : abilities) {
-                if (Objects.equals(ability.ownerName, sender.getName())) {
-                    if (ability.getInfo().codeName.equals(args.get(0))) {
+            for (Ability<?> ability : abilities) {
+                if (Objects.equals(ability.getOwnerName(), sender.getName())) {
+                    if (ability.getInfo().getCodeName().equalsIgnoreCase(args.get(0))) {
                         EnderPearlAbilities.getInstance().removeAbility(ability);
-                        sender.sendMessage("" + ChatColor.LIGHT_PURPLE + ChatColor.BOLD + "Unregistered ability " + ability.getInfo().codeName);
+                        sender.sendMessage("" + ChatColor.LIGHT_PURPLE + ChatColor.BOLD + "Unregistered ability " + ability.getInfo().getCodeName());
                         return true;
                     }
                 }

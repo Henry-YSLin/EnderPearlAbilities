@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class GibraltarTacticalAbility extends Ability {
+public class GibraltarTacticalAbility extends Ability<GibraltarTacticalAbilityInfo> {
 
     static final int PROJECTILE_LIFETIME = 100;
     static final double PROJECTILE_SPEED = 0.5;

@@ -3,6 +3,7 @@ package io.github.henry_yslin.enderpearlabilities;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.commands.ability.AbilityCommand;
 import io.github.henry_yslin.enderpearlabilities.commands.ability.AbilityTabCompleter;
 import io.github.henry_yslin.enderpearlabilities.managers.Manager;
@@ -26,9 +27,9 @@ public final class EnderPearlAbilities extends JavaPlugin {
 
     final FileConfiguration config = getConfig();
 
-    final List<Ability> internalTemplateAbilities = new ArrayList<>();
-    final List<Ability> templateAbilities = Collections.unmodifiableList(internalTemplateAbilities);
-    final List<Ability> abilities = Collections.synchronizedList(new ArrayList<>());
+    final List<AbilityInfo> internalAbilityInfos = new ArrayList<>();
+    final List<AbilityInfo> abilityInfos = Collections.unmodifiableList(internalAbilityInfos);
+    final List<Ability<?>> abilities = Collections.synchronizedList(new ArrayList<>());
 
     final List<Manager> internalManagers = new ArrayList<>();
     final List<Manager> managers = Collections.unmodifiableList(internalManagers);
@@ -44,11 +45,11 @@ public final class EnderPearlAbilities extends JavaPlugin {
         return protocolManager;
     }
 
-    public List<Ability> getTemplateAbilities() {
-        return templateAbilities;
+    public List<AbilityInfo> getAbilityInfos() {
+        return abilityInfos;
     }
 
-    public List<Ability> getAbilities() {
+    public List<Ability<?>> getAbilities() {
         return abilities;
     }
 
@@ -86,25 +87,26 @@ public final class EnderPearlAbilities extends JavaPlugin {
                 e.printStackTrace();
             }
         }
+        internalManagers.sort(Comparator.comparing(Manager::getCodeName));
 
-        List<Class<?>> abilitySubTypes =
-                reflections.get(SubTypes.of(Ability.class).asClass()).stream().sorted(Comparator.comparing(Class::getName)).toList();
-        for (Class<?> subType : abilitySubTypes) {
+        List<Class<?>> abilityInfoSubTypes =
+                reflections.get(SubTypes.of(AbilityInfo.class).asClass()).stream().filter(c -> c.isAnnotationPresent(Instantiable.class)).sorted(Comparator.comparing(Class::getName)).toList();
+        for (Class<?> subType : abilityInfoSubTypes) {
             try {
-                Ability ability = (Ability) subType.getDeclaredConstructor(Plugin.class, String.class, ConfigurationSection.class).newInstance(this, null, null);
-                String codeName = ability.getInfo().codeName;
-                getLogger().info("Setting config defaults for " + codeName + " ability");
+                AbilityInfo abilityInfo = (AbilityInfo) subType.getDeclaredConstructor(Plugin.class).newInstance(this);
+                String codeName = abilityInfo.getCodeName();
+                getLogger().info("Setting config defaults for ability: " + codeName);
                 ConfigurationSection section = config.getConfigurationSection(codeName);
                 if (section == null) section = config.createSection(codeName);
-                ability.setConfigDefaults(section);
+                abilityInfo.writeConfigDefaults(section);
+                abilityInfo.loadConfig(section);
                 section.addDefault("players", new ArrayList<String>());
-                Ability template = ability.getClass().getDeclaredConstructor(Plugin.class, String.class, ConfigurationSection.class).newInstance(this, null, section);
-                internalTemplateAbilities.add(template);
+                internalAbilityInfos.add(abilityInfo);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        internalTemplateAbilities.sort(Comparator.comparing(ability -> ability.getInfo().codeName));
+        internalAbilityInfos.sort(Comparator.comparing(AbilityInfo::getCodeName));
 
         getLogger().info("Saving config");
 
@@ -138,14 +140,14 @@ public final class EnderPearlAbilities extends JavaPlugin {
             getLogger().info("No cooldown mode is ON. All ability cooldowns are set to 1s.");
         }
 
-        for (Ability templateAbility : templateAbilities) {
+        for (AbilityInfo abilityInfo : internalAbilityInfos) {
             try {
-                String codeName = templateAbility.getInfo().codeName;
+                String codeName = abilityInfo.getCodeName();
                 ConfigurationSection configSection = config.getConfigurationSection(codeName);
                 if (configSection == null) configSection = config.createSection(codeName);
                 List<String> players = configSection.getStringList("players");
                 for (String player : players) {
-                    Ability instance = templateAbility.getClass().getDeclaredConstructor(Plugin.class, String.class, ConfigurationSection.class).newInstance(this, player, configSection);
+                    Ability<?> instance = abilityInfo.createInstance(player);
                     abilities.add(instance);
                     getServer().getPluginManager().registerEvents(instance, this);
                     getLogger().info("Setting up \"" + codeName + "\" for " + player);
@@ -163,8 +165,8 @@ public final class EnderPearlAbilities extends JavaPlugin {
                         getLogger().info("Calling onEnable for \"" + manager.getCodeName() + "\"");
                         manager.onEnable();
                     }
-                    for (Ability ability : abilities) {
-                        getLogger().info("Calling onEnable for \"" + ability.getInfo().codeName + "\" for " + ability.ownerName);
+                    for (Ability<?> ability : abilities) {
+                        getLogger().info("Calling onEnable for \"" + ability.getInfo().getCodeName() + "\" for " + ability.getOwnerName());
                         ability.onEnable();
                     }
                 }
@@ -178,8 +180,8 @@ public final class EnderPearlAbilities extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
         synchronized (abilities) {
-            for (Ability ability : abilities) {
-                getLogger().info("Calling onDisable for \"" + ability.getInfo().codeName + "\" for " + ability.ownerName);
+            for (Ability<?> ability : abilities) {
+                getLogger().info("Calling onDisable for \"" + ability.getInfo().getCodeName() + "\" for " + ability.getOwnerName());
                 ability.onDisable();
             }
         }
@@ -193,7 +195,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
         getLogger().info("Plugin onDisable completed");
     }
 
-    public void removeAbility(Ability ability) {
+    public void removeAbility(Ability<?> ability) {
         synchronized (abilities) {
             if (!abilities.contains(ability)) {
                 return;
@@ -201,24 +203,25 @@ public final class EnderPearlAbilities extends JavaPlugin {
             abilities.remove(ability);
             HandlerList.unregisterAll(ability);
             ability.onDisable();
-            getLogger().info("Calling onDisable for \"" + ability.getInfo().codeName + "\"");
-            ConfigurationSection section = config.getConfigurationSection(ability.getInfo().codeName);
+            getLogger().info("Calling onDisable for \"" + ability.getInfo().getCodeName() + "\"");
+            ConfigurationSection section = config.getConfigurationSection(ability.getInfo().getCodeName());
             if (section != null) {
                 List<String> players = section.getStringList("players");
-                players.remove(ability.ownerName);
+                players.remove(ability.getOwnerName());
                 section.set("players", players);
                 saveConfig();
             }
         }
     }
 
-    public Ability addAbility(Ability templateAbility, String ownerName) {
+    public Ability<?> addAbility(AbilityInfo abilityInfo, String ownerName) {
         try {
-            String codeName = templateAbility.getInfo().codeName;
+            String codeName = abilityInfo.getCodeName();
             ConfigurationSection configSection = config.getConfigurationSection(codeName);
             if (configSection == null) {
                 configSection = config.createSection(codeName);
-                templateAbility.setConfigDefaults(configSection);
+                abilityInfo.writeConfigDefaults(configSection);
+                abilityInfo.loadConfig(configSection);
             }
             List<String> players = configSection.getStringList("players");
             if (!players.contains(ownerName)) {
@@ -226,7 +229,7 @@ public final class EnderPearlAbilities extends JavaPlugin {
                 configSection.set("players", players);
                 saveConfig();
             }
-            Ability instance = templateAbility.getClass().getDeclaredConstructor(Plugin.class, String.class, ConfigurationSection.class).newInstance(this, ownerName, configSection);
+            Ability<?> instance = abilityInfo.createInstance(ownerName);
             abilities.add(instance);
             getServer().getPluginManager().registerEvents(instance, this);
             getLogger().info("Setting up \"" + codeName + "\" for " + ownerName);

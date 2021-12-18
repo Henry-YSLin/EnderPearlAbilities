@@ -29,39 +29,38 @@ public class RegisterAbilitySubCommand extends SubCommand {
         if (args.size() <= 0) return false;
         if (!(sender instanceof Player)) return false;
 
-        Ability templateAbility = null;
-        List<Ability> templateAbilities = EnderPearlAbilities.getInstance().getTemplateAbilities();
-        for (Ability template : templateAbilities) {
-            AbilityInfo info = template.getInfo();
-            if (info.codeName.equals(args.get(0))) {
-                templateAbility = template;
+        AbilityInfo abilityInfo = null;
+        List<AbilityInfo> abilityInfos = EnderPearlAbilities.getInstance().getAbilityInfos();
+        for (AbilityInfo info : abilityInfos) {
+            if (info.getCodeName().equalsIgnoreCase(args.get(0))) {
+                abilityInfo = info;
             }
         }
 
-        if (templateAbility == null) {
+        if (abilityInfo == null) {
             sender.sendMessage(ChatColor.RED + "Cannot find ability with code name " + args.get(0));
             return true;
         }
 
-        List<Ability> abilities;
+        List<Ability<?>> abilities;
         synchronized (abilities = EnderPearlAbilities.getInstance().getAbilities()) {
-            for (Ability ability : abilities) {
-                if (Objects.equals(ability.ownerName, sender.getName())) {
-                    if (ability.getInfo().codeName.equals(args.get(0))) {
+            for (Ability<?> ability : abilities) {
+                if (Objects.equals(ability.getOwnerName(), sender.getName())) {
+                    if (ability.getInfo().getCodeName().equalsIgnoreCase(args.get(0))) {
                         sender.sendMessage(ChatColor.RED + "You already have this ability registered");
                         return true;
                     }
-                    if (ability.getInfo().activation == templateAbility.getInfo().activation) {
-                        sender.sendMessage(ChatColor.RED + "Your " + (ability.getInfo().activation == ActivationHand.MainHand ? "main" : "off") + " hand is already occupied by the ability " + ability.getInfo().codeName);
+                    if (ability.getInfo().getActivation() == abilityInfo.getActivation()) {
+                        sender.sendMessage(ChatColor.RED + "Your " + (ability.getInfo().getActivation() == ActivationHand.MainHand ? "main" : "off") + " hand is already occupied by the ability " + ability.getInfo().getCodeName());
                         return true;
                     }
                 }
             }
         }
 
-        EnderPearlAbilities.getInstance().addAbility(templateAbility, sender.getName());
+        EnderPearlAbilities.getInstance().addAbility(abilityInfo, sender.getName());
 
-        sender.sendMessage("" + ChatColor.LIGHT_PURPLE + ChatColor.BOLD + "Registered ability " + templateAbility.getInfo().codeName);
+        sender.sendMessage("" + ChatColor.LIGHT_PURPLE + ChatColor.BOLD + "Registered ability " + abilityInfo.getCodeName());
         return true;
     }
 }

@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class FragGrenadeAbility extends Ability {
+public class FragGrenadeAbility extends Ability<FragGrenadeAbilityInfo> {
 
     static final double PROJECTILE_SPEED = 10;
 

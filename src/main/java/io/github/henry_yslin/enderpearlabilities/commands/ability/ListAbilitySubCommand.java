@@ -19,28 +19,27 @@ public class ListAbilitySubCommand extends SubCommand {
 
     @Override
     public boolean execute(CommandSender sender, Command command, String label, String subcommand, List<String> args) {
-        List<Ability> abilities;
+        List<Ability<?>> abilities;
         synchronized (abilities = EnderPearlAbilities.getInstance().getAbilities()) {
-            List<Ability> templateAbilities = EnderPearlAbilities.getInstance().getTemplateAbilities();
+            List<AbilityInfo> abilityInfos = EnderPearlAbilities.getInstance().getAbilityInfos();
             int totalCount = 0;
 
             for (ActivationHand hand : ActivationHand.values()) {
-                List<Ability> filteredAbilities = templateAbilities.stream().filter(ability -> ability.getInfo().activation == hand).toList();
+                List<AbilityInfo> filteredInfos = abilityInfos.stream().filter(info -> info.getActivation() == hand).toList();
                 sender.sendMessage(ChatColor.GRAY + hand.toString() + " abilities:");
 
-                for (Ability ability : filteredAbilities) {
-                    AbilityInfo info = ability.getInfo();
-                    long count = abilities.stream().filter(a -> a.getInfo().codeName.equals(info.codeName)).count();
+                for (AbilityInfo info : filteredInfos) {
+                    long count = abilities.stream().filter(a -> a.getInfo().getCodeName().equals(info.getCodeName())).count();
                     if (count > 0) {
-                        sender.sendMessage(info.codeName + " - " + count + " instance" + (count > 1 ? "s" : "") + " active");
+                        sender.sendMessage(info.getCodeName() + " - " + count + " instance" + (count > 1 ? "s" : "") + " active");
                     } else {
-                        sender.sendMessage(info.codeName);
+                        sender.sendMessage(info.getCodeName());
                     }
                     totalCount += count;
                 }
             }
 
-            sender.sendMessage("Total: " + templateAbilities.size() + " abilities, " + totalCount + " active instances");
+            sender.sendMessage("Total: " + abilityInfos.size() + " abilities, " + totalCount + " active instances");
         }
 
         return true;

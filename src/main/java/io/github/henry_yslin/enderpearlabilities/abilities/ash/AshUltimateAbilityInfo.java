@@ -1,7 +1,6 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.ash;
 
 import io.github.henry_yslin.enderpearlabilities.Instantiable;
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityWithDurationInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import org.bukkit.configuration.ConfigurationSection;
@@ -48,7 +47,7 @@ public class AshUltimateAbilityInfo extends AbilityWithDurationInfo {
     }
 
     @Override
-    public Ability createInstance(String ownerName) {
+    public AshUltimateAbility createInstance(String ownerName) {
         return new AshUltimateAbility(plugin, this, ownerName);
     }
 

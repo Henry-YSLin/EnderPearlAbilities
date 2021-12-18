@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class BloodhoundTacticalAbility extends Ability {
+public class BloodhoundTacticalAbility extends Ability<BloodhoundTacticalAbilityInfo> {
 
     static final double SCAN_RADIUS = 75;
 

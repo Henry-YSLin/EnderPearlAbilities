@@ -24,7 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class AshUltimateAbility extends Ability {
+public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
 
     static final int TARGET_RANGE = 80;
     static final double ANGLE_ALLOWANCE = Math.toRadians(10);
@@ -137,7 +137,7 @@ public class AshUltimateAbility extends Ability {
             final Location[] lastLocation = new Location[1];
             final Location[] startLocation = new Location[1];
 
-            Ability ability = this;
+            Ability<?> ability = this;
             new FunctionChain(
                     next -> new AbilityRunnable() {
                         @Override
