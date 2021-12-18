@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.wraithultimate;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
@@ -12,7 +10,6 @@ import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -30,49 +27,28 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class WraithUltimateAbility extends Ability {
+public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
 
     static final double MAX_DISTANCE = 120;
     static final double REFUNDABLE_DISTANCE = 5;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 0);
-        config.addDefault("duration", 1200);
-        config.addDefault("cooldown", 1200);
-    }
-
-    public WraithUltimateAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("wraith-ultimate")
-                .name("Dimensional Rift")
-                .origin("Apex - Wraith")
-                .description("Link two locations with portals, allowing anyone to use them.")
-                .usage("Right click with an ender pearl to set the first portal location. Go to the second location and right click again to set the second portal. You have extra buffs while setting portals. Portals have a limited distance and travelling to another dimension consumes extra portal distance.")
-                .activation(ActivationHand.MainHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public WraithUltimateAbility(Plugin plugin, WraithUltimateAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityRunnable portal;
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -94,7 +70,7 @@ public class WraithUltimateAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
     }
 
     @Override
@@ -106,7 +82,7 @@ public class WraithUltimateAbility extends Ability {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation, true)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation(), true)) return;
 
         if (player.getName().equals(ownerName) && abilityActive.get()) {
             abilityActive.set(false);
@@ -130,7 +106,7 @@ public class WraithUltimateAbility extends Ability {
                     PlayerUtils.consumeEnderPearl(player);
                     next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     abilityActive.set(true);
                     player.addPotionEffect(PotionEffectType.NIGHT_VISION.createEffect(1000000, 0));
@@ -146,7 +122,7 @@ public class WraithUltimateAbility extends Ability {
 
                     @Override
                     protected synchronized void start() {
-                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.BLUE, BarStyle.SOLID);
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.BLUE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                         lastLocation = player.getLocation();
                         locations[0] = player.getLocation().add(0, 1, 0);
@@ -193,12 +169,12 @@ public class WraithUltimateAbility extends Ability {
                         if (setPortal) {
                             if (MAX_DISTANCE - distanceRemaining <= REFUNDABLE_DISTANCE)
                                 return;
-                            cooldown.setCooldown(info.cooldown);
+                            cooldown.setCooldown(info.getCooldown());
                             locations[1] = player.getLocation().add(0, 1, 0);
                             next.run();
                         }
                     }
-                }.runTaskRepeated(this, 0, 1, info.duration),
+                }.runTaskRepeated(this, 0, 1, info.getDuration()),
                 next -> {
                     if (portal != null && !portal.isCancelled())
                         portal.cancel();
@@ -250,7 +226,7 @@ public class WraithUltimateAbility extends Ability {
                         protected void end() {
                             super.end();
                         }
-                    }).runTaskRepeated(this, 0, 1, info.duration);
+                    }).runTaskRepeated(this, 0, 1, info.getDuration());
                 }
         ).execute();
     }

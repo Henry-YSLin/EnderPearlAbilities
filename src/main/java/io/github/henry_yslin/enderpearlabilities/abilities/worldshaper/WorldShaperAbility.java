@@ -1,14 +1,11 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.worldshaper;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -24,47 +21,26 @@ import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class WorldShaperAbility extends Ability {
+public class WorldShaperAbility extends Ability<WorldShaperAbilityInfo> {
 
     static final int PROJECTILE_LIFETIME = 30;
     static final double PROJECTILE_SPEED = 4;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 0);
-        config.addDefault("duration", 0);
-        config.addDefault("cooldown", 20);
-    }
-
-    public WorldShaperAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("worldshaper")
-                .name("World Shaper")
-                .origin("Create Mod")
-                .description("Fires a projectile which explodes on impact, instantly mining a 3x3 area of blocks using the tool held in main hand.")
-                .usage("Right click to fire. The tool held in main hand will be used to mine a 3x3 area where the projectile lands. Blocks inside this blast area will not be mined if the tool in main hand cannot produce block drops from those blocks. Tool durability is twice as efficient as manual mining and will not completely deplete while using this ability. There is a high chance for the ender pearl to drop as item after the blast.")
-                .activation(ActivationHand.OffHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public WorldShaperAbility(Plugin plugin, WorldShaperAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
+
+    @Override
+    public boolean isActive() {
+        return false;
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -72,7 +48,7 @@ public class WorldShaperAbility extends Ability {
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             chargingUp.set(false);
-            cooldown.setCooldown(info.cooldown);
+            cooldown.setCooldown(info.getCooldown());
         }
     }
 
@@ -81,7 +57,7 @@ public class WorldShaperAbility extends Ability {
         super.onEnable();
         if (player != null) {
             chargingUp.set(false);
-            cooldown.setCooldown(info.cooldown);
+            cooldown.setCooldown(info.getCooldown());
         }
     }
 
@@ -89,7 +65,7 @@ public class WorldShaperAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -101,10 +77,10 @@ public class WorldShaperAbility extends Ability {
                     PlayerUtils.consumeEnderPearl(player);
                     next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     AbilityUtils.fireProjectile(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false);
-                    cooldown.setCooldown(info.cooldown);
+                    cooldown.setCooldown(info.getCooldown());
                 }
         ).execute();
     }

@@ -1,12 +1,13 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.wattson;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
@@ -22,47 +23,27 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class WattsonAbility extends Ability {
+public class WattsonUltimateAbility extends Ability<WattsonUltimateAbilityInfo> {
 
     static final int INTERCEPTION_PER_TICK = Integer.MAX_VALUE;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 20);
-        config.addDefault("duration", 1000);
-        config.addDefault("cooldown", 800);
-    }
-
-    public WattsonAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("wattson")
-                .name("Interception Pylon")
-                .origin("Apex - Wattson")
-                .description("Place an electrified pylon that destroys incoming projectiles and repairs damaged armors.")
-                .usage("Right click on a block to place down the pylon. It will then intercept all projectiles and primed explosives in range that are not fired by the player who owns the pylon. It will also regenerate armor durability for all players in range.")
-                .activation(ActivationHand.MainHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public WattsonUltimateAbility(Plugin plugin, WattsonUltimateAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+    final AtomicBoolean chargingUp = new AtomicBoolean(false);
     AtomicReference<EnderCrystal> pylon = new AtomicReference<>();
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     private boolean shouldIntercept(Entity entity) {
         if (!entity.isValid()) return false;
@@ -91,7 +72,7 @@ public class WattsonAbility extends Ability {
         super.onEnable();
         if (player != null) {
             abilityActive.set(false);
-            cooldown.setCooldown(info.cooldown);
+            cooldown.setCooldown(info.getCooldown());
         }
     }
 
@@ -106,7 +87,7 @@ public class WattsonAbility extends Ability {
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             abilityActive.set(false);
-            cooldown.setCooldown(info.cooldown);
+            cooldown.setCooldown(info.getCooldown());
         }
     }
 
@@ -135,7 +116,7 @@ public class WattsonAbility extends Ability {
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         if (event.getClickedBlock() == null) return;
 
@@ -164,7 +145,7 @@ public class WattsonAbility extends Ability {
                         entity.setGravity(false);
                         entity.setGlowing(true);
                         entity.setShowingBottom(true);
-                        entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+                        entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
                     });
                     pylon.set(crystal);
 
@@ -175,25 +156,31 @@ public class WattsonAbility extends Ability {
                 },
                 next -> new AbilityRunnable() {
                     @Override
+                    protected void start() {
+                        chargingUp.set(true);
+                    }
+
+                    @Override
                     protected void tick() {
                         world.spawnParticle(Particle.WHITE_ASH, pylon.get().getLocation(), 4, 0.5, 0.5, 0.5, 0.02);
                     }
 
                     @Override
                     protected void end() {
+                        chargingUp.set(false);
                         if (this.hasCompleted())
                             next.run();
                         else
                             pylon.get().remove();
                     }
-                }.runTaskRepeated(this, 0, 2, info.chargeUp / 2),
+                }.runTaskRepeated(this, 0, 2, info.getChargeUp() / 2),
                 next -> new AbilityRunnable() {
                     BossBar bossbar;
                     int beamTick;
 
                     @Override
                     protected synchronized void start() {
-                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID);
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                     }
 
@@ -204,7 +191,7 @@ public class WattsonAbility extends Ability {
                             cancel();
                             return;
                         }
-                        bossbar.setProgress(count / (double) info.duration);
+                        bossbar.setProgress(count / (double) info.getDuration());
                         if (count % 40 == 0)
                             world.playSound(crystal.getLocation(), Sound.BLOCK_BEACON_AMBIENT, 1, 0.5f);
                         if (count % 5 == 0)
@@ -237,10 +224,10 @@ public class WattsonAbility extends Ability {
                         if (pylon.get().isValid())
                             pylon.get().remove();
                         abilityActive.set(false);
-                        cooldown.setCooldown(info.cooldown);
+                        cooldown.setCooldown(info.getCooldown());
                         next.run();
                     }
-                }.runTaskRepeated(this, 0, 1, info.duration)
+                }.runTaskRepeated(this, 0, 1, info.getDuration())
         ).execute();
     }
 }

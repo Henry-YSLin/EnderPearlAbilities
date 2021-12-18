@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.wraithtactical;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -17,7 +15,6 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -27,49 +24,29 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class WraithTacticalAbility extends Ability {
+public class WraithTacticalAbility extends Ability<WraithTacticalAbilityInfo> {
+
     static final int CANCEL_DELAY = 10;
 
-    private final AbilityInfo info;
+    public WraithTacticalAbility(Plugin plugin, WraithTacticalAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
 
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 20);
-        config.addDefault("duration", 140);
-        config.addDefault("cooldown", 500);
-    }
-
-    public WraithTacticalAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("wraith-tactical")
-                .name("Into The Void")
-                .origin("Apex - Wraith")
-                .description("Reposition quickly through the safety of void space, avoiding all damage and interactions.\nPassive ability: A voice warns you when danger approaches.")
-                .usage("Right click with an ender pearl to activate the ability. Right click again to exit early. You may not interact with anything while the ability is active.")
-                .activation(ActivationHand.OffHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-
-        subListeners.add(new VoicesFromTheVoidListener(plugin, this, config));
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+        subListeners.add(new VoicesFromTheVoidListener(plugin, this));
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicBoolean cancelAbility = new AtomicBoolean(false);
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -91,7 +68,7 @@ public class WraithTacticalAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
     }
 
     @Override
@@ -103,7 +80,7 @@ public class WraithTacticalAbility extends Ability {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation, true)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation(), true)) return;
 
         event.setCancelled(true);
 
@@ -120,10 +97,10 @@ public class WraithTacticalAbility extends Ability {
         new FunctionChain(
                 next -> {
                     PlayerUtils.consumeEnderPearl(player);
-                    player.addPotionEffect(PotionEffectType.SLOW.createEffect(info.chargeUp, 2));
+                    player.addPotionEffect(PotionEffectType.SLOW.createEffect(info.getChargeUp(), 2));
                     next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.chargeUp, chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.7f, 0.8f);
                     cancelAbility.set(false);
@@ -139,7 +116,7 @@ public class WraithTacticalAbility extends Ability {
 
                     @Override
                     protected synchronized void start() {
-                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.name, BarColor.PURPLE, BarStyle.SOLID, BarFlag.CREATE_FOG, BarFlag.DARKEN_SKY);
+                        bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID, BarFlag.CREATE_FOG, BarFlag.DARKEN_SKY);
                         bossbar.addPlayer(player);
                     }
 
@@ -153,7 +130,7 @@ public class WraithTacticalAbility extends Ability {
                             player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 5, 0.5, 1, 0.5, 0.02, null, true);
                             if (cancelTick <= 0) abilityActive.set(false);
                         }
-                        bossbar.setProgress(count / (double) info.duration);
+                        bossbar.setProgress(count / (double) info.getDuration());
                         player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 10, 0.5, 1, 0.5, 0.02, null, true);
                         if (count < CANCEL_DELAY)
                             player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 5, 0.5, 1, 0.5, 0.02, null, true);
@@ -164,14 +141,14 @@ public class WraithTacticalAbility extends Ability {
                         bossbar.removeAll();
                         next.run();
                     }
-                }.runTaskRepeated(this, 0, 1, info.duration),
+                }.runTaskRepeated(this, 0, 1, info.getDuration()),
                 next -> {
                     abilityActive.set(false);
                     cancelAbility.set(false);
 
                     VoidSpaceManager.getInstance().exitVoid(player);
 
-                    cooldown.setCooldown(info.cooldown);
+                    cooldown.setCooldown(info.getCooldown());
                     next.run();
                 }
         ).execute();
