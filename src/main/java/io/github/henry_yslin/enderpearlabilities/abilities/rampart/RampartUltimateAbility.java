@@ -1,6 +1,8 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.rampart;
 
-import io.github.henry_yslin.enderpearlabilities.abilities.*;
+import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
@@ -12,7 +14,6 @@ import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
@@ -27,49 +28,28 @@ import org.bukkit.util.Vector;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class RampartAbility extends Ability {
+public class RampartUltimateAbility extends Ability<RampartUltimateAbilityInfo> {
 
     static final double PROJECTILE_SPEED = 4;
 
-    private final AbilityInfo info;
-
-    @Override
-    public void setConfigDefaults(ConfigurationSection config) {
-        super.setConfigDefaults(config);
-        config.addDefault("charge-up", 20);
-        config.addDefault("duration", 200);
-        config.addDefault("cooldown", 60);
-    }
-
-    public RampartAbility(Plugin plugin, String ownerName, ConfigurationSection config) {
-        super(plugin, ownerName, config);
-
-        AbilityInfo.Builder builder = new AbilityInfo.Builder()
-                .codeName("rampart")
-                .name("Mobile Minigun \"Sheila\"")
-                .origin("Apex - Rampart")
-                .description("Wield a mobile minigun with a single high capacity magazine. Cooldown is increased by the number of shots fired.")
-                .usage("Right click to bring up Sheila. Sneak to spin up and fire, switch away from holding ender pearls to holster the minigun. Right click with the ender pearl again to start cooldown.")
-                .activation(ActivationHand.MainHand);
-
-        if (config != null)
-            builder
-                    .chargeUp(config.getInt("charge-up"))
-                    .duration(config.getInt("duration"))
-                    .cooldown(config.getInt("cooldown"));
-
-        info = builder.build();
-    }
-
-    @Override
-    public AbilityInfo getInfo() {
-        return info;
+    public RampartUltimateAbility(Plugin plugin, RampartUltimateAbilityInfo info, String ownerName) {
+        super(plugin, info, ownerName);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicBoolean isSneaking = new AtomicBoolean(false);
     AbilityRunnable minigun;
+
+    @Override
+    public boolean isActive() {
+        return abilityActive.get();
+    }
+
+    @Override
+    public boolean isChargingUp() {
+        return chargingUp.get();
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -91,7 +71,7 @@ public class RampartAbility extends Ability {
     private void setUpPlayer(Player player) {
         chargingUp.set(false);
         abilityActive.set(false);
-        cooldown.setCooldown(info.cooldown);
+        cooldown.setCooldown(info.getCooldown());
         if (minigun != null)
             if (!minigun.isCancelled())
                 minigun.cancel();
@@ -107,7 +87,7 @@ public class RampartAbility extends Ability {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.activation)) return;
+        if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
 
         event.setCancelled(true);
 
@@ -131,10 +111,10 @@ public class RampartAbility extends Ability {
                     @Override
                     protected void start() {
                         abilityActive.set(true);
-                        magazine = info.duration;
-                        spinUpTicks = info.chargeUp;
+                        magazine = info.getDuration();
+                        spinUpTicks = info.getChargeUp();
                         spinUpBossBar = Bukkit.createBossBar("Spinning up", BarColor.WHITE, BarStyle.SOLID);
-                        magazineBossBar = Bukkit.createBossBar(info.name, BarColor.PURPLE, BarStyle.SOLID);
+                        magazineBossBar = Bukkit.createBossBar(info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                         magazineBossBar.addPlayer(player);
                     }
 
@@ -143,7 +123,7 @@ public class RampartAbility extends Ability {
                             magazineBossBar.addPlayer(player);
                             spinUpBossBar.removeAll();
                         }
-                        magazineBossBar.setProgress(magazine / (double) info.duration);
+                        magazineBossBar.setProgress(magazine / (double) info.getDuration());
                     }
 
                     private void displaySpinUpBar() {
@@ -151,7 +131,7 @@ public class RampartAbility extends Ability {
                             spinUpBossBar.addPlayer(player);
                             magazineBossBar.removeAll();
                         }
-                        spinUpBossBar.setProgress(1 - spinUpTicks / (double) info.chargeUp);
+                        spinUpBossBar.setProgress(1 - spinUpTicks / (double) info.getChargeUp());
                     }
 
                     private Vector randomizeVelocity(Vector vector) {
@@ -175,9 +155,9 @@ public class RampartAbility extends Ability {
                         else
                             InteractionLockManager.getInstance().unlockInteraction(player);
                         if (!firing || player.getInventory().getItemInMainHand().getType() != Material.ENDER_PEARL) {
-                            if (spinUpTicks < info.chargeUp) {
+                            if (spinUpTicks < info.getChargeUp()) {
                                 spinUpTicks += 2;
-                                player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, (info.chargeUp - spinUpTicks) / (float) info.chargeUp * 2);
+                                player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, (info.getChargeUp() - spinUpTicks) / (float) info.getChargeUp() * 2);
                             }
                             displayMagazineBar();
                             return;
@@ -185,7 +165,7 @@ public class RampartAbility extends Ability {
                         if (spinUpTicks > 0) {
                             spinUpTicks--;
                             player.getWorld().spawnParticle(Particle.SMOKE_NORMAL, player.getLocation(), 2, 0.2, 0.2, 0.2, 0.05);
-                            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, (info.chargeUp - spinUpTicks) / (float) info.chargeUp * 2);
+                            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, (info.getChargeUp() - spinUpTicks) / (float) info.getChargeUp() * 2);
                             displaySpinUpBar();
                         } else {
                             magazine--;
@@ -197,7 +177,7 @@ public class RampartAbility extends Ability {
                             arrow.setTicksLived(1180);
                             arrow.setPierceLevel(2);
                             arrow.setDamage(3);
-                            arrow.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.codeName, ownerName)));
+                            arrow.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
                         }
                     }
 
@@ -207,10 +187,10 @@ public class RampartAbility extends Ability {
                         spinUpBossBar.removeAll();
                         abilityActive.set(false);
                         InteractionLockManager.getInstance().unlockInteraction(player);
-                        if (magazine == info.duration)
+                        if (magazine == info.getDuration())
                             cooldown.setCooldown(20);
                         else
-                            cooldown.setCooldown(info.cooldown + (info.duration - magazine) * 8);
+                            cooldown.setCooldown(info.getCooldown() + (info.getDuration() - magazine) * 8);
                     }
                 }).runTaskTimer(this, 0, 1)
         ).execute();
