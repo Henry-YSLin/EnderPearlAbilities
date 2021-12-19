@@ -70,7 +70,7 @@ public class FragGrenadeAbility extends Ability<FragGrenadeAbilityInfo> {
         if (fragPredictionRunnable != null && !fragPredictionRunnable.isCancelled())
             fragPredictionRunnable.cancel();
         fragPredictionRunnable = new FragPredictionRunnable(this, player);
-        fragPredictionRunnable.runTaskTimer(this, 0, 5);
+        fragPredictionRunnable.runTaskTimer(this, 0, 3);
     }
 
     private Location getFirePosition(Player player) {

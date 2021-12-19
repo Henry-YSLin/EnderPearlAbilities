@@ -35,7 +35,7 @@ public class FragPredictionRunnable extends AbilityRunnable {
         Location location = getFirePosition(player);
         Location lastLocation = location.clone();
 
-        for (int i = 0; i < ability.getInfo().getDuration(); i++) {
+        for (int i = 0; i < ability.getInfo().getDuration() * 2 / 3; i++) {
             location.add(velocity);
             velocity.multiply(0.98);
             velocity.add(new Vector(0, -0.1, 0));
