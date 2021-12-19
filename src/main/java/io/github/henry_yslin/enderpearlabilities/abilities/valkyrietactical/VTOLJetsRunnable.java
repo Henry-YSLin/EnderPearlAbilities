@@ -12,9 +12,11 @@ import org.bukkit.inventory.ItemStack;
 public class VTOLJetsRunnable extends AbilityRunnable {
 
     static final double MAX_FUEL = 140;
-    static final int REGEN_DELAY = 160;
-    static final double REGEN_SPEED = 140d / 200d;
+    static final int REGEN_DELAY = 120;
+    static final double REGEN_SPEED = 1;
     static final float FLY_SPEED = 0.04f;
+    static final double FALL_DISTANCE_THRESHOLD = 5;
+    static final int LEVEL_FLIGHT_TOLERANCE = 3;
 
     final Player player;
     BossBar bossbar;
@@ -23,6 +25,7 @@ public class VTOLJetsRunnable extends AbilityRunnable {
     double previousY;
     double fuel;
     int regenTicks;
+    int levelFlightTicks;
 
     public VTOLJetsRunnable(Player player) {
         this.player = player;
@@ -37,6 +40,7 @@ public class VTOLJetsRunnable extends AbilityRunnable {
         previousY = player.getLocation().getY();
         regenTicks = REGEN_DELAY;
         fuel = 0;
+        levelFlightTicks = 0;
     }
 
     @Override
@@ -52,7 +56,7 @@ public class VTOLJetsRunnable extends AbilityRunnable {
             player.setAllowFlight(false);
             bossbar.setVisible(false);
             return;
-        } else if (player.getFallDistance() >= 3) {
+        } else if (player.getFallDistance() >= FALL_DISTANCE_THRESHOLD) {
             player.setAllowFlight(false);
             bossbar.setProgress(fuel / MAX_FUEL);
             bossbar.setTitle(ChatColor.RED + "VTOL Jets");
@@ -84,14 +88,22 @@ public class VTOLJetsRunnable extends AbilityRunnable {
         }
 
         if (player.isFlying()) {
+            player.sendMessage("Vel: " + player.getVelocity().getY() + "  Loc: " + player.getLocation().getY());
             if (!wasFlying) {
                 velocityStable = false;
             }
             if (!velocityStable) {
+                levelFlightTicks = 0;
                 if (MathUtils.almostEqual(player.getVelocity().getY(), 0))
                     velocityStable = true;
-            } else if (!MathUtils.almostEqual(player.getVelocity().getY(), 0) || MathUtils.almostSmaller(player.getLocation().getY(), previousY)) {
-                player.setFlying(false);
+            } else {
+                if (MathUtils.almostEqual(player.getLocation().getY(), previousY))
+                    levelFlightTicks++;
+                else
+                    levelFlightTicks = 0;
+                if (!MathUtils.almostLarger(player.getVelocity().getY(), 0) || !MathUtils.almostLarger(player.getLocation().getY(), previousY) || levelFlightTicks > LEVEL_FLIGHT_TOLERANCE) {
+                    player.setFlying(false);
+                }
             }
             player.setFlySpeed(FLY_SPEED);
         }
