@@ -8,6 +8,7 @@ import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -76,11 +77,12 @@ public class TimeFreezeAbility extends Ability<TimeFreezeAbilityInfo> {
         super.onDisable();
     }
 
-    static record FreezeRecord(Entity entity, boolean gravity, Vector velocity, boolean hasAI, int fuseTick) {
+    static record FreezeRecord(Entity entity, Location location, boolean gravity, Vector velocity, boolean hasAI,
+                               int fuseTick) {
     }
 
     private FreezeRecord freezeEntity(Entity entity) {
-        FreezeRecord record = new FreezeRecord(entity, entity.hasGravity(), entity.getVelocity(), entity instanceof LivingEntity livingEntity && livingEntity.hasAI(), entity instanceof Creeper creeper ? creeper.getFuseTicks() : 0);
+        FreezeRecord record = new FreezeRecord(entity, entity.getLocation(), entity.hasGravity(), entity.getVelocity(), entity instanceof LivingEntity livingEntity && livingEntity.hasAI(), entity instanceof Creeper creeper ? creeper.getFuseTicks() : 0);
         entity.setInvulnerable(true);
         entity.setGravity(false);
         entity.setVelocity(new Vector(0, 0, 0));
@@ -138,6 +140,7 @@ public class TimeFreezeAbility extends Ability<TimeFreezeAbilityInfo> {
                         bossbar.setProgress(count / (double) info.getDuration());
                         for (FreezeRecord record : entities) {
                             record.entity.setVelocity(new Vector(0, 0, 0));
+                            record.entity.teleport(record.location);
                             if (record.entity instanceof Creeper creeper) {
                                 creeper.setFuseTicks(record.fuseTick);
                             }
