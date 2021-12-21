@@ -5,6 +5,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.commands.SubCommand;
+import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -19,6 +20,7 @@ public class ListAbilitySubCommand extends SubCommand {
 
     @Override
     public boolean execute(CommandSender sender, Command command, String label, String subcommand, List<String> args) {
+        if (!PlayerUtils.checkPermissionOrError(sender, "ability." + subCommandName)) return true;
         List<Ability<?>> abilities;
         synchronized (abilities = EnderPearlAbilities.getInstance().getAbilities()) {
             List<AbilityInfo> abilityInfos = EnderPearlAbilities.getInstance().getAbilityInfos();

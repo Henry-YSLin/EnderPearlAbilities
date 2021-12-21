@@ -3,6 +3,7 @@ package io.github.henry_yslin.enderpearlabilities.commands.ability;
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.commands.SubCommand;
+import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -19,6 +20,7 @@ public class UnregisterAbilitySubCommand extends SubCommand {
 
     @Override
     public boolean execute(CommandSender sender, Command command, String label, String subcommand, List<String> args) {
+        if (!PlayerUtils.checkPermissionOrError(sender, "ability." + subCommandName)) return true;
         if (!EnderPearlAbilities.getInstance().getLoadedConfig().getBoolean("dynamic")) {
             sender.sendMessage(ChatColor.RED + "This command is only allowed when dynamic abilities are on.");
             return true;

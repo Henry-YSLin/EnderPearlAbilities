@@ -4,6 +4,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.*;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -209,6 +210,14 @@ public class PlayerUtils {
         }
 
         block.setBlockData(data, true);
+        return true;
+    }
+
+    public static boolean checkPermissionOrError(CommandSender player, String permission) {
+        if (!player.hasPermission(permission)) {
+            player.sendMessage(ChatColor.RED + "You don't have permission to do that!");
+            return false;
+        }
         return true;
     }
 }

@@ -4,6 +4,7 @@ import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.commands.SubCommand;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -20,6 +21,7 @@ public class QueryAbilitySubCommand extends SubCommand {
 
     @Override
     public boolean execute(CommandSender sender, Command command, String label, String subcommand, List<String> args) {
+        if (!PlayerUtils.checkPermissionOrError(sender, "ability." + subCommandName)) return true;
         String lookupPlayer = null;
         if (args.size() >= 1)
             lookupPlayer = args.get(0);
