@@ -89,8 +89,10 @@ public class AbilityCooldown {
         @Override
         protected void tick() {
             int count = cooldownTicks.getAndDecrement();
-            if (count <= 0)
+            if (count <= 0) {
                 cancel();
+                return;
+            }
             if (!visible) return;
             boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
             boolean offHandPearl = player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
@@ -98,15 +100,14 @@ public class AbilityCooldown {
                     ability.getInfo().getActivation() == ActivationHand.OffHand && offHandPearl)
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ability.getInfo().getName() + " in " + count / 20 + "s"));
             else if (!mainHandPearl && !offHandPearl)
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent());
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(" "));
             player.getWorld().spawnParticle(Particle.SUSPENDED, player.getLocation(), 1, 0.5, 0.5, 0.5, 0.02);
-
         }
 
         @Override
         protected void end() {
             cooldownTicks.set(0);
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent());
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ability.getInfo().getName() + " ready"));
         }
     }
 }
