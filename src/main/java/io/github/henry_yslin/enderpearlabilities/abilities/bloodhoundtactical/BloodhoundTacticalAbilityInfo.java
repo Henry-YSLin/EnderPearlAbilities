@@ -33,7 +33,7 @@ public class BloodhoundTacticalAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public String getDescription() {
-        return "Briefly reveal entities through all structures around you.";
+        return "Briefly reveal entities through all structures in front of you.";
     }
 
     @Override

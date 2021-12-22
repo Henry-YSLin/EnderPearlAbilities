@@ -28,7 +28,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BloodhoundTacticalAbility extends Ability<BloodhoundTacticalAbilityInfo> {
 
-    static final double SCAN_RADIUS = 75;
+    static final double FORWARD_SCAN_RADIUS = 75;
+    static final double PERIPHERY_SCAN_RADIUS = 20;
+    static final double FORWARD_FOV_ANGLE = 125.0 / 180 * Math.PI;
 
     public BloodhoundTacticalAbility(Plugin plugin, BloodhoundTacticalAbilityInfo info, String ownerName) {
         super(plugin, info, ownerName);
@@ -104,7 +106,14 @@ public class BloodhoundTacticalAbility extends Ability<BloodhoundTacticalAbility
                     abilityActive.set(true);
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1, 0);
                     player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 5000, 1, 1, 1, 3);
-                    entities.addAll(player.getWorld().getNearbyEntities(player.getLocation(), SCAN_RADIUS, SCAN_RADIUS, SCAN_RADIUS));
+                    entities.addAll(player.getWorld().getNearbyEntities(player.getLocation(), FORWARD_SCAN_RADIUS, FORWARD_SCAN_RADIUS, FORWARD_SCAN_RADIUS, entity -> {
+                        Location location = entity.getLocation();
+                        if (location.distanceSquared(player.getLocation()) <= PERIPHERY_SCAN_RADIUS * PERIPHERY_SCAN_RADIUS)
+                            return true;
+                        if (location.subtract(player.getLocation()).toVector().angle(player.getLocation().getDirection()) <= FORWARD_FOV_ANGLE)
+                            return true;
+                        return false;
+                    }));
                     entities.removeIf(entity -> {
                         if (entity instanceof Player p) {
                             if (p.getGameMode() == GameMode.SPECTATOR) return true;
