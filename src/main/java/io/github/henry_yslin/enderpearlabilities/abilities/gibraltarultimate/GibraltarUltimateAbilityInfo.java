@@ -12,8 +12,8 @@ public class GibraltarUltimateAbilityInfo extends AbilityWithDurationInfo {
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 0);
-        config.addDefault("duration", 120);
-        config.addDefault("cooldown", 1500);
+        config.addDefault("duration", 6 * 20);
+        config.addDefault("cooldown", 180 * 20);
     }
 
     @Override

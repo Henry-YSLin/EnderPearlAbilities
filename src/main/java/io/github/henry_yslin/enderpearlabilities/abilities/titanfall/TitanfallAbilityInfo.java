@@ -11,9 +11,9 @@ public class TitanfallAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
-        config.addDefault("charge-up", 10);
+        config.addDefault("charge-up", 0);
         config.addDefault("duration", 0);
-        config.addDefault("cooldown", 12000);
+        config.addDefault("cooldown", 300 * 20);
     }
 
     @Override

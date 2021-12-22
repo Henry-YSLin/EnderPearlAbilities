@@ -1,4 +1,4 @@
-package io.github.henry_yslin.enderpearlabilities.abilities.valkyrieultimate;
+package io.github.henry_yslin.enderpearlabilities.abilities.horizonultimate;
 
 import io.github.henry_yslin.enderpearlabilities.Instantiable;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityWithDurationInfo;
@@ -7,38 +7,38 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
 @Instantiable
-public class ValkyrieUltimateAbilityInfo extends AbilityWithDurationInfo {
+public class HorizonUltimateAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 20);
         config.addDefault("duration", 10 * 20);
-        config.addDefault("cooldown", 60 * 20);
+        config.addDefault("cooldown", 160 * 20);
     }
 
     @Override
     public String getCodeName() {
-        return "valkyrie-ultimate";
+        return "horizon-ultimate";
     }
 
     @Override
     public String getName() {
-        return "Skyward Dive";
+        return "Black Hole";
     }
 
     @Override
     public String getOrigin() {
-        return "Apex Legends - Valkyrie";
+        return "Apex Legends - Horizon";
     }
 
     @Override
     public String getDescription() {
-        return "Launch into the air and skydive, revealing entities while in flight.";
+        return "Create an inescapable micro black hole that pulls all entities in towards it.\nPassive ability: Cushion your fall to reduce fall damage.";
     }
 
     @Override
     public String getUsage() {
-        return "Right-click once to prepare for launch. Switch away from ender pearl to cancel. Right-click again to launch into the air and skydive. Living entities are pinged with flashing light while you are in flight.";
+        return "Right click to throw a projectile. A black hole will be created where it lands.";
     }
 
     @Override
@@ -47,11 +47,11 @@ public class ValkyrieUltimateAbilityInfo extends AbilityWithDurationInfo {
     }
 
     @Override
-    public ValkyrieUltimateAbility createInstance(String ownerName) {
-        return new ValkyrieUltimateAbility(plugin, this, ownerName);
+    public HorizonUltimateAbility createInstance(String ownerName) {
+        return new HorizonUltimateAbility(plugin, this, ownerName);
     }
 
-    public ValkyrieUltimateAbilityInfo(Plugin plugin) {
+    public HorizonUltimateAbilityInfo(Plugin plugin) {
         super(plugin);
     }
 }

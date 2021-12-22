@@ -11,9 +11,9 @@ public class BangaloreUltimateAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
-        config.addDefault("charge-up", 100);
-        config.addDefault("duration", 100);
-        config.addDefault("cooldown", 1500);
+        config.addDefault("charge-up", 5 * 20);
+        config.addDefault("duration", 5 * 20);
+        config.addDefault("cooldown", 180 * 20);
     }
 
     @Override

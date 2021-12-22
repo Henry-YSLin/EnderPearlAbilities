@@ -1,4 +1,4 @@
-package io.github.henry_yslin.enderpearlabilities.abilities.timefreeze;
+package io.github.henry_yslin.enderpearlabilities.abilities.ashultimate;
 
 import io.github.henry_yslin.enderpearlabilities.Instantiable;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityWithDurationInfo;
@@ -7,38 +7,38 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
 @Instantiable
-public class TimeFreezeAbilityInfo extends AbilityWithDurationInfo {
+public class AshUltimateAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 0);
-        config.addDefault("duration", 5 * 20);
+        config.addDefault("duration", 20 * 20);
         config.addDefault("cooldown", 60 * 20);
     }
 
     @Override
     public String getCodeName() {
-        return "time-freeze";
+        return "ash-ultimate";
     }
 
     @Override
     public String getName() {
-        return "Time Freeze";
+        return "Phase Breach";
     }
 
     @Override
     public String getOrigin() {
-        return "Original";
+        return "Apex Legends - Ash";
     }
 
     @Override
     public String getDescription() {
-        return "Locally freeze time for a short duration.";
+        return "Tear open a one-way portal to a targeted location and immediately enter it.";
     }
 
     @Override
     public String getUsage() {
-        return "Right click with an ender pearl to activate the ability. Frozen entities are invulnerable. Players are not affected by the freeze.";
+        return "Right click to show targeting UI. Right click again to activate. Switch away from ender pearl or click an invalid location to cancel.";
     }
 
     @Override
@@ -47,11 +47,11 @@ public class TimeFreezeAbilityInfo extends AbilityWithDurationInfo {
     }
 
     @Override
-    public TimeFreezeAbility createInstance(String ownerName) {
-        return new TimeFreezeAbility(plugin, this, ownerName);
+    public AshUltimateAbility createInstance(String ownerName) {
+        return new AshUltimateAbility(plugin, this, ownerName);
     }
 
-    public TimeFreezeAbilityInfo(Plugin plugin) {
+    public AshUltimateAbilityInfo(Plugin plugin) {
         super(plugin);
     }
 }

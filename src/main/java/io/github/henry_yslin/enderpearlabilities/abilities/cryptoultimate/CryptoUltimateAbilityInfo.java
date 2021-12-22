@@ -11,9 +11,9 @@ public class CryptoUltimateAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
-        config.addDefault("charge-up", 60);
-        config.addDefault("duration", 200);
-        config.addDefault("cooldown", 1200);
+        config.addDefault("charge-up", 3 * 20);
+        config.addDefault("duration", 10 * 20);
+        config.addDefault("cooldown", 180 * 20);
     }
 
     @Override
