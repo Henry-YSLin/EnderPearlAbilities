@@ -6,6 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 public class FragPredictionRunnable extends AbilityRunnable {
@@ -44,6 +45,11 @@ public class FragPredictionRunnable extends AbilityRunnable {
             WorldUtils.spawnPlayerParticleLine(player, lastLocation, location, Particle.ELECTRIC_SPARK, 2);
             lastLocation = location.clone();
         }
+
+        if (player.isSneaking())
+            player.addPotionEffect(PotionEffectType.SLOW.createEffect(5, 20));
+        else
+            player.addPotionEffect(PotionEffectType.SLOW.createEffect(5, 1));
     }
 }
 

@@ -21,7 +21,7 @@ public class SpacewalkRunnable extends AbilityRunnable {
         if (player.getVelocity().getY() >= 0) return false;
         if (player.getFallDistance() < 3) return false;
 
-        RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), 2, FluidCollisionMode.NEVER, true);
+        RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), Math.max(2, -player.getVelocity().getY()), FluidCollisionMode.NEVER, true);
         if (result == null) return false;
         return result.getHitBlock() != null;
     }
@@ -32,7 +32,7 @@ public class SpacewalkRunnable extends AbilityRunnable {
             if (activated) return;
             activated = true;
             player.setVelocity(player.getVelocity().setY(player.getVelocity().getY() / 5));
-            player.setFallDistance(player.getFallDistance() - 5);
+            player.setFallDistance(player.getFallDistance() - 7);
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LARGE_BLAST_FAR, 0.5f, 0);
             player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 10, 0.1, 0.1, 0.1, 0.02);
         } else {

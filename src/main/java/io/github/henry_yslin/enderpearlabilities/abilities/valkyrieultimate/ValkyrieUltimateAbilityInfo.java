@@ -33,12 +33,12 @@ public class ValkyrieUltimateAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public String getDescription() {
-        return "Press once to prepare for launch. Press again to launch into the air and skydive. Living entities are pinged with flashing light while you are in flight.";
+        return "Launch into the air and skydive, revealing entities while in flight.";
     }
 
     @Override
     public String getUsage() {
-        return "Right click to prepare for launch. Right click again to launch. Switch away from ender pearl to cancel.";
+        return "Right-click once to prepare for launch. Switch away from ender pearl to cancel. Right-click again to launch into the air and skydive. Living entities are pinged with flashing light while you are in flight.";
     }
 
     @Override

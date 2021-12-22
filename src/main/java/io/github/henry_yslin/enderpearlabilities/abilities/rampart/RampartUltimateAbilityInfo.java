@@ -33,12 +33,12 @@ public class RampartUltimateAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public String getDescription() {
-        return "Wield a mobile minigun with a single high capacity magazine. Cooldown is increased by the number of shots fired.";
+        return "Wield a mobile minigun with a single high capacity magazine.";
     }
 
     @Override
     public String getUsage() {
-        return "Right click to bring up Sheila. Sneak to spin up and fire, switch away from holding ender pearls to holster the minigun. Right click with the ender pearl again to start cooldown.";
+        return "Right click to bring up Sheila. Sneak to spin up and fire, switch away from holding ender pearls to holster the minigun. Right click with the ender pearl again to start cooldown. Cooldown is increased by the number of shots fired.";
     }
 
     @Override

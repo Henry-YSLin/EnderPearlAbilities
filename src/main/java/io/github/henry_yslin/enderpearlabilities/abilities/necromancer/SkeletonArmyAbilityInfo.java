@@ -33,12 +33,12 @@ public class SkeletonArmyAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public String getDescription() {
-        return "Summon skeletons to fight whatever the player is looking at. Summoned skeletons obey commands until death.\nPassive ability: No skeletons will ever actively attack the player.";
+        return "Summon skeletons to fight whatever the player is looking at.\nPassive ability: No skeletons will ever actively attack the player.";
     }
 
     @Override
     public String getUsage() {
-        return "Right click to summon skeletons. They target the entity that is currently under the player's crosshair. If the skeletons are summoned during daytime, they have a higher chance of wearing helmets.";
+        return "Right click to summon skeletons. They obey commands until death and target the entity that is currently under the player's crosshair. If the skeletons are summoned during daytime, they have a higher chance of wearing helmets.";
     }
 
     @Override

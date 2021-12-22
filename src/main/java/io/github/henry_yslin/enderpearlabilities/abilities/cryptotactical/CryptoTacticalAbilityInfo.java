@@ -33,7 +33,7 @@ public class CryptoTacticalAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public String getDescription() {
-        return "Deploys an aerial drone for various purposes. Cooldown is only active if the drone is destroyed or recalled.";
+        return "Deploys an aerial drone for recon. Exit and re-enter drone at will until it is destroyed or recalled.";
     }
 
     @Override

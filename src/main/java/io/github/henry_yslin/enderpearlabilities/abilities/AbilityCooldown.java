@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class AbilityCooldown {
 
-    final Ability ability;
+    final Ability<?> ability;
     final FileConfiguration config;
     final Player player;
     final boolean visible;
@@ -39,14 +39,14 @@ public class AbilityCooldown {
         return cooldownTicks.get();
     }
 
-    public AbilityCooldown(Ability ability, Player player, boolean visible) {
+    public AbilityCooldown(Ability<?> ability, Player player, boolean visible) {
         this.ability = ability;
         this.config = ability.getPlugin().getConfig();
         this.player = player;
         this.visible = visible;
     }
 
-    public AbilityCooldown(Ability ability, Player player) {
+    public AbilityCooldown(Ability<?> ability, Player player) {
         this(ability, player, true);
     }
 
@@ -99,7 +99,7 @@ public class AbilityCooldown {
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ability.getInfo().getName() + " in " + count / 20 + "s"));
             else if (!mainHandPearl && !offHandPearl)
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent());
-            player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation(), 2, 0.5, 0.5, 0.5, 0.02);
+            player.getWorld().spawnParticle(Particle.SUSPENDED, player.getLocation(), 1, 0.5, 0.5, 0.5, 0.02);
 
         }
 

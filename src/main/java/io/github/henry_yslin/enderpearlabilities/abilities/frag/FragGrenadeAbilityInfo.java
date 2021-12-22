@@ -38,7 +38,7 @@ public class FragGrenadeAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public String getUsage() {
-        return "Hold an ender pearl to see the guide. Right click to throw.";
+        return "Hold an ender pearl to see the guide. Sneak to zoom in. Right click to throw.";
     }
 
     @Override

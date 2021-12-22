@@ -155,6 +155,7 @@ public class GibraltarUltimateAbility extends Ability<GibraltarUltimateAbilityIn
                     @Override
                     protected void end() {
                         abilityActive.set(false);
+                        cooldown.setCooldown(info.getCooldown());
                     }
                 }.runTaskRepeated(this, 0, MISSILE_DELAY, info.getDuration() / MISSILE_DELAY)
         ).execute();

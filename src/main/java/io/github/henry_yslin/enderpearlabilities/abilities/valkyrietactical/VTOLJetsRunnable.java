@@ -88,7 +88,6 @@ public class VTOLJetsRunnable extends AbilityRunnable {
         }
 
         if (player.isFlying()) {
-            player.sendMessage("Vel: " + player.getVelocity().getY() + "  Loc: " + player.getLocation().getY());
             if (!wasFlying) {
                 velocityStable = false;
             }
