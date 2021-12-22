@@ -109,14 +109,15 @@ public class BangaloreUltimateAbility extends Ability<BangaloreUltimateAbilityIn
 
             @Override
             protected void tick() {
-                if (!projectile.isValid()) {
+                if (projectile == null || !projectile.isValid()) {
                     ticksToCancel--;
                     if (ticksToCancel <= 0) {
                         cancel();
                         return;
                     }
                 }
-                projectile.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, projectile.getLocation(), 5, 0, 0, 0, 0.1);
+                if (projectile != null)
+                    projectile.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, projectile.getLocation(), 5, 0, 0, 0, 0.1);
             }
 
             @Override
@@ -193,6 +194,7 @@ public class BangaloreUltimateAbility extends Ability<BangaloreUltimateAbilityIn
                     @Override
                     protected void end() {
                         abilityActive.set(false);
+                        cooldown.setCooldown(info.getCooldown());
                     }
                 }.runTaskRepeated(this, 0, Math.max(1, info.getChargeUp() / MISSILE_ARRAY_SIZE / MISSILE_ARRAY_SIZE), MISSILE_ARRAY_SIZE * MISSILE_ARRAY_SIZE)
         ).execute();

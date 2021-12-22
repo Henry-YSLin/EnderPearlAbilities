@@ -29,8 +29,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class BloodhoundTacticalAbility extends Ability<BloodhoundTacticalAbilityInfo> {
 
     static final double FORWARD_SCAN_RADIUS = 75;
-    static final double PERIPHERY_SCAN_RADIUS = 20;
-    static final double FORWARD_FOV_ANGLE = 125.0 / 180 * Math.PI;
+    static final double PERIPHERY_SCAN_RADIUS = 16;
+    static final double FORWARD_FOV_ANGLE = 125.0 / 2 / 180 * Math.PI;
 
     public BloodhoundTacticalAbility(Plugin plugin, BloodhoundTacticalAbilityInfo info, String ownerName) {
         super(plugin, info, ownerName);
@@ -120,6 +120,14 @@ public class BloodhoundTacticalAbility extends Ability<BloodhoundTacticalAbility
                         }
                         return entity.getUniqueId().equals(player.getUniqueId());
                     });
+                    if (entities.isEmpty()) {
+                        if (team != null)
+                            team.unregister();
+                        entities.clear();
+                        abilityActive.set(false);
+                        cooldown.setCooldown(info.getCooldown());
+                        return;
+                    }
                     for (Entity entity : entities) {
                         if (entity instanceof LivingEntity livingEntity) {
                             if (team != null)

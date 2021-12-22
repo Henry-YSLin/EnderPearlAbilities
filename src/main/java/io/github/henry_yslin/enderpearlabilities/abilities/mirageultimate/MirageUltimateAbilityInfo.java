@@ -1,12 +1,12 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.mirageultimate;
 
-import io.github.henry_yslin.enderpearlabilities.Instantiable;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityWithDurationInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
-@Instantiable
+// @Instantiable
+// TODO: Disabled due to citizens API problems
 public class MirageUltimateAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
