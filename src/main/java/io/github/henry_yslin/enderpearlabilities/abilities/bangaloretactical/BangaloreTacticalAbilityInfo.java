@@ -12,8 +12,8 @@ public class BangaloreTacticalAbilityInfo extends AbilityWithDurationInfo {
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 0);
-        config.addDefault("duration", 400);
-        config.addDefault("cooldown", 1000);
+        config.addDefault("duration", 20 * 20);
+        config.addDefault("cooldown", 30 * 20);
     }
 
     @Override

@@ -11,9 +11,9 @@ public class WraithTacticalAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
-        config.addDefault("charge-up", 20);
-        config.addDefault("duration", 140);
-        config.addDefault("cooldown", 500);
+        config.addDefault("charge-up", 30);
+        config.addDefault("duration", 7 * 20);
+        config.addDefault("cooldown", 20 * 20);
     }
 
     @Override

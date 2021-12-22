@@ -13,7 +13,7 @@ public class ValkyrieTacticalAbilityInfo extends AbilityWithDurationInfo {
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 0);
         config.addDefault("duration", 15);
-        config.addDefault("cooldown", 400);
+        config.addDefault("cooldown", 20 * 20);
     }
 
     @Override

@@ -12,8 +12,8 @@ public class PhaseShiftAbilityInfo extends AbilityWithDurationInfo {
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 0);
-        config.addDefault("duration", 50);
-        config.addDefault("cooldown", 400);
+        config.addDefault("duration", 2 * 20);
+        config.addDefault("cooldown", 15 * 20);
     }
 
     @Override

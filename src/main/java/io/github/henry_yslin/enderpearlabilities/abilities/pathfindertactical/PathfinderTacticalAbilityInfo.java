@@ -1,19 +1,25 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.pathfindertactical;
 
 import io.github.henry_yslin.enderpearlabilities.Instantiable;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityWithDurationInfo;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
 @Instantiable
-public class PathfinderTacticalAbilityInfo extends AbilityWithDurationInfo {
+public class PathfinderTacticalAbilityInfo extends AbilityInfo {
+
+    protected int chargeUp;
+    protected int duration;
+    protected int minCooldown;
+    protected int maxCooldown;
 
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 0);
-        config.addDefault("duration", 100);
-        config.addDefault("cooldown", 20);
+        config.addDefault("duration", 5 * 20);
+        config.addDefault("min-cooldown", 5 * 20);
+        config.addDefault("min-cooldown", 40 * 20);
     }
 
     @Override
@@ -44,6 +50,37 @@ public class PathfinderTacticalAbilityInfo extends AbilityWithDurationInfo {
     @Override
     public ActivationHand getActivation() {
         return ActivationHand.OffHand;
+    }
+
+    @Override
+    public int getChargeUp() {
+        return chargeUp;
+    }
+
+    @Override
+    public int getDuration() {
+        return duration;
+    }
+
+    @Override
+    public int getCooldown() {
+        return maxCooldown;
+    }
+
+    public int getMinCooldown() {
+        return minCooldown;
+    }
+
+    public int getMaxCooldown() {
+        return maxCooldown;
+    }
+
+    @Override
+    protected void readFromConfig(ConfigurationSection config) {
+        chargeUp = config.getInt("charge-up");
+        duration = config.getInt("duration");
+        minCooldown = config.getInt("min-cooldown");
+        maxCooldown = config.getInt("max-cooldown");
     }
 
     @Override

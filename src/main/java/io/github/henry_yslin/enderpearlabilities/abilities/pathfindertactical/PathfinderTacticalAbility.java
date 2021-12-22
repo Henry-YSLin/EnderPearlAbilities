@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PathfinderTacticalAbility extends Ability<PathfinderTacticalAbilityInfo> {
 
-    static final int PROJECTILE_LIFETIME = 20;
+    static final int PROJECTILE_LIFETIME = 15;
     static final double PROJECTILE_SPEED = 4;
 
     public PathfinderTacticalAbility(Plugin plugin, PathfinderTacticalAbilityInfo info, String ownerName) {
@@ -167,6 +167,8 @@ public class PathfinderTacticalAbility extends Ability<PathfinderTacticalAbility
         anchor.getWorld().playSound(anchor.getLocation(), Sound.BLOCK_CHAIN_FALL, 1, 0);
         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_CHAIN_FALL, 0.3f, 0);
 
+        Location origin = player.getLocation();
+
         (grapple = new AbilityRunnable() {
             BossBar bossbar;
             Location anchorLocation;
@@ -233,7 +235,7 @@ public class PathfinderTacticalAbility extends Ability<PathfinderTacticalAbility
                 anchor.remove();
                 InteractionLockManager.getInstance().unlockInteraction(player);
                 abilityActive.set(false);
-                cooldown.setCooldown(info.getCooldown());
+                cooldown.setCooldown((int) Math.max(info.getMinCooldown(), origin.distance(player.getLocation()) / (PROJECTILE_LIFETIME * PROJECTILE_SPEED) * info.getMaxCooldown()));
             }
         }).runTaskRepeated(this, 0, 1, info.getDuration());
     }

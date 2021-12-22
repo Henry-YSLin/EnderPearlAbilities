@@ -12,8 +12,8 @@ public class OctaneTacticalAbilityInfo extends AbilityWithDurationInfo {
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 0);
-        config.addDefault("duration", 200);
-        config.addDefault("cooldown", 60);
+        config.addDefault("duration", 6 * 20);
+        config.addDefault("cooldown", 20);
     }
 
     @Override

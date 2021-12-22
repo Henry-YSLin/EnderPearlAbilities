@@ -12,8 +12,8 @@ public class BloodhoundTacticalAbilityInfo extends AbilityWithDurationInfo {
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 10);
-        config.addDefault("duration", 200);
-        config.addDefault("cooldown", 600);
+        config.addDefault("duration", 10 * 20);
+        config.addDefault("cooldown", 20 * 20);
     }
 
     @Override

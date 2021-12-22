@@ -12,8 +12,8 @@ public class FragGrenadeAbilityInfo extends AbilityWithDurationInfo {
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 0);
-        config.addDefault("duration", 60);
-        config.addDefault("cooldown", 400);
+        config.addDefault("duration", 3 * 20);
+        config.addDefault("cooldown", 20 * 20);
     }
 
     @Override

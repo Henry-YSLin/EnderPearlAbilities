@@ -1,19 +1,20 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.smartbow;
 
 import io.github.henry_yslin.enderpearlabilities.Instantiable;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityWithDurationInfo;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityWithMagazineInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
 @Instantiable
-public class SmartBowAbilityInfo extends AbilityWithDurationInfo {
+public class SmartBowAbilityInfo extends AbilityWithMagazineInfo {
 
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 10);
-        config.addDefault("duration", 12);
-        config.addDefault("cooldown", 100);
+        config.addDefault("magazine-size", 12);
+        config.addDefault("base-cooldown", 5 * 20);
+        config.addDefault("cooldown-per-shot", 25);
     }
 
     @Override

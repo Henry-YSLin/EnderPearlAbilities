@@ -172,7 +172,7 @@ public class SmartBowAbility extends Ability<SmartBowAbilityInfo> {
         if (!abilityActive.get()) return;
 
         int shots = shotsLeft.decrementAndGet();
-        bossbar.setProgress(shots / (double) info.getDuration());
+        bossbar.setProgress(shots / (double) info.getMagazineSize());
 
         if (shots <= 0) {
             abilityActive.set(false);
@@ -218,7 +218,7 @@ public class SmartBowAbility extends Ability<SmartBowAbilityInfo> {
     }
 
     private void cooldown() {
-        cooldown.setCooldown(info.getCooldown() + (info.getDuration() - shotsLeft.get()) * 40);
+        cooldown.setCooldown(info.getBaseCooldown() + (info.getMagazineSize() - shotsLeft.get()) * info.getCooldownPerShot());
     }
 
     @EventHandler
@@ -252,7 +252,7 @@ public class SmartBowAbility extends Ability<SmartBowAbilityInfo> {
                     abilityActive.set(true);
                     bossbar.setVisible(true);
                     bossbar.setProgress(1);
-                    shotsLeft.set(info.getDuration());
+                    shotsLeft.set(info.getMagazineSize());
                 }
         ).execute();
     }

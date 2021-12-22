@@ -12,8 +12,8 @@ public class GibraltarTacticalAbilityInfo extends AbilityWithDurationInfo {
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 0);
-        config.addDefault("duration", 600);
-        config.addDefault("cooldown", 1500);
+        config.addDefault("duration", 12 * 20);
+        config.addDefault("cooldown", 30 * 20);
     }
 
     @Override

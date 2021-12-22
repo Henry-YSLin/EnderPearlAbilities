@@ -13,7 +13,7 @@ public class CryptoTacticalAbilityInfo extends AbilityWithDurationInfo {
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 20);
         config.addDefault("duration", 0);
-        config.addDefault("cooldown", 800);
+        config.addDefault("cooldown", 40 * 20);
     }
 
     @Override
