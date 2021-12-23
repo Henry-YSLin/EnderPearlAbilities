@@ -4,7 +4,6 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.StringUtils;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
@@ -96,7 +95,7 @@ public class SeerTacticalAbility extends Ability<SeerTacticalAbilityInfo> {
 
         new FunctionChain(
                 next -> {
-                    PlayerUtils.consumeEnderPearl(player);
+                    AbilityUtils.consumeEnderPearl(this, player);
                     new SeerTacticalEffect(Particle.ELECTRIC_SPARK, origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, ANGLE_DELTA, PARTICLE_COUNT, true)
                             .runTaskRepeated(this, 0, 1, SPREAD_TIME);
                     new SeerTacticalEffect(Particle.DRAGON_BREATH, origin, origin.getDirection(), SCAN_RANGE, SCAN_RADIUS, ANGLE_DELTA, PARTICLE_COUNT, false)

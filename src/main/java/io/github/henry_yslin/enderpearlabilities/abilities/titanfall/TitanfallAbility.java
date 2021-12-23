@@ -4,7 +4,10 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCooldown;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.utils.*;
+import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -148,7 +151,7 @@ public class TitanfallAbility extends Ability<TitanfallAbilityInfo> {
 
         abilityActive.set(true);
 
-        PlayerUtils.consumeEnderPearl(player);
+        AbilityUtils.consumeEnderPearl(this, player);
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

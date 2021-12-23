@@ -4,7 +4,6 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -109,7 +108,7 @@ public class TimeFreezeAbility extends Ability<TimeFreezeAbilityInfo> {
 
         new FunctionChain(
                 next -> {
-                    PlayerUtils.consumeEnderPearl(player);
+                    AbilityUtils.consumeEnderPearl(this, player);
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

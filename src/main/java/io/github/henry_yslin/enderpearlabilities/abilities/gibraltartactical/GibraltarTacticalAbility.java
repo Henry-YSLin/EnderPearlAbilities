@@ -7,7 +7,6 @@ import io.github.henry_yslin.enderpearlabilities.managers.shield.Shield;
 import io.github.henry_yslin.enderpearlabilities.managers.shield.ShieldManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -93,7 +92,7 @@ public class GibraltarTacticalAbility extends Ability<GibraltarTacticalAbilityIn
 
         new FunctionChain(
                 next -> {
-                    PlayerUtils.consumeEnderPearl(player);
+                    AbilityUtils.consumeEnderPearl(this, player);
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

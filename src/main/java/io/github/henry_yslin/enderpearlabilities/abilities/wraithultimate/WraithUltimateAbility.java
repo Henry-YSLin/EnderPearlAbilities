@@ -5,7 +5,6 @@ import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -103,7 +102,7 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
         new FunctionChain(
                 next -> {
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRIGGER, 0.3f, 2);
-                    PlayerUtils.consumeEnderPearl(player);
+                    AbilityUtils.consumeEnderPearl(this, player);
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

@@ -74,7 +74,7 @@ public class WorldShaperAbility extends Ability<WorldShaperAbilityInfo> {
 
         new FunctionChain(
                 next -> {
-                    PlayerUtils.consumeEnderPearl(player);
+                    AbilityUtils.consumeEnderPearl(this, player);
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

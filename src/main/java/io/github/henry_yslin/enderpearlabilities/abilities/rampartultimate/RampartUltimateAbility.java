@@ -6,7 +6,6 @@ import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -98,7 +97,7 @@ public class RampartUltimateAbility extends Ability<RampartUltimateAbilityInfo> 
             return;
         }
 
-        PlayerUtils.consumeEnderPearl(player);
+        AbilityUtils.consumeEnderPearl(this, player);
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

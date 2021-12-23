@@ -6,7 +6,6 @@ import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Equipment;
@@ -370,6 +369,7 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
 
         Location finalDeployLocation = deployLocation;
 
+        Ability<?> ability = this;
         new FunctionChain(
                 next -> new AbilityRunnable() {
                     BossBar bossbar;
@@ -381,7 +381,7 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
                         bossbar = Bukkit.createBossBar("Charging up", BarColor.WHITE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
 
-                        PlayerUtils.consumeEnderPearl(player);
+                        AbilityUtils.consumeEnderPearl(ability, player);
 
                         if (isDroneValid())
                             vex = drone.get();

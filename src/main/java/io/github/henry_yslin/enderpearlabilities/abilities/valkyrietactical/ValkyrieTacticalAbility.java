@@ -3,7 +3,10 @@ package io.github.henry_yslin.enderpearlabilities.abilities.valkyrietactical;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.utils.*;
+import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -94,7 +97,7 @@ public class ValkyrieTacticalAbility extends Ability<ValkyrieTacticalAbilityInfo
         AtomicReference<Location> targetLocation = new AtomicReference<>();
         new FunctionChain(
                 next -> {
-                    PlayerUtils.consumeEnderPearl(player);
+                    AbilityUtils.consumeEnderPearl(this, player);
                     RayTraceResult result = player.getWorld().rayTrace(player.getEyeLocation(), player.getEyeLocation().getDirection(), TARGET_RANGE, FluidCollisionMode.NEVER, true, 0, entity -> !entity.equals(player));
                     if (result == null) {
                         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.RED + "Too far away"));

@@ -5,7 +5,6 @@ import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -95,7 +94,7 @@ public class BangaloreUltimateAbility extends Ability<BangaloreUltimateAbilityIn
         if (cooldown.isCoolingDown()) return;
         if (abilityActive.get()) return;
 
-        PlayerUtils.consumeEnderPearl(player);
+        AbilityUtils.consumeEnderPearl(this, player);
         Ability<?> ability = this;
         new AbilityRunnable() {
             Projectile projectile;

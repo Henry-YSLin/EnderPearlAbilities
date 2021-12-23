@@ -4,7 +4,6 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Particle;
@@ -102,7 +101,7 @@ public class OctaneTacticalAbility extends Ability<OctaneTacticalAbilityInfo> {
                 next -> {
                     player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1, 2);
                     if (Math.random() < 0.25)
-                        PlayerUtils.consumeEnderPearl(player);
+                        AbilityUtils.consumeEnderPearl(this, player);
                     player.setHealth(Math.max(1, player.getHealth() - 4));
                     next.run();
                 },

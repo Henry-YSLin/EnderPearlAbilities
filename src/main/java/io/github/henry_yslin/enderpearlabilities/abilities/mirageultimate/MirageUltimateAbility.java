@@ -3,7 +3,10 @@ package io.github.henry_yslin.enderpearlabilities.abilities.mirageultimate;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.utils.*;
+import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.BlockUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henry_yslin.enderpearlabilities.utils.ListUtils;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.TraitInfo;
@@ -151,7 +154,7 @@ public class MirageUltimateAbility extends Ability<MirageUltimateAbilityInfo> {
 
         ArrayList<NPC> npcs = new ArrayList<>();
 
-        PlayerUtils.consumeEnderPearl(player);
+        AbilityUtils.consumeEnderPearl(this, player);
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

@@ -93,7 +93,7 @@ public class FragGrenadeAbility extends Ability<FragGrenadeAbilityInfo> {
 
         AtomicReference<Projectile> grenade = new AtomicReference<>();
 
-        PlayerUtils.consumeEnderPearl(player);
+        AbilityUtils.consumeEnderPearl(this, player);
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {

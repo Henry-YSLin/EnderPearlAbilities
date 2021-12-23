@@ -85,6 +85,24 @@ public class AbilityUtils {
     }
 
     /**
+     * Remove an ender pearl from the player's inventory if necessary.
+     * <p>
+     * Only main hand abilities will remove the ender pearl.
+     * <p>
+     * See {@link PlayerUtils#consumeEnderPearl(Player)} for more information.
+     *
+     * @param ability The {@link Ability} to remove an ender pearl for.
+     * @param player  The player to remove an ender pearl from.
+     * @return Whether the ender pearl is successfully removed.
+     */
+    public static boolean consumeEnderPearl(Ability<?> ability, Player player) {
+        if (ability.getInfo().getActivation() == ActivationHand.MainHand)
+            return PlayerUtils.consumeEnderPearl(player);
+        else
+            return true;
+    }
+
+    /**
      * Check whether a given {@link PlayerInteractEvent} should activate an ability.
      *
      * @param event          The related {@link PlayerInteractEvent}.

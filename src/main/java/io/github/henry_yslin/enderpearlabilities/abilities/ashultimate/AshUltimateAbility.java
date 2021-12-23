@@ -4,7 +4,10 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
-import io.github.henry_yslin.enderpearlabilities.utils.*;
+import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -190,7 +193,7 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
 
                         @Override
                         protected void start() {
-                            PlayerUtils.consumeEnderPearl(player);
+                            AbilityUtils.consumeEnderPearl(ability, player);
                             location = player.getLocation();
                             Vector direction = player.getLocation().getDirection();
                             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1, 0.5f);

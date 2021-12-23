@@ -6,7 +6,6 @@ import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.ProjectileUtils;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
@@ -102,7 +101,7 @@ public class PathfinderTacticalAbility extends Ability<PathfinderTacticalAbility
 
         if (InteractionLockManager.getInstance().isInteractionLocked(player)) return;
 
-        PlayerUtils.consumeEnderPearl(player);
+        AbilityUtils.consumeEnderPearl(this, player);
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

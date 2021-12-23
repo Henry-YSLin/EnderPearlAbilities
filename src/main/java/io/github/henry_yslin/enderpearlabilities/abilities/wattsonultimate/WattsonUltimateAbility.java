@@ -3,7 +3,10 @@ package io.github.henry_yslin.enderpearlabilities.abilities.wattsonultimate;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.utils.*;
+import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henry_yslin.enderpearlabilities.utils.ItemStackUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -135,7 +138,7 @@ public class WattsonUltimateAbility extends Ability<WattsonUltimateAbilityInfo> 
         if (location.getBlock().getType() != Material.AIR) return;
 
         abilityActive.set(true);
-        PlayerUtils.consumeEnderPearl(player);
+        AbilityUtils.consumeEnderPearl(this, player);
 
         new FunctionChain(
                 next -> {

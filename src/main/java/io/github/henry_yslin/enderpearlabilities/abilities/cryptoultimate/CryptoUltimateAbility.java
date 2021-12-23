@@ -265,7 +265,7 @@ public class CryptoUltimateAbility extends Ability<CryptoUltimateAbilityInfo> {
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
-        PlayerUtils.consumeEnderPearl(player);
+        AbilityUtils.consumeEnderPearl(this, player);
 
         activateAbility(targetEntity);
     }

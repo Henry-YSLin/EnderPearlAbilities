@@ -4,7 +4,6 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.StringUtils;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
@@ -84,7 +83,7 @@ public class BloodhoundTacticalAbility extends Ability<BloodhoundTacticalAbility
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
-        PlayerUtils.consumeEnderPearl(player);
+        AbilityUtils.consumeEnderPearl(this, player);
 
         List<Entity> entities = new ArrayList<>();
         ScoreboardManager manager = Bukkit.getScoreboardManager();

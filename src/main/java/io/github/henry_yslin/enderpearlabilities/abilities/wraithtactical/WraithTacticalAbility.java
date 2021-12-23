@@ -6,7 +6,6 @@ import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.Intera
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Particle;
@@ -96,7 +95,7 @@ public class WraithTacticalAbility extends Ability<WraithTacticalAbilityInfo> {
 
         new FunctionChain(
                 next -> {
-                    PlayerUtils.consumeEnderPearl(player);
+                    AbilityUtils.consumeEnderPearl(this, player);
                     player.addPotionEffect(PotionEffectType.SLOW.createEffect(info.getChargeUp(), 2));
                     next.run();
                 },

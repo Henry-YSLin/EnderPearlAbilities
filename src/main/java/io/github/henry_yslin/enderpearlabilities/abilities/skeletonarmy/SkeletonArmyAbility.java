@@ -117,7 +117,7 @@ public class SkeletonArmyAbility extends Ability<SkeletonArmyAbilityInfo> {
         new FunctionChain(
                 next -> {
                     cooldown.setCooldown(info.getCooldown());
-                    PlayerUtils.consumeEnderPearl(player);
+                    AbilityUtils.consumeEnderPearl(this, player);
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

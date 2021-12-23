@@ -7,7 +7,6 @@ import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.Intera
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -194,7 +193,7 @@ public class ValkyrieUltimateAbility extends Ability<ValkyrieUltimateAbilityInfo
 
                         @Override
                         protected void start() {
-                            PlayerUtils.consumeEnderPearl(player);
+                            AbilityUtils.consumeEnderPearl(ability, player);
                             groundLocation = player.getLocation();
                         }
 

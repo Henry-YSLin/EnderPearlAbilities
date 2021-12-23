@@ -187,7 +187,7 @@ public class BangaloreTacticalAbility extends Ability<BangaloreTacticalAbilityIn
         if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
 
-        PlayerUtils.consumeEnderPearl(player);
+        AbilityUtils.consumeEnderPearl(this, player);
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {

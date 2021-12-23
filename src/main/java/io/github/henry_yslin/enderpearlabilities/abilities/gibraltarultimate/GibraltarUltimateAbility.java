@@ -5,7 +5,6 @@ import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.PlayerUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
@@ -94,7 +93,7 @@ public class GibraltarUltimateAbility extends Ability<GibraltarUltimateAbilityIn
         if (cooldown.isCoolingDown()) return;
         if (abilityActive.get()) return;
 
-        PlayerUtils.consumeEnderPearl(player);
+        AbilityUtils.consumeEnderPearl(this, player);
         AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
     }
 

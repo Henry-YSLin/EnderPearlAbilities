@@ -2,7 +2,10 @@ package io.github.henry_yslin.enderpearlabilities.abilities.horizonultimate;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.utils.*;
+import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import org.bukkit.*;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -81,7 +84,7 @@ public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> 
         if (cooldown.isCoolingDown()) return;
         if (abilityActive.get()) return;
 
-        PlayerUtils.consumeEnderPearl(player);
+        AbilityUtils.consumeEnderPearl(this, player);
         AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
     }
 
