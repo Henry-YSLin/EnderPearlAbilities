@@ -129,9 +129,7 @@ public class WorldShaperAbility extends Ability<WorldShaperAbilityInfo> {
             if (type.isSolid()) {
                 if (player.getGameMode() != GameMode.CREATIVE) {
                     if (Math.random() * (unbreaking + 1) < 1) {
-                        if (Math.random() < 0.5) {
-                            ItemStackUtils.damageTool(player.getInventory().getItemInMainHand(), 1);
-                        }
+                        ItemStackUtils.damageTool(player.getInventory().getItemInMainHand(), 1);
                     }
                 }
             }
