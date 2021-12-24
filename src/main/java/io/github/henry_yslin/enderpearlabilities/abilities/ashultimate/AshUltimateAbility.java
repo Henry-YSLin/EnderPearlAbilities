@@ -22,6 +22,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
@@ -32,7 +33,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
 
-    static final int TARGET_RANGE = 80;
+    static final int MIN_DISTANCE = 3;
+    static final int MAX_DISTANCE = 80;
     static final double ANGLE_ALLOWANCE = Math.toRadians(10);
     static final double PHASE_VELOCITY = 2;
 
@@ -98,7 +100,7 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
         if (MathUtils.almostEqual(direction.getX(), 0) && MathUtils.almostEqual(direction.getZ(), 0) && direction.getY() > 0)
             return Optional.empty();
 
-        RayTraceResult eyeRay = world.rayTraceBlocks(eyeLocation, direction, TARGET_RANGE, FluidCollisionMode.NEVER, true);
+        RayTraceResult eyeRay = world.rayTraceBlocks(eyeLocation, direction, MAX_DISTANCE, FluidCollisionMode.NEVER, true);
 
         Vector eyeHitPosition;
         if (eyeRay != null) {
@@ -108,7 +110,7 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
         } else {
             if (MathUtils.almostEqual(direction.getX(), 0) && MathUtils.almostEqual(direction.getZ(), 0) && direction.getY() < 0)
                 return Optional.empty();
-            eyeHitPosition = player.getEyeLocation().add(direction.clone().multiply(TARGET_RANGE)).toVector();
+            eyeHitPosition = player.getEyeLocation().add(direction.clone().multiply(MAX_DISTANCE)).toVector();
         }
 
         Vector eyeLocationVector = eyeLocation.toVector();
@@ -177,7 +179,7 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
 
                         @Override
                         protected void end() {
-                            if (locations[1] != null && locations[1].distance(player.getLocation()) < 1)
+                            if (locations[1] != null && locations[1].distance(player.getLocation()) < MIN_DISTANCE)
                                 locations[1] = null;
 
                             if (abilityActive.get()) {
@@ -243,6 +245,7 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
                                 world.spawnParticle(Particle.ELECTRIC_SPARK, to, 10, 0.05, 1, 0.05, 0.01, null, true);
 
                                 for (Entity entity : world.getNearbyEntities(from, 0.5, 1, 0.5, entity -> entity instanceof LivingEntity)) {
+                                    if (entity.hasMetadata("ash-portal")) continue;
                                     LivingEntity livingEntity = (LivingEntity) entity;
                                     new AbilityRunnable() {
                                         double maxDistance;
@@ -252,6 +255,7 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
 
                                         @Override
                                         protected void start() {
+                                            livingEntity.setMetadata("ash-portal", new FixedMetadataValue(executor.getPlugin(), executor));
                                             if (livingEntity instanceof Player player) {
                                                 bossBar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID, BarFlag.CREATE_FOG, BarFlag.DARKEN_SKY);
                                                 bossBar.setProgress(0);
@@ -288,6 +292,7 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
 
                                         @Override
                                         protected void end() {
+                                            livingEntity.removeMetadata("ash-portal", executor.getPlugin());
                                             if (bossBar != null) {
                                                 bossBar.removeAll();
                                             }

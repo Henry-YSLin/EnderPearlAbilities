@@ -19,7 +19,7 @@ public class PathfinderTacticalAbilityInfo extends AbilityInfo {
         config.addDefault("charge-up", 0);
         config.addDefault("duration", 5 * 20);
         config.addDefault("min-cooldown", 5 * 20);
-        config.addDefault("min-cooldown", 40 * 20);
+        config.addDefault("max-cooldown", 40 * 20);
     }
 
     @Override
