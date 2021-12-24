@@ -1,14 +1,20 @@
 package io.github.henry_yslin.enderpearlabilities.managers.voidspace;
 
 import io.github.henry_yslin.enderpearlabilities.managers.ManagerRunnable;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
-public class VoidSpaceRunnable extends ManagerRunnable {
-    private final Player player;
+import java.util.List;
 
-    public VoidSpaceRunnable(Player player) {
+public class VoidSpaceRunnable extends ManagerRunnable {
+    private final List<Player> playersInVoid;
+    private final List<LivingEntity> entitiesInVoid;
+
+
+    public VoidSpaceRunnable(List<Player> playersInVoid, List<LivingEntity> entitiesInVoid) {
         super();
-        this.player = player;
+        this.playersInVoid = playersInVoid;
+        this.entitiesInVoid = entitiesInVoid;
     }
 
     @Override
@@ -18,12 +24,18 @@ public class VoidSpaceRunnable extends ManagerRunnable {
 
     @Override
     protected void tick() {
-        if (!VoidSpaceManager.getInstance().isInVoid(player)) {
-            cancel();
-            return;
+        synchronized (playersInVoid) {
+            for (Player player : playersInVoid) {
+                player.setRemainingAir(player.getMaximumAir());
+                player.setFireTicks(0);
+            }
         }
-        player.setRemainingAir(player.getMaximumAir());
-        player.setFireTicks(0);
+        synchronized (entitiesInVoid) {
+            for (LivingEntity entity : entitiesInVoid) {
+                entity.setRemainingAir(entity.getMaximumAir());
+                entity.setFireTicks(0);
+            }
+        }
     }
 
     @Override

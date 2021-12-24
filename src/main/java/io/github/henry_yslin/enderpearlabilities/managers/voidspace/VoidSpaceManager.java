@@ -4,6 +4,7 @@ import io.github.henry_yslin.enderpearlabilities.Instantiable;
 import io.github.henry_yslin.enderpearlabilities.managers.Manager;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -51,9 +52,28 @@ public class VoidSpaceManager extends Manager {
     }
 
     private final List<Player> playersInVoid = Collections.synchronizedList(new ArrayList<>());
+    private final List<LivingEntity> entitiesInVoid = Collections.synchronizedList(new ArrayList<>());
+    private VoidSpaceRunnable voidSpaceRunnable;
 
     public boolean isInVoid(Player player) {
         return playersInVoid.contains(player);
+    }
+
+    public boolean isInVoid(LivingEntity entity) {
+        if (entity instanceof Player player) {
+            return isInVoid(player);
+        }
+        return entitiesInVoid.contains(entity);
+    }
+
+    @Override
+    public void onEnable() {
+        super.onEnable();
+
+        if (voidSpaceRunnable != null && !voidSpaceRunnable.isCancelled())
+            voidSpaceRunnable.cancel();
+        voidSpaceRunnable = new VoidSpaceRunnable(playersInVoid, entitiesInVoid);
+        voidSpaceRunnable.runTaskTimer(this, 0, 1);
     }
 
     @Override
@@ -62,19 +82,21 @@ public class VoidSpaceManager extends Manager {
         for (int i = playersInVoid.size() - 1; playersInVoid.size() > 0; i = playersInVoid.size() - 1) {
             exitVoid(playersInVoid.get(i));
         }
+        for (int i = entitiesInVoid.size() - 1; entitiesInVoid.size() > 0; i = entitiesInVoid.size() - 1) {
+            exitVoid(entitiesInVoid.get(i));
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) return;
-        if (!isInVoid(player)) return;
+        if (!(event.getDamager() instanceof LivingEntity livingEntity)) return;
+        if (!isInVoid(livingEntity)) return;
         event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityPickupItem(EntityPickupItemEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-        if (!isInVoid(player)) return;
+        if (!isInVoid(event.getEntity())) return;
         event.setCancelled(true);
     }
 
@@ -107,8 +129,21 @@ public class VoidSpaceManager extends Manager {
         player.addPotionEffect(PotionEffectType.NIGHT_VISION.createEffect(Integer.MAX_VALUE, 1));
         player.addPotionEffect(PotionEffectType.SPEED.createEffect(Integer.MAX_VALUE, 1));
 
-        new VoidSpaceRunnable(player).runTaskTimer(this, 0, 1);
         playersInVoid.add(player);
+    }
+
+    public void enterVoid(LivingEntity entity) {
+        if (isInVoid(entity)) return;
+        if (entity instanceof Player player) {
+            enterVoid(player);
+            return;
+        }
+
+        entity.setCollidable(false);
+        entity.setInvulnerable(true);
+        entity.addPotionEffect(PotionEffectType.SPEED.createEffect(Integer.MAX_VALUE, 1));
+
+        entitiesInVoid.add(entity);
     }
 
     public void exitVoid(Player player) {
@@ -129,6 +164,21 @@ public class VoidSpaceManager extends Manager {
         player.removePotionEffect(PotionEffectType.SPEED);
 
         playersInVoid.remove(player);
+    }
+
+    public void exitVoid(LivingEntity entity) {
+        if (!isInVoid(entity)) return;
+        if (entity instanceof Player player) {
+            exitVoid(player);
+            return;
+        }
+
+        entity.setCollidable(true);
+        entity.setInvulnerable(false);
+        entity.setFireTicks(0);
+        entity.removePotionEffect(PotionEffectType.SPEED);
+
+        entitiesInVoid.remove(entity);
     }
 }
 

@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class TitanfallAbility extends Ability<TitanfallAbilityInfo> {
 
     static final int ACTION_COOLDOWN = 5;
+    static final int ENERGY_SIPHON_RANGE = 64;
     static final int ENERGY_SIPHON_COOLDOWN = 200;
     static final int ENERGY_SIPHON_CHARGE_UP = 20;
 
@@ -212,14 +213,17 @@ public class TitanfallAbility extends Ability<TitanfallAbilityInfo> {
                                         siphonChargeUp++;
                                     siphonChargeUpBar.setVisible(true);
                                     siphonChargeUpBar.setProgress((double) siphonChargeUp / ENERGY_SIPHON_CHARGE_UP);
+                                    RayTraceResult result = player.getWorld().rayTrace(player.getEyeLocation(), player.getEyeLocation().getDirection(), ENERGY_SIPHON_RANGE, FluidCollisionMode.NEVER, true, 0, entity -> !entity.equals(player) && !entity.equals(t) && entity instanceof LivingEntity);
+                                    Vector hit;
+                                    if (result == null) {
+                                        hit = player.getEyeLocation().toVector().add(player.getEyeLocation().getDirection().multiply(ENERGY_SIPHON_RANGE));
+                                    } else {
+                                        hit = result.getHitPosition();
+                                    }
                                     if (siphonChargeUp >= ENERGY_SIPHON_CHARGE_UP) {
-                                        RayTraceResult result = player.getWorld().rayTrace(player.getEyeLocation(), player.getEyeLocation().getDirection(), 32, FluidCollisionMode.NEVER, true, 0, entity -> !entity.equals(player) && !entity.equals(t) && entity instanceof LivingEntity);
-                                        Vector hit;
+                                        t.getWorld().playSound(t.getLocation(), Sound.BLOCK_GLASS_BREAK, 1, 2);
                                         boolean effective = false;
-                                        if (result == null) {
-                                            hit = player.getEyeLocation().toVector().add(player.getEyeLocation().getDirection().multiply(32));
-                                        } else {
-                                            hit = result.getHitPosition();
+                                        if (result != null) {
                                             LivingEntity entity = (LivingEntity) result.getHitEntity();
                                             if (entity != null) {
                                                 effective = true;
@@ -232,6 +236,8 @@ public class TitanfallAbility extends Ability<TitanfallAbilityInfo> {
                                         siphonChargeUp = 0;
                                         siphonCooldown.setCooldown(ENERGY_SIPHON_COOLDOWN);
                                         siphonChargeUpBar.setProgress(0);
+                                    } else {
+                                        WorldUtils.spawnParticleLine(t.getEyeLocation(), hit.toLocation(t.getWorld()), Particle.ELECTRIC_SPARK, 3, false);
                                     }
                                 } else {
                                     siphonChargeUpBar.setVisible(false);

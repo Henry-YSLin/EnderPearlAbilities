@@ -7,7 +7,6 @@ import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceMan
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
-import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -137,8 +136,7 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
             chargingUp.set(false);
             abilityActive.set(true);
         } else {
-            final Location[] lastLocation = new Location[1];
-            final Location[] startLocation = new Location[1];
+            final Location[] locations = new Location[2];
 
             Ability<?> ability = this;
             new FunctionChain(
@@ -161,7 +159,7 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
                             if (!player.isValid()) shouldContinue = false;
                             if (shouldContinue) {
                                 Optional<Location> targetLocation = getTargetLocation(player);
-                                lastLocation[0] = targetLocation.orElse(null);
+                                locations[1] = targetLocation.orElse(null);
                                 targetLocation.ifPresentOrElse(location -> {
                                     player.spawnParticle(Particle.ELECTRIC_SPARK, location.clone().add(0, 1, 0), 20, 0.05, 1, 0.05, 0, null);
                                     player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.LIGHT_PURPLE + String.format("%.0fm", location.distance(player.getLocation()))));
@@ -175,11 +173,11 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
 
                         @Override
                         protected void end() {
-                            if (lastLocation[0] != null && lastLocation[0].distance(player.getLocation()) < 1)
-                                lastLocation[0] = null;
+                            if (locations[1] != null && locations[1].distance(player.getLocation()) < 1)
+                                locations[1] = null;
 
                             if (abilityActive.get()) {
-                                if (lastLocation[0] == null)
+                                if (locations[1] == null)
                                     abilityActive.set(false);
                                 else
                                     next.run();
@@ -213,62 +211,14 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
 
                         @Override
                         protected void end() {
-                            if (hasCompleted())
+                            abilityActive.set(false);
+                            if (hasCompleted()) {
+                                locations[0] = location;
+                                cooldown.setCooldown(info.getCooldown());
                                 next.run();
-                            else
-                                abilityActive.set(false);
+                            }
                         }
                     }.runTaskRepeated(this, 0, 1, 10),
-                    next -> new AbilityRunnable() {
-                        Location currentLocation;
-                        Vector velocity;
-
-                        @Override
-                        protected void start() {
-                            startLocation[0] = player.getLocation();
-                            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.3f, 2);
-                            abilityActive.set(true);
-
-                            VoidSpaceManager.getInstance().enterVoid(player);
-
-                            currentLocation = player.getLocation();
-                            velocity = lastLocation[0].clone().subtract(player.getLocation()).toVector().normalize().multiply(PHASE_VELOCITY);
-                            currentLocation.setDirection(velocity);
-                        }
-
-                        @Override
-                        protected void tick() {
-                            if (!player.isValid()) {
-                                cancel();
-                                return;
-                            }
-                            currentLocation.add(velocity);
-                            player.teleport(currentLocation);
-                            player.setVelocity(velocity);
-                            player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 10, 0.5, 1, 0.5, 0.02, null, true);
-                            player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, lastLocation[0].clone().add(0, 1, 0), 20, 0.05, 1, 0.05, 0, null, true);
-
-                            if (currentLocation.distance(lastLocation[0]) < PHASE_VELOCITY * 1.5)
-                                cancel();
-                        }
-
-                        @Override
-                        protected void end() {
-                            boolean completed = currentLocation.distance(lastLocation[0]) < PHASE_VELOCITY * 1.5;
-                            if (completed)
-                                player.teleport(lastLocation[0].setDirection(player.getLocation().getDirection()));
-
-                            abilityActive.set(false);
-                            player.setVelocity(new Vector());
-                            player.setFallDistance(0);
-
-                            VoidSpaceManager.getInstance().exitVoid(player);
-
-                            cooldown.setCooldown(info.getCooldown());
-                            if (completed)
-                                next.run();
-                        }
-                    }.runTaskTimer(this, 0, 1),
                     next -> {
                         if (portal != null && !portal.isCancelled())
                             portal.cancel();
@@ -278,8 +228,8 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
 
                             @Override
                             protected void start() {
-                                from = startLocation[0].clone().add(0, 1, 0);
-                                to = lastLocation[0].clone().add(0, 1, 0);
+                                from = locations[0].clone().add(0, 1, 0);
+                                to = locations[1].clone().add(0, 1, 0);
                             }
 
                             @Override
@@ -289,12 +239,49 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
                                 world.spawnParticle(Particle.ELECTRIC_SPARK, to, 10, 0.05, 1, 0.05, 0.01, null, true);
 
                                 for (Entity entity : world.getNearbyEntities(from, 0.5, 1, 0.5, entity -> entity instanceof LivingEntity)) {
-                                    from.getWorld().playSound(from, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1, 0.5f);
-                                    from.getWorld().playSound(to, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1, 0.5f);
-                                    entity.teleport(to.clone().subtract(0, 0.99, 0));
-                                    entity.setFallDistance(0);
-                                    entity.setVelocity(new Vector());
-                                    WorldUtils.spawnParticleLine(from, to, Particle.DRAGON_BREATH, 2, true);
+                                    LivingEntity livingEntity = (LivingEntity) entity;
+                                    new AbilityRunnable() {
+                                        Location currentLocation;
+                                        Vector velocity;
+
+                                        @Override
+                                        protected void start() {
+                                            livingEntity.getWorld().playSound(livingEntity.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.3f, 2);
+
+                                            VoidSpaceManager.getInstance().enterVoid(livingEntity);
+
+                                            currentLocation = livingEntity.getLocation();
+                                            velocity = to.clone().subtract(livingEntity.getLocation()).toVector().normalize().multiply(PHASE_VELOCITY);
+                                        }
+
+                                        @Override
+                                        protected void tick() {
+                                            if (!livingEntity.isValid()) {
+                                                cancel();
+                                                return;
+                                            }
+                                            currentLocation.add(velocity);
+                                            Vector directionOffset = velocity.clone().normalize().subtract(currentLocation.getDirection()).multiply(0.25);
+                                            currentLocation.setDirection(currentLocation.getDirection().add(directionOffset));
+                                            livingEntity.teleport(currentLocation);
+                                            livingEntity.setVelocity(velocity);
+
+                                            if (currentLocation.distance(to) < PHASE_VELOCITY * 1.5)
+                                                cancel();
+                                        }
+
+                                        @Override
+                                        protected void end() {
+                                            boolean completed = currentLocation.distance(to) < PHASE_VELOCITY * 1.5;
+                                            if (completed)
+                                                livingEntity.teleport(to.clone().setDirection(livingEntity.getLocation().getDirection()));
+
+                                            livingEntity.setVelocity(new Vector());
+                                            livingEntity.setFallDistance(0);
+
+                                            VoidSpaceManager.getInstance().exitVoid(livingEntity);
+                                        }
+                                    }.runTaskTimer(executor, 0, 1);
                                 }
                             }
 
