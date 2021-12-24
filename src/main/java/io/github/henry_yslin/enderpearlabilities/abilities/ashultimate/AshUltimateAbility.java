@@ -11,6 +11,10 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarFlag;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -241,11 +245,20 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
                                 for (Entity entity : world.getNearbyEntities(from, 0.5, 1, 0.5, entity -> entity instanceof LivingEntity)) {
                                     LivingEntity livingEntity = (LivingEntity) entity;
                                     new AbilityRunnable() {
+                                        double maxDistance;
                                         Location currentLocation;
                                         Vector velocity;
+                                        BossBar bossBar = null;
 
                                         @Override
                                         protected void start() {
+                                            if (livingEntity instanceof Player player) {
+                                                bossBar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID, BarFlag.CREATE_FOG, BarFlag.DARKEN_SKY);
+                                                bossBar.setProgress(0);
+                                                bossBar.addPlayer(player);
+
+                                                maxDistance = player.getLocation().distance(to);
+                                            }
                                             livingEntity.getWorld().playSound(livingEntity.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.3f, 2);
 
                                             VoidSpaceManager.getInstance().enterVoid(livingEntity);
@@ -260,6 +273,9 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
                                                 cancel();
                                                 return;
                                             }
+                                            if (bossBar != null) {
+                                                bossBar.setProgress(1 - currentLocation.distance(to) / maxDistance);
+                                            }
                                             currentLocation.add(velocity);
                                             Vector directionOffset = velocity.clone().normalize().subtract(currentLocation.getDirection()).multiply(0.25);
                                             currentLocation.setDirection(currentLocation.getDirection().add(directionOffset));
@@ -272,6 +288,9 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
 
                                         @Override
                                         protected void end() {
+                                            if (bossBar != null) {
+                                                bossBar.removeAll();
+                                            }
                                             boolean completed = currentLocation.distance(to) < PHASE_VELOCITY * 1.5;
                                             if (completed)
                                                 livingEntity.teleport(to.clone().setDirection(livingEntity.getLocation().getDirection()));
