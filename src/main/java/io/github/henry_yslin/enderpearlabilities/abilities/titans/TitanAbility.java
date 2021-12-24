@@ -1,16 +1,18 @@
-package io.github.henry_yslin.enderpearlabilities.abilities.titanfall;
+package io.github.henry_yslin.enderpearlabilities.abilities.titans;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCooldown;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -26,7 +28,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.spigotmc.event.entity.EntityDismountEvent;
@@ -36,14 +37,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class TitanfallAbility extends Ability<TitanfallAbilityInfo> {
+public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInfo> {
 
     static final int ACTION_COOLDOWN = 5;
     static final int ENERGY_SIPHON_RANGE = 64;
-    static final int ENERGY_SIPHON_COOLDOWN = 200;
-    static final int ENERGY_SIPHON_CHARGE_UP = 20;
 
-    public TitanfallAbility(Plugin plugin, TitanfallAbilityInfo info, String ownerName) {
+    public TitanAbility(Plugin plugin, TInfo info, String ownerName) {
         super(plugin, info, ownerName);
     }
 
@@ -124,6 +123,10 @@ public class TitanfallAbility extends Ability<TitanfallAbilityInfo> {
         player.setCollidable(true);
     }
 
+    public abstract void onTitanAbilityChargeUp(IronGolem titan);
+
+    public abstract void onTitanAbilityActivate(IronGolem titan);
+
     @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
@@ -172,18 +175,18 @@ public class TitanfallAbility extends Ability<TitanfallAbilityInfo> {
                         boolean attackMode = false;
                         boolean landed = false;
                         IronGolem t;
-                        BossBar siphonChargeUpBar;
-                        int siphonChargeUp = 0;
-                        AbilityCooldown siphonCooldown;
+                        BossBar abilityChargeUpBar;
+                        int abilityChargeUp = 0;
+                        AbilityCooldown abilityCooldown;
 
                         @Override
                         protected void start() {
                             super.start();
-                            siphonCooldown = new AbilityCooldown(ability, player, false);
+                            abilityCooldown = new AbilityCooldown(ability, player, false);
                             t = titan.get();
-                            siphonChargeUpBar = Bukkit.createBossBar(ChatColor.WHITE + "Energy Siphon", BarColor.WHITE, BarStyle.SOLID);
-                            siphonChargeUpBar.addPlayer(player);
-                            siphonChargeUpBar.setProgress(0);
+                            abilityChargeUpBar = Bukkit.createBossBar(ChatColor.WHITE + "Energy Siphon", BarColor.WHITE, BarStyle.SOLID);
+                            abilityChargeUpBar.addPlayer(player);
+                            abilityChargeUpBar.setProgress(0);
                         }
 
                         @Override
@@ -202,45 +205,29 @@ public class TitanfallAbility extends Ability<TitanfallAbilityInfo> {
                             }
                             if (t.getPassengers().size() <= 0) {
                                 t.setAware(false);
-                                siphonChargeUpBar.setVisible(false);
-                                siphonChargeUp = 0;
+                                abilityChargeUpBar.setVisible(false);
+                                abilityChargeUp = 0;
                             } else {
                                 t.setAware(true);
-                                if (siphonCooldown.isCoolingDown()) {
-                                    siphonChargeUpBar.setVisible(false);
-                                } else if (siphonChargeUp > 0) {
-                                    if (siphonChargeUp < ENERGY_SIPHON_CHARGE_UP)
-                                        siphonChargeUp++;
-                                    siphonChargeUpBar.setVisible(true);
-                                    siphonChargeUpBar.setProgress((double) siphonChargeUp / ENERGY_SIPHON_CHARGE_UP);
-                                    RayTraceResult result = player.getWorld().rayTrace(player.getEyeLocation(), player.getEyeLocation().getDirection(), ENERGY_SIPHON_RANGE, FluidCollisionMode.NEVER, true, 0, entity -> !entity.equals(player) && !entity.equals(t) && entity instanceof LivingEntity);
-                                    Vector hit;
-                                    if (result == null) {
-                                        hit = player.getEyeLocation().toVector().add(player.getEyeLocation().getDirection().multiply(ENERGY_SIPHON_RANGE));
+                                if (abilityCooldown.isCoolingDown()) {
+                                    abilityChargeUpBar.setVisible(false);
+                                } else if (abilityChargeUp > 0) {
+                                    if (abilityChargeUp < info.getTitanAbilityChargeUp())
+                                        abilityChargeUp++;
+                                    abilityChargeUpBar.setVisible(true);
+                                    if (abilityChargeUp >= 0 && abilityChargeUp <= info.getTitanAbilityChargeUp())
+                                        abilityChargeUpBar.setProgress((double) abilityChargeUp / info.getTitanAbilityChargeUp());
+
+                                    if (abilityChargeUp >= info.getTitanAbilityChargeUp()) {
+                                        onTitanAbilityActivate(t);
+                                        abilityChargeUp = 0;
+                                        abilityCooldown.setCooldown(info.getTitanAbilityCooldown());
+                                        abilityChargeUpBar.setProgress(0);
                                     } else {
-                                        hit = result.getHitPosition();
-                                    }
-                                    if (siphonChargeUp >= ENERGY_SIPHON_CHARGE_UP) {
-                                        t.getWorld().playSound(t.getLocation(), Sound.BLOCK_GLASS_BREAK, 1, 2);
-                                        boolean effective = false;
-                                        if (result != null) {
-                                            LivingEntity entity = (LivingEntity) result.getHitEntity();
-                                            if (entity != null) {
-                                                effective = true;
-                                                entity.damage(4, player);
-                                                entity.addPotionEffect(PotionEffectType.SLOW.createEffect(60, 1));
-                                                t.setHealth(Math.min(EntityUtils.getMaxHealth(t), t.getHealth() + 4));
-                                            }
-                                        }
-                                        WorldUtils.spawnParticleLine(t.getEyeLocation(), hit.toLocation(t.getWorld()), effective ? Particle.DRAGON_BREATH : Particle.ELECTRIC_SPARK, 3, false);
-                                        siphonChargeUp = 0;
-                                        siphonCooldown.setCooldown(ENERGY_SIPHON_COOLDOWN);
-                                        siphonChargeUpBar.setProgress(0);
-                                    } else {
-                                        WorldUtils.spawnParticleLine(t.getEyeLocation(), hit.toLocation(t.getWorld()), Particle.ELECTRIC_SPARK, 3, false);
+                                        onTitanAbilityChargeUp(t);
                                     }
                                 } else {
-                                    siphonChargeUpBar.setVisible(false);
+                                    abilityChargeUpBar.setVisible(false);
                                 }
                                 if (attackMode) {
                                     RayTraceResult result = player.getWorld().rayTraceEntities(player.getEyeLocation(), player.getEyeLocation().getDirection(), 48, entity -> {
@@ -265,9 +252,9 @@ public class TitanfallAbility extends Ability<TitanfallAbilityInfo> {
                             if (action != null) {
                                 if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
                                     if (attackMode) {
-                                        if (!siphonCooldown.isCoolingDown())
-                                            if (siphonChargeUp <= 0)
-                                                siphonChargeUp = 1;
+                                        if (!abilityCooldown.isCoolingDown())
+                                            if (abilityChargeUp <= 0)
+                                                abilityChargeUp = 1;
                                     } else {
                                         if (t.isOnGround())
                                             t.setVelocity(t.getVelocity().add(new Vector(0, 1, 0)));
@@ -285,15 +272,15 @@ public class TitanfallAbility extends Ability<TitanfallAbilityInfo> {
                             } else {
                                 String statusText = "";
                                 statusText += attackMode ? "Attack mode" : "Move mode";
-                                if (siphonCooldown.isCoolingDown())
-                                    statusText += " | Energy Siphon in " + siphonCooldown.getCooldownTicks() / 20 + "s";
+                                if (abilityCooldown.isCoolingDown())
+                                    statusText += " | " + info.getTitanAbilityName() + " in " + abilityCooldown.getCooldownTicks() / 20 + "s";
                                 if (t.getTarget() != null)
                                     statusText += " | Target: " + t.getTarget().getName();
                                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(statusText));
                             }
-                            if (siphonCooldown.isCoolingDown())
+                            if (abilityCooldown.isCoolingDown())
                                 t.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, t.getLocation(), 2, 0.5, 0.5, 0.5, 0.02);
-                            t.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, t.getLocation().add(0, 1, 0), 1, 0.8, 0.8, 0.8, 0.1);
+                            player.spawnParticle(Particle.ENCHANTMENT_TABLE, t.getLocation().add(0, 1, 0), 1, 0.8, 0.8, 0.8, 0.1);
                         }
 
                         @Override
