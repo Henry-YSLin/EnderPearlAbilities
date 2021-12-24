@@ -19,7 +19,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BoundingBox;
-import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,6 +97,7 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
         if (cooldown.isCoolingDown()) return;
 
         Location[] locations = new Location[2];
+        List<Location> path = new ArrayList<>();
 
         new FunctionChain(
                 next -> {
@@ -118,6 +118,7 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
                     Location lastLocation;
                     double distanceRemaining = MAX_DISTANCE;
                     boolean setPortal = false;
+                    int pathTicks = 0;
 
                     @Override
                     protected synchronized void start() {
@@ -125,6 +126,8 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
                         bossbar.addPlayer(player);
                         lastLocation = player.getLocation();
                         locations[0] = player.getLocation().add(0, 1, 0);
+                        path.add(locations[0].clone());
+                        pathTicks = 5;
                     }
 
                     @Override
@@ -145,6 +148,12 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
                         else
                             distance = 20;
                         distanceRemaining -= distance;
+                        if (lastLocation.distance(player.getLocation()) > 0.01)
+                            pathTicks--;
+                        if (pathTicks <= 0) {
+                            path.add(player.getLocation());
+                            pathTicks = 5;
+                        }
                         lastLocation = player.getLocation();
                         if (distanceRemaining <= 0) {
                             setPortal = true;
@@ -170,6 +179,7 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
                                 return;
                             cooldown.setCooldown(info.getCooldown());
                             locations[1] = player.getLocation().add(0, 1, 0);
+                            path.add(locations[1].clone());
                             next.run();
                         }
                     }
@@ -177,6 +187,7 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
                 next -> {
                     if (portal != null && !portal.isCancelled())
                         portal.cancel();
+                    WraithUltimateAbility ability = this;
                     (portal = new AbilityRunnable() {
                         final List<Entity> justTeleported = new ArrayList<>();
                         Location from;
@@ -188,8 +199,8 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
                         protected void start() {
                             from = locations[0];
                             to = locations[1];
-                            fromBox = BoundingBox.of(locations[0], 0.5, 1, 0.5);
-                            toBox = BoundingBox.of(locations[1], 0.5, 1, 0.5);
+                            fromBox = BoundingBox.of(locations[0], 0.5, 1.1, 0.5);
+                            toBox = BoundingBox.of(locations[1], 0.5, 1.1, 0.5);
                             justTeleported.add(player);
                         }
 
@@ -201,24 +212,20 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
                             to.getWorld().spawnParticle(Particle.DRAGON_BREATH, to, 10, 0.3, 1, 0.3, 0.01, null, true);
 
                             for (Entity entity : from.getWorld().getNearbyEntities(fromBox, entity -> entity instanceof LivingEntity && !justTeleported.contains(entity))) {
-                                from.getWorld().playSound(from, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1, 0.5f);
-                                to.getWorld().playSound(to, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1, 0.5f);
-                                entity.teleport(to.clone().subtract(0, 0.99, 0));
+                                if (entity.getPassengers().size() > 0) continue;
+                                if (entity.hasMetadata("wraith-portal")) continue;
                                 justTeleported.add(entity);
-                                entity.setFallDistance(0);
-                                entity.setVelocity(new Vector());
+                                new WraithPortalRunnable(ability, locations, path, (LivingEntity) entity, false).runTaskTimer(ability, 0, 1);
                             }
 
                             for (Entity entity : to.getWorld().getNearbyEntities(toBox, entity -> entity instanceof LivingEntity && !justTeleported.contains(entity))) {
-                                from.getWorld().playSound(from, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1, 0.5f);
-                                to.getWorld().playSound(to, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1, 0.5f);
-                                entity.teleport(from.clone().subtract(0, 0.99, 0));
+                                if (entity.getPassengers().size() > 0) continue;
+                                if (entity.hasMetadata("wraith-portal")) continue;
                                 justTeleported.add(entity);
-                                entity.setFallDistance(0);
-                                entity.setVelocity(new Vector());
+                                new WraithPortalRunnable(ability, locations, path, (LivingEntity) entity, true).runTaskTimer(ability, 0, 1);
                             }
 
-                            justTeleported.removeIf(entity -> !toBox.overlaps(entity.getBoundingBox()) && !fromBox.overlaps(entity.getBoundingBox()));
+                            justTeleported.removeIf(entity -> !toBox.overlaps(entity.getBoundingBox()) && !fromBox.overlaps(entity.getBoundingBox()) && !entity.hasMetadata("wraith-portal"));
                         }
 
                         @Override
