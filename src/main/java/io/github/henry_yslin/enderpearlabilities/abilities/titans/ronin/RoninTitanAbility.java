@@ -68,8 +68,6 @@ public class RoninTitanAbility extends TitanAbility<RoninTitanInfo> {
                     Vector smallHorizontalOffset = smallOffset.clone().setY(0);
                     double largeOffsetAngle = largeHorizontalOffset.angle(velocity.setY(0));
                     double smallOffsetAngle = smallHorizontalOffset.angle(velocity);
-                    player.sendMessage("largeOffsetAngle: " + largeOffsetAngle / Math.PI * 180);
-                    player.sendMessage("smallOffsetAngle: " + smallOffsetAngle / Math.PI * 180);
                     if (Math.min(largeOffsetAngle, smallOffsetAngle) > ANGLE_TOLERANCE) {
                         cancel();
                         return;
@@ -89,7 +87,7 @@ public class RoninTitanAbility extends TitanAbility<RoninTitanInfo> {
                     lastLocation = arcWaveSmall.getLocation();
                 }
 
-                for (Entity entity : arcWaveLarge.getWorld().getNearbyEntities(arcWaveLarge.getBoundingBox(),
+                for (Entity entity : arcWaveSmall.getWorld().getNearbyEntities(arcWaveLarge.getBoundingBox(),
                         entity -> entity instanceof LivingEntity
                                 && !entity.equals(titan)
                                 && !entity.equals(player)

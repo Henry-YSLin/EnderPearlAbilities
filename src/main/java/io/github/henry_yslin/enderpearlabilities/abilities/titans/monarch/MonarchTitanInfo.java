@@ -14,7 +14,7 @@ public class MonarchTitanInfo extends TitanInfo {
         config.addDefault("charge-up", 0);
         config.addDefault("duration", 0);
         config.addDefault("cooldown", 300 * 20);
-        config.addDefault("titan-ability-charge-up", 2 * 20);
+        config.addDefault("titan-ability-charge-up", 20);
         config.addDefault("titan-ability-cooldown", 10 * 20);
     }
 

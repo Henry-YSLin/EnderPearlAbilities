@@ -9,10 +9,7 @@ import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -153,6 +150,13 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
+        RayTraceResult result = player.getWorld().rayTraceBlocks(player.getEyeLocation(), player.getEyeLocation().getDirection(), 16, FluidCollisionMode.NEVER, true);
+        if (result == null) {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.RED + "Too far away"));
+            return;
+        }
+        Location spawnLocation = result.getHitPosition().toLocation(player.getWorld());
+
         abilityActive.set(true);
 
         AbilityUtils.consumeEnderPearl(this, player);
@@ -163,9 +167,9 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
                     if (titanControlRunnable != null && !titanControlRunnable.isCancelled())
                         titanControlRunnable.cancel();
 
-                    titan.set(player.getWorld().spawn(player.getLocation().add(0, 300, 0), IronGolem.class, entity -> entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)))));
+                    titan.set(player.getWorld().spawn(spawnLocation.clone().add(0, 300, 0), IronGolem.class, entity -> entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)))));
 
-                    WorldUtils.spawnParticleCubeOutline(player.getLocation().subtract(1.5, 0, 1.5), player.getLocation().add(1.5, 3, 1.5), Particle.END_ROD, 3, false);
+                    WorldUtils.spawnParticleCubeOutline(spawnLocation.clone().subtract(1.5, 0, 1.5), spawnLocation.clone().add(1.5, 3, 1.5), Particle.END_ROD, 3, false);
 
                     pendingAction.set(null);
                     actionCooldown.set(ACTION_COOLDOWN);
@@ -184,7 +188,7 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
                             super.start();
                             abilityCooldown = new AbilityCooldown(ability, player, false);
                             t = titan.get();
-                            abilityChargeUpBar = Bukkit.createBossBar(ChatColor.WHITE + "Energy Siphon", BarColor.WHITE, BarStyle.SOLID);
+                            abilityChargeUpBar = Bukkit.createBossBar(ChatColor.WHITE + info.getTitanAbilityName(), BarColor.WHITE, BarStyle.SOLID);
                             abilityChargeUpBar.addPlayer(player);
                             abilityChargeUpBar.setProgress(0);
                         }
