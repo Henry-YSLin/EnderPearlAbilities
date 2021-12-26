@@ -20,6 +20,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -134,7 +135,10 @@ public class LobaUltimateAbility extends Ability<LobaUltimateAbilityInfo> {
             for (Block block : BlockUtils.getBlocks(event.getRightClicked().getLocation(), RADIUS)) {
                 if (block.getType() == item.getType()) {
                     block.setType(Material.AIR);
-                    player.getInventory().addItem(new ItemStack(item.getType(), 1));
+                    HashMap<Integer, ItemStack> extraItems = player.getInventory().addItem(new ItemStack(item.getType(), 1));
+                    if (!extraItems.isEmpty()) {
+                        player.getWorld().dropItem(player.getLocation().add(0, 1, 0), new ItemStack(item.getType(), 1));
+                    }
                     WorldUtils.spawnParticleCubeOutline(block.getLocation(), block.getLocation().add(1, 1, 1), Particle.DRAGON_BREATH, 2, true);
                     WorldUtils.spawnParticleLine(block.getLocation().add(0.5, 0.5, 0.5), event.getRightClicked().getLocation(), Particle.DRAGON_BREATH, 2, true);
                     success = true;
@@ -164,7 +168,7 @@ public class LobaUltimateAbility extends Ability<LobaUltimateAbilityInfo> {
         event.setCancelled(true);
 
         if (cooldown.isCoolingDown()) return;
-
+        if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
         World world = player.getWorld();
@@ -218,8 +222,10 @@ public class LobaUltimateAbility extends Ability<LobaUltimateAbilityInfo> {
                         chargingUp.set(false);
                         if (this.hasCompleted())
                             next.run();
-                        else
+                        else {
                             blackMarket.get().remove();
+                            cooldown.setCooldown(5 * 20);
+                        }
                     }
                 }.runTaskRepeated(this, 0, 2, info.getChargeUp() / 2),
                 next -> new AbilityRunnable() {
@@ -227,6 +233,7 @@ public class LobaUltimateAbility extends Ability<LobaUltimateAbilityInfo> {
                     protected void start() {
                         abilityActive.set(true);
                         blackMarket.get().setPeek(1);
+                        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1, 0);
                     }
 
                     @Override
@@ -242,6 +249,7 @@ public class LobaUltimateAbility extends Ability<LobaUltimateAbilityInfo> {
                     protected void end() {
                         abilityActive.set(false);
                         blackMarket.get().remove();
+                        cooldown.setCooldown(info.getCooldown());
                     }
                 }.runTaskRepeated(this, 0, 5, info.getDuration() / 5)
         ).execute();
