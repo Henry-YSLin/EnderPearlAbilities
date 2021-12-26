@@ -2,7 +2,7 @@ package io.github.henry_yslin.enderpearlabilities.abilities.wraithultimate;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
+import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import org.bukkit.*;
@@ -88,7 +88,7 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
             return;
         }
 
-        if (InteractionLockManager.getInstance().isInteractionLocked(player)) return;
+        if (AbilityLockManager.getInstance().isAbilityLocked(player)) return;
 
         event.setCancelled(true);
 

@@ -3,7 +3,7 @@ package io.github.henry_yslin.enderpearlabilities.utils;
 import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.managers.Manager;
 import io.github.henry_yslin.enderpearlabilities.managers.ManagerRunnable;
-import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
+import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -130,7 +130,6 @@ public class AbilityUtils {
         Action action = event.getAction();
         ItemStack item = event.getItem();
 
-        if (!ignoreInteractionLock && InteractionLockManager.getInstance().isInteractionLocked(player)) return false;
         if (!player.getName().equals(ownerName)) return false;
         if (activationHand == ActivationHand.MainHand) {
             if (player.getInventory().getItemInMainHand().getType() != Material.ENDER_PEARL) return false;
@@ -139,7 +138,13 @@ public class AbilityUtils {
         }
         if (item == null || item.getType() != Material.ENDER_PEARL) return false;
         if (player.getCooldown(Material.ENDER_PEARL) > 0) return false;
-        return action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK;
+        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return false;
+        if (ignoreInteractionLock) return true;
+        if (AbilityLockManager.getInstance().isAbilityLocked(player)) {
+            event.setCancelled(true);
+            return false;
+        }
+        return true;
     }
 
     /**

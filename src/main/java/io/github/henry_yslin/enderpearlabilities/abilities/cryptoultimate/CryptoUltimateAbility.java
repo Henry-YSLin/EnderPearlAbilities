@@ -18,6 +18,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -80,7 +81,7 @@ public class CryptoUltimateAbility extends Ability<CryptoUltimateAbilityInfo> {
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         Entity damager = event.getDamager();
-        if (EntityUtils.getMetadata(damager, "emp").isPresent()) {
+        if (damager.hasMetadata("emp")) {
             event.setCancelled(true);
         }
     }
@@ -88,7 +89,15 @@ public class CryptoUltimateAbility extends Ability<CryptoUltimateAbilityInfo> {
     @EventHandler
     public void onProjectileLaunch(ProjectileLaunchEvent event) {
         Entity shooter = (Entity) event.getEntity().getShooter();
-        if (shooter != null && EntityUtils.getMetadata(shooter, "emp").isPresent()) {
+        if (shooter != null && shooter.hasMetadata("emp")) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onExplosionPrime(ExplosionPrimeEvent event) {
+        Entity entity = event.getEntity();
+        if (entity.hasMetadata("emp")) {
             event.setCancelled(true);
         }
     }

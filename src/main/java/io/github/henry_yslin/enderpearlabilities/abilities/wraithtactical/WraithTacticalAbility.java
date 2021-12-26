@@ -2,7 +2,7 @@ package io.github.henry_yslin.enderpearlabilities.abilities.wraithtactical;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
+import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
@@ -88,7 +88,7 @@ public class WraithTacticalAbility extends Ability<WraithTacticalAbilityInfo> {
             return;
         }
 
-        if (InteractionLockManager.getInstance().isInteractionLocked(player)) return;
+        if (AbilityLockManager.getInstance().isAbilityLocked(player)) return;
 
         if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;

@@ -3,6 +3,7 @@ package io.github.henry_yslin.enderpearlabilities.abilities.pathfindertactical;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
@@ -99,7 +100,7 @@ public class PathfinderTacticalAbility extends Ability<PathfinderTacticalAbility
             return;
         }
 
-        if (InteractionLockManager.getInstance().isInteractionLocked(player)) return;
+        if (AbilityLockManager.getInstance().isAbilityLocked(player)) return;
 
         AbilityUtils.consumeEnderPearl(this, player);
 

@@ -2,7 +2,7 @@ package io.github.henry_yslin.enderpearlabilities.abilities.phaseshift;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
+import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
@@ -90,7 +90,7 @@ public class PhaseShiftAbility extends Ability<PhaseShiftAbilityInfo> {
             return;
         }
 
-        if (InteractionLockManager.getInstance().isInteractionLocked(player)) return;
+        if (AbilityLockManager.getInstance().isAbilityLocked(player)) return;
 
         if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;

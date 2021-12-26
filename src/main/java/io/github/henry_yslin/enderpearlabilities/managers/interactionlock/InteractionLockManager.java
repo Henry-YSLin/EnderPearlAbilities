@@ -2,6 +2,7 @@ package io.github.henry_yslin.enderpearlabilities.managers.interactionlock;
 
 import io.github.henry_yslin.enderpearlabilities.Instantiable;
 import io.github.henry_yslin.enderpearlabilities.managers.Manager;
+import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -72,12 +73,14 @@ public class InteractionLockManager extends Manager {
     public void lockInteraction(Player player) {
         if (isInteractionLocked(player)) return;
 
+        AbilityLockManager.getInstance().lockAbility(player);
         player.setMetadata("interaction-lock", new FixedMetadataValue(plugin, true));
     }
 
     public void unlockInteraction(Player player) {
         if (!isInteractionLocked(player)) return;
 
+        AbilityLockManager.getInstance().unlockAbility(player);
         player.removeMetadata("interaction-lock", plugin);
     }
 }

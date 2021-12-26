@@ -18,9 +18,9 @@ public class DoubleTimeListener extends AbilityListener {
     static final int SPEED_DURATION = 40;
     static final double DETECT_RANGE = 2;
 
-    protected final Ability ability;
+    protected final Ability<?> ability;
 
-    public DoubleTimeListener(Plugin plugin, Ability ability) {
+    public DoubleTimeListener(Plugin plugin, Ability<?> ability) {
         super(plugin);
         this.ability = ability;
     }
