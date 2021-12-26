@@ -51,7 +51,8 @@ public class LobaUltimateAbility extends Ability<LobaUltimateAbilityInfo> {
             Material.ANCIENT_DEBRIS,
             Material.OBSIDIAN,
             Material.SPONGE,
-            Material.WET_SPONGE
+            Material.WET_SPONGE,
+            Material.AMETHYST_BLOCK
     );
 
     public LobaUltimateAbility(Plugin plugin, LobaUltimateAbilityInfo info, String ownerName) {
