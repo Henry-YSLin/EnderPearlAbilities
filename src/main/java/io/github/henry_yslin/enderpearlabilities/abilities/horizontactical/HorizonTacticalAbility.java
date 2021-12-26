@@ -5,6 +5,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.ProjectileUtils;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -106,7 +107,7 @@ public class HorizonTacticalAbility extends Ability<HorizonTacticalAbilityInfo> 
         abilityActive.set(true);
         blockShoot.set(false);
 
-        Location finalLocation = projectile.getLocation();
+        Location finalLocation = ProjectileUtils.correctProjectileHitLocation(projectile);
 
         World world = projectile.getWorld();
 

@@ -146,11 +146,11 @@ public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> 
                         bossBar.setProgress((double) count / info.getDuration());
                         world.getNearbyEntities(blackHoleLocation, 5.5, 5.5, 5.5).forEach(entity -> {
                             if (entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR) return;
-                            Vector velocity = MathUtils.clamp(entity.getVelocity(), 0.1);
+                            Vector velocity = MathUtils.clamp(entity.getVelocity(), 0.8);
                             velocity = MathUtils.replaceInfinite(velocity, new Vector(0, 0, 0));
                             Vector blackHole = blackHoleLocation.toVector().subtract(entity.getLocation().toVector());
                             double distance = blackHole.length();
-                            blackHole.normalize().multiply(Math.min(1, 2 / distance));
+                            blackHole.normalize().multiply(Math.min(1, 1.25 / distance));
                             blackHole = MathUtils.replaceInfinite(blackHole, new Vector(0, 0, 0));
                             entity.setVelocity(MathUtils.clamp(velocity.add(blackHole), 0.6));
                             if (count % 10 == 0)

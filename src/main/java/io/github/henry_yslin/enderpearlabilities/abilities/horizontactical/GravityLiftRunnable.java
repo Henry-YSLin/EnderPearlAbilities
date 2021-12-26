@@ -36,7 +36,7 @@ public class GravityLiftRunnable extends AbilityRunnable {
     public void tick() {
         if (preempt-- > 0) return;
         entity.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, entity.getLocation(), 1, 0, 0, 0, 0.02);
-        if (entity.isInWater() || entity.isOnGround()) {
+        if (!entity.isValid() || entity.isInWater() || entity.isOnGround()) {
             cancel();
             return;
         }

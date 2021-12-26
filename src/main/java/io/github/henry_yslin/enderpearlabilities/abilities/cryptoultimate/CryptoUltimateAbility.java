@@ -18,6 +18,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -99,6 +100,16 @@ public class CryptoUltimateAbility extends Ability<CryptoUltimateAbilityInfo> {
         Entity entity = event.getEntity();
         if (entity.hasMetadata("emp")) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onEntityTeleport(EntityTeleportEvent event) {
+        if (event.getEntityType() == EntityType.ENDERMAN) {
+            Entity entity = event.getEntity();
+            if (entity.hasMetadata("silence")) {
+                event.setCancelled(true);
+            }
         }
     }
 

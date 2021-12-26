@@ -12,10 +12,7 @@ import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.ExplosionPrimeEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -120,6 +117,16 @@ public class RevenantTacticalAbility extends Ability<RevenantTacticalAbilityInfo
         Entity entity = event.getEntity();
         if (entity.hasMetadata("silence")) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onEntityTeleport(EntityTeleportEvent event) {
+        if (event.getEntityType() == EntityType.ENDERMAN) {
+            Entity entity = event.getEntity();
+            if (entity.hasMetadata("silence")) {
+                event.setCancelled(true);
+            }
         }
     }
 
