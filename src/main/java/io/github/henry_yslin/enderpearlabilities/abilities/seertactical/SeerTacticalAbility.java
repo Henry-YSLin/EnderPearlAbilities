@@ -122,6 +122,8 @@ public class SeerTacticalAbility extends Ability<SeerTacticalAbilityInfo> {
                             if (entity instanceof Player p) {
                                 if (p.getGameMode() == GameMode.SPECTATOR) return false;
                             }
+                            if (entity.getLocation().subtract(origin).toVector().dot(origin.getDirection()) < 0)
+                                return false;
                             return !entities.contains(entity) && !entity.equals(player);
                         });
                         if (result != null && result.getHitEntity() != null)

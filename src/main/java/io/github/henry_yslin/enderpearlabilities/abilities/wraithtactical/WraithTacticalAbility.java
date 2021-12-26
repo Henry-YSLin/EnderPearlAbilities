@@ -130,7 +130,7 @@ public class WraithTacticalAbility extends Ability<WraithTacticalAbilityInfo> {
                             if (cancelTick <= 0) abilityActive.set(false);
                         }
                         bossbar.setProgress(count / (double) info.getDuration());
-                        player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation(), 10, 0.5, 1, 0.5, 0.02, null, true);
+                        player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation().add(0, 1, 0), 10, 0.5, 0.7, 0.5, 0.02);
                         if (count < CANCEL_DELAY)
                             player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 5, 0.5, 1, 0.5, 0.02, null, true);
                     }

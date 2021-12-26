@@ -2,10 +2,7 @@ package io.github.henry_yslin.enderpearlabilities.abilities.wraithultimate;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
@@ -73,7 +70,11 @@ public class WraithPortalRunnable extends AbilityRunnable {
             pathIdx--;
         else
             pathIdx++;
-        livingEntity.setVelocity(path.get(pathIdx).clone().subtract(livingEntity.getLocation()).toVector());
+        if (path.get(pathIdx).getWorld() != livingEntity.getWorld())
+            livingEntity.setVelocity(new Vector());
+        else
+            livingEntity.setVelocity(path.get(pathIdx).clone().subtract(livingEntity.getLocation()).toVector());
+        livingEntity.getWorld().spawnParticle(Particle.DRAGON_BREATH, livingEntity.getLocation().add(0, 1, 0), 10, 0.5, 0.7, 0.5, 0.02);
     }
 
     @Override

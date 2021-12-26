@@ -285,6 +285,7 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
                                             currentLocation.setDirection(currentLocation.getDirection().add(directionOffset));
                                             livingEntity.teleport(currentLocation);
                                             livingEntity.setVelocity(velocity);
+                                            livingEntity.getWorld().spawnParticle(Particle.DRAGON_BREATH, livingEntity.getLocation().add(0, 1, 0), 10, 0.5, 0.7, 0.5, 0.02);
 
                                             if (currentLocation.distance(to) < PHASE_VELOCITY * 1.5)
                                                 cancel();

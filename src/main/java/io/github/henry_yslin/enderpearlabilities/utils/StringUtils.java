@@ -19,4 +19,11 @@ public class StringUtils {
         if (length < 0) return "";
         return str.substring(Math.max(0, start), Math.min(str.length(), start + length));
     }
+
+    public static String truncate(String s, int maxLength) {
+        if (s.length() > maxLength) {
+            return s.substring(0, maxLength - 3) + "...";
+        }
+        return s;
+    }
 }

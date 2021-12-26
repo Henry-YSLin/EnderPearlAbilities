@@ -148,7 +148,9 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
                         else
                             distance = 20;
                         distanceRemaining -= distance;
-                        if (lastLocation.distance(player.getLocation()) > 0.01)
+                        if (lastLocation.getWorld() != player.getWorld())
+                            pathTicks = 0;
+                        else if (lastLocation.distance(player.getLocation()) > 0.01)
                             pathTicks--;
                         if (pathTicks <= 0) {
                             path.add(player.getLocation());
