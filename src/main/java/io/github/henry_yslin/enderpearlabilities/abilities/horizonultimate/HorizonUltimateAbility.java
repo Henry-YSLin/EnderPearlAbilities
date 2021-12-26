@@ -7,6 +7,9 @@ import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import org.bukkit.*;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -128,15 +131,19 @@ public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> 
                 }.runTaskRepeated(this, 0, 2, info.getChargeUp() / 2),
                 nextFunction -> new AbilityRunnable() {
                     Location blackHoleLocation;
+                    BossBar bossBar;
 
                     @Override
                     protected void start() {
                         blackHoleLocation = finalLocation.clone();
                         world.playSound(blackHoleLocation, Sound.BLOCK_END_PORTAL_SPAWN, 1, 0);
+                        bossBar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID);
+                        bossBar.addPlayer(player);
                     }
 
                     @Override
                     protected void tick() {
+                        bossBar.setProgress((double) count / info.getDuration());
                         world.getNearbyEntities(blackHoleLocation, 5.5, 5.5, 5.5).forEach(entity -> {
                             if (entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR) return;
                             Vector velocity = MathUtils.clamp(entity.getVelocity(), 0.1);
@@ -159,6 +166,7 @@ public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> 
 
                     @Override
                     protected void end() {
+                        bossBar.removeAll();
                         if (this.hasCompleted())
                             cooldown.setCooldown(info.getCooldown());
                         abilityActive.set(false);

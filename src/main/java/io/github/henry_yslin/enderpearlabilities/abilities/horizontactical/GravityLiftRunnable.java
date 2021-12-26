@@ -42,7 +42,7 @@ public class GravityLiftRunnable extends AbilityRunnable {
         }
         if (shouldActivate(entity)) {
             entity.setVelocity(entity.getVelocity().setY(entity.getVelocity().getY() / 5));
-            entity.setFallDistance(0);
+            entity.setFallDistance(entity.getFallDistance() - 30);
             entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LARGE_BLAST_FAR, 0.5f, 0);
             entity.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, entity.getLocation(), 10, 0.1, 0.1, 0.1, 0.02);
             cancel();

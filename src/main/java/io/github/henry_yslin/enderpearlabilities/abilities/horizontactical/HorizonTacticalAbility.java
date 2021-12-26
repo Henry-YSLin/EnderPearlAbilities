@@ -4,6 +4,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -149,7 +150,7 @@ public class HorizonTacticalAbility extends Ability<HorizonTacticalAbilityInfo> 
                                     new AbilityRunnable() {
                                         @Override
                                         protected void tick() {
-                                            entity.setVelocity(entity.getVelocity().add(entity.getLocation().subtract(pastLoc).toVector().setY(0).multiply(10)));
+                                            entity.setVelocity(entity.getVelocity().add(MathUtils.clamp(entity.getLocation().subtract(pastLoc).toVector().setY(0).multiply(10), 2)));
                                         }
                                     }.runTaskLater(executor, 1);
                                 }
@@ -169,6 +170,8 @@ public class HorizonTacticalAbility extends Ability<HorizonTacticalAbilityInfo> 
                             world.spawnParticle(Particle.SMOKE_NORMAL, finalLocation.clone().add(Math.random() * 3 - 1.5, Math.random() * GRAVITY_LIFT_HEIGHT, Math.random() * 3 - 1.5), 0, 0, 0.5, 0, 1);
                         for (int i = 0; i < 5; i++)
                             world.spawnParticle(Particle.SMOKE_NORMAL, finalLocation.clone().add(Math.random() * 3 - 1.5, 0, Math.random() * 3 - 1.5), 0, 0, 0.5, 0, 1);
+                        if (count % 10 == 9 && count > 20)
+                            world.playSound(finalLocation, Sound.ENTITY_BLAZE_AMBIENT, 0.5f, 1);
                     }
 
                     @Override
