@@ -1,4 +1,4 @@
-package io.github.henry_yslin.enderpearlabilities.abilities.horizonultimate;
+package io.github.henry_yslin.enderpearlabilities.abilities.horizontactical;
 
 import io.github.henry_yslin.enderpearlabilities.Instantiable;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityWithDurationInfo;
@@ -7,23 +7,23 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
 @Instantiable
-public class HorizonUltimateAbilityInfo extends AbilityWithDurationInfo {
+public class HorizonTacticalAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
-        config.addDefault("charge-up", 20);
+        config.addDefault("charge-up", 0);
         config.addDefault("duration", 10 * 20);
-        config.addDefault("cooldown", 160 * 20);
+        config.addDefault("cooldown", 20 * 20);
     }
 
     @Override
     public String getCodeName() {
-        return "horizon-ultimate";
+        return "horizon-tactical";
     }
 
     @Override
     public String getName() {
-        return "Black Hole";
+        return "Gravity Lift";
     }
 
     @Override
@@ -33,25 +33,25 @@ public class HorizonUltimateAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public String getDescription() {
-        return "Create an inescapable micro black hole that pulls all entities in towards it.";
+        return "Reverses the flow of gravity, lifting players upward and boosting them outward when they exit.\nPassive ability: Cushion your fall to reduce fall damage.";
     }
 
     @Override
     public String getUsage() {
-        return "Right click to throw a projectile. A black hole will be created where it lands.";
+        return "Right click to throw a projectile. A gravity lift will be created where it lands.";
     }
 
     @Override
     public ActivationHand getActivation() {
-        return ActivationHand.MainHand;
+        return ActivationHand.OffHand;
     }
 
     @Override
-    public HorizonUltimateAbility createInstance(String ownerName) {
-        return new HorizonUltimateAbility(plugin, this, ownerName);
+    public HorizonTacticalAbility createInstance(String ownerName) {
+        return new HorizonTacticalAbility(plugin, this, ownerName);
     }
 
-    public HorizonUltimateAbilityInfo(Plugin plugin) {
+    public HorizonTacticalAbilityInfo(Plugin plugin) {
         super(plugin);
     }
 }

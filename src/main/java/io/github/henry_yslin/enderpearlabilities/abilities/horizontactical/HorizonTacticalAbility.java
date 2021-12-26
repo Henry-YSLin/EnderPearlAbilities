@@ -1,16 +1,14 @@
-package io.github.henry_yslin.enderpearlabilities.abilities.horizonultimate;
+package io.github.henry_yslin.enderpearlabilities.abilities.horizontactical;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import io.github.henry_yslin.enderpearlabilities.utils.MathUtils;
-import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import org.bukkit.*;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
-import org.bukkit.entity.Snowball;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -19,21 +17,24 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> {
+public class HorizonTacticalAbility extends Ability<HorizonTacticalAbilityInfo> {
 
-    static final int PROJECTILE_LIFETIME = 100;
+    static final int PROJECTILE_LIFETIME = 50;
     static final double PROJECTILE_SPEED = 2;
     static final boolean PROJECTILE_GRAVITY = true;
+    static final double GRAVITY_LIFT_HEIGHT = 20;
 
-    public HorizonUltimateAbility(Plugin plugin, HorizonUltimateAbilityInfo info, String ownerName) {
+    public HorizonTacticalAbility(Plugin plugin, HorizonTacticalAbilityInfo info, String ownerName) {
         super(plugin, info, ownerName);
     }
 
     final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+    SpacewalkRunnable spacewalkRunnable;
 
     @Override
     public boolean isActive() {
@@ -66,6 +67,10 @@ public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> 
         abilityActive.set(false);
         blockShoot.set(false);
         cooldown.setCooldown(info.getCooldown());
+        if (spacewalkRunnable != null && !spacewalkRunnable.isCancelled())
+            spacewalkRunnable.cancel();
+        spacewalkRunnable = new SpacewalkRunnable(player);
+        spacewalkRunnable.runTaskTimer(this, 0, 1);
     }
 
     @EventHandler
@@ -102,8 +107,6 @@ public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> 
 
         Location finalLocation = projectile.getLocation();
 
-        WorldUtils.spawnParticleCubeOutline(finalLocation.clone().add(-5.5, -5.5, -5.5), finalLocation.clone().add(5.5, 5.5, 5.5), Particle.VILLAGER_HAPPY, 5, true);
-
         World world = projectile.getWorld();
 
         new FunctionChain(
@@ -115,8 +118,7 @@ public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> 
 
                     @Override
                     protected void tick() {
-                        world.playSound(finalLocation, Sound.ENTITY_BLAZE_AMBIENT, 1, 0);
-                        world.spawnParticle(Particle.EXPLOSION_NORMAL, finalLocation, 2, 0.5, 0.5, 0.5, 0.02);
+                        world.spawnParticle(Particle.EXPLOSION_NORMAL, finalLocation, 2, 0.1, 0.1, 0.1, 0.01);
                     }
 
                     @Override
@@ -127,38 +129,51 @@ public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> 
                     }
                 }.runTaskRepeated(this, 0, 2, info.getChargeUp() / 2),
                 nextFunction -> new AbilityRunnable() {
-                    Location blackHoleLocation;
+                    BossBar bossBar;
+                    List<Entity> entities;
 
                     @Override
                     protected void start() {
-                        blackHoleLocation = finalLocation.clone();
-                        world.playSound(blackHoleLocation, Sound.BLOCK_END_PORTAL_SPAWN, 1, 0);
+                        bossBar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID);
+                        bossBar.addPlayer(player);
                     }
 
                     @Override
                     protected void tick() {
-                        world.getNearbyEntities(blackHoleLocation, 5.5, 5.5, 5.5).forEach(entity -> {
+                        bossBar.setProgress((double) count / info.getDuration());
+                        List<Entity> newEntities = world.getNearbyEntities(finalLocation.clone().add(0, GRAVITY_LIFT_HEIGHT / 2, 0), 1.5, GRAVITY_LIFT_HEIGHT, 1.5).stream().toList();
+                        if (entities != null)
+                            for (Entity entity : entities) {
+                                if (!newEntities.contains(entity)) {
+                                    Location pastLoc = entity.getLocation();
+                                    new AbilityRunnable() {
+                                        @Override
+                                        protected void tick() {
+                                            entity.setVelocity(entity.getVelocity().add(entity.getLocation().subtract(pastLoc).toVector().setY(0).multiply(10)));
+                                        }
+                                    }.runTaskLater(executor, 1);
+                                }
+                            }
+                        entities = newEntities;
+                        entities.forEach(entity -> {
                             if (entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR) return;
-                            Vector velocity = MathUtils.clamp(entity.getVelocity(), 0.1);
-                            velocity = MathUtils.replaceInfinite(velocity, new Vector(0, 0, 0));
-                            Vector blackHole = blackHoleLocation.toVector().subtract(entity.getLocation().toVector());
-                            double distance = blackHole.length();
-                            blackHole.normalize().multiply(Math.min(1, 2 / distance));
-                            blackHole = MathUtils.replaceInfinite(blackHole, new Vector(0, 0, 0));
-                            entity.setVelocity(MathUtils.clamp(velocity.add(blackHole), 0.6));
-                            if (count % 10 == 0)
-                                if (entity instanceof LivingEntity livingEntity)
-                                    livingEntity.damage(1, player);
+                            Vector verticalVelocity = entity.getVelocity().add(new Vector(0, 0.1, 0));
+                            entity.setVelocity(verticalVelocity.setY(Math.min(verticalVelocity.getY(), 0.7)));
+                            if (entity.getVelocity().getY() > 0)
+                                if (entity instanceof LivingEntity livingEntity) {
+                                    if (livingEntity.hasMetadata("gravity-lift")) return;
+                                    new GravityLiftRunnable(livingEntity).runTaskTimer(executor, 0, 1);
+                                }
                         });
-                        //blackHoleLocation.add(0, 0.05, 0);
-                        world.spawnParticle(Particle.SMOKE_LARGE, blackHoleLocation, 5, 0.5, 0.5, 0.5, 0.2);
-                        if (count % 20 == 19) {
-                            WorldUtils.spawnParticleCubeOutline(blackHoleLocation.clone().add(-5.5, -5.5, -5.5), blackHoleLocation.clone().add(5.5, 5.5, 5.5), Particle.END_ROD, 5, true);
-                        }
+                        for (int i = 0; i < 5; i++)
+                            world.spawnParticle(Particle.SMOKE_NORMAL, finalLocation.clone().add(Math.random() * 3 - 1.5, Math.random() * GRAVITY_LIFT_HEIGHT, Math.random() * 3 - 1.5), 0, 0, 0.5, 0, 1);
+                        for (int i = 0; i < 5; i++)
+                            world.spawnParticle(Particle.SMOKE_NORMAL, finalLocation.clone().add(Math.random() * 3 - 1.5, 0, Math.random() * 3 - 1.5), 0, 0, 0.5, 0, 1);
                     }
 
                     @Override
                     protected void end() {
+                        bossBar.removeAll();
                         if (this.hasCompleted())
                             cooldown.setCooldown(info.getCooldown());
                         abilityActive.set(false);

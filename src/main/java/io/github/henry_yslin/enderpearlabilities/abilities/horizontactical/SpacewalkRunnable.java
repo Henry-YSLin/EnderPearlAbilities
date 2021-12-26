@@ -1,4 +1,4 @@
-package io.github.henry_yslin.enderpearlabilities.abilities.horizonultimate;
+package io.github.henry_yslin.enderpearlabilities.abilities.horizontactical;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import org.bukkit.FluidCollisionMode;
@@ -21,7 +21,7 @@ public class SpacewalkRunnable extends AbilityRunnable {
         if (player.getVelocity().getY() >= 0) return false;
         if (player.getFallDistance() < 3) return false;
 
-        RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), Math.max(2, -player.getVelocity().getY()), FluidCollisionMode.NEVER, true);
+        RayTraceResult result = player.getWorld().rayTraceBlocks(player.getLocation(), new Vector(0, -1, 0), Math.max(2, -player.getVelocity().getY() + 0.5), FluidCollisionMode.NEVER, true);
         if (result == null) return false;
         return result.getHitBlock() != null;
     }
