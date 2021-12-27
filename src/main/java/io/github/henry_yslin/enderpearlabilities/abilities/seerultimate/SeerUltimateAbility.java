@@ -1,33 +1,37 @@
-package io.github.henry_yslin.enderpearlabilities.abilities.horizonultimate;
+package io.github.henry_yslin.enderpearlabilities.abilities.seerultimate;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.utils.*;
+import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henry_yslin.enderpearlabilities.utils.ProjectileUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
-import org.bukkit.entity.Snowball;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.util.Vector;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> {
+public class SeerUltimateAbility extends Ability<SeerUltimateAbilityInfo> {
 
-    static final int PROJECTILE_LIFETIME = 100;
-    static final double PROJECTILE_SPEED = 2;
+    static final int PROJECTILE_LIFETIME = 50;
+    static final double PROJECTILE_SPEED = 1;
     static final boolean PROJECTILE_GRAVITY = true;
+    static final double DETECTION_RADIUS = 45;
 
-    public HorizonUltimateAbility(Plugin plugin, HorizonUltimateAbilityInfo info, String ownerName) {
+    public SeerUltimateAbility(Plugin plugin, SeerUltimateAbilityInfo info, String ownerName) {
         super(plugin, info, ownerName);
     }
 
@@ -69,6 +73,12 @@ public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> 
     }
 
     @EventHandler
+    public void onEntityDeath(EntityDeathEvent event) {
+        if (!AbilityUtils.verifyAbilityCouple(this, event.getEntity())) return;
+        event.getDrops().clear();
+    }
+
+    @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
@@ -97,73 +107,91 @@ public class HorizonUltimateAbility extends Ability<HorizonUltimateAbilityInfo> 
         event.setCancelled(true);
 
         projectile.remove();
-        abilityActive.set(true);
         blockShoot.set(false);
 
         Location finalLocation = ProjectileUtils.correctProjectileHitLocation(projectile);
 
-        WorldUtils.spawnParticleCubeOutline(finalLocation.clone().add(-5.5, -5.5, -5.5), finalLocation.clone().add(5.5, 5.5, 5.5), Particle.VILLAGER_HAPPY, 5, true);
+        Shulker chamber = projectile.getWorld().spawn(finalLocation, Shulker.class, entity -> {
+            entity.setAI(false);
+            entity.setSilent(true);
+            entity.setPeek(0);
+            entity.setColor(DyeColor.MAGENTA);
+            entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
+        });
 
         World world = projectile.getWorld();
 
         new FunctionChain(
                 nextFunction -> new AbilityRunnable() {
+                    BossBar bossBar;
+
                     @Override
                     protected void start() {
                         chargingUp.set(true);
+                        bossBar = Bukkit.createBossBar("Charging up", BarColor.WHITE, BarStyle.SOLID);
+                        bossBar.addPlayer(player);
                     }
 
                     @Override
                     protected void tick() {
-                        world.playSound(finalLocation, Sound.ENTITY_BLAZE_AMBIENT, 1, 0);
-                        world.spawnParticle(Particle.EXPLOSION_NORMAL, finalLocation, 2, 0.5, 0.5, 0.5, 0.02);
+                        if (!chamber.isValid()) {
+                            cancel();
+                            return;
+                        }
+                        bossBar.setProgress(1 - (double) count / info.getChargeUp() * 2);
+                        chamber.getWorld().playSound(chamber.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 0.05f, 0.3f);
+                        chamber.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, chamber.getLocation(), 2, 0.5, 0.5, 0.5, 0.05);
                     }
 
                     @Override
                     protected void end() {
+                        bossBar.removeAll();
                         chargingUp.set(false);
                         if (this.hasCompleted())
                             nextFunction.run();
                     }
                 }.runTaskRepeated(this, 0, 2, info.getChargeUp() / 2),
                 nextFunction -> new AbilityRunnable() {
-                    Location blackHoleLocation;
                     BossBar bossBar;
 
                     @Override
                     protected void start() {
-                        blackHoleLocation = finalLocation.clone();
-                        world.playSound(blackHoleLocation, Sound.BLOCK_END_PORTAL_SPAWN, 1, 0);
+                        abilityActive.set(true);
                         bossBar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                         bossBar.addPlayer(player);
+                        chamber.getWorld().playSound(chamber.getLocation(), Sound.BLOCK_CONDUIT_ACTIVATE, 1, 2);
+                        chamber.getWorld().spawnParticle(Particle.END_ROD, chamber.getLocation(), 1000, 1, 1, 1, 1, null, true);
                     }
 
                     @Override
                     protected void tick() {
-                        bossBar.setProgress((double) count / info.getDuration());
-                        world.getNearbyEntities(blackHoleLocation, 5.5, 5.5, 5.5).forEach(entity -> {
-                            if (entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR) return;
-                            Vector velocity = MathUtils.clamp(entity.getVelocity(), 0.8);
-                            velocity = MathUtils.replaceInfinite(velocity, new Vector(0, 0, 0));
-                            Vector blackHole = blackHoleLocation.toVector().subtract(entity.getLocation().toVector());
-                            double distance = blackHole.length();
-                            blackHole.normalize().multiply(Math.min(1, 1.25 / distance));
-                            blackHole = MathUtils.replaceInfinite(blackHole, new Vector(0, 0, 0));
-                            entity.setVelocity(MathUtils.clamp(velocity.add(blackHole), 0.6));
-                            if (count % 10 == 0)
-                                if (entity instanceof LivingEntity livingEntity)
-                                    livingEntity.damage(1, player);
-                        });
-                        //blackHoleLocation.add(0, 0.05, 0);
-                        world.spawnParticle(Particle.SMOKE_LARGE, blackHoleLocation, 5, 0.5, 0.5, 0.5, 0.2);
-                        if (count % 20 == 19) {
-                            WorldUtils.spawnParticleCubeOutline(blackHoleLocation.clone().add(-5.5, -5.5, -5.5), blackHoleLocation.clone().add(5.5, 5.5, 5.5), Particle.END_ROD, 5, true);
+                        if (!chamber.isValid()) {
+                            cancel();
+                            return;
                         }
+                        bossBar.setProgress((double) count / info.getDuration());
+                        world.getNearbyEntities(chamber.getLocation(), DETECTION_RADIUS, DETECTION_RADIUS, DETECTION_RADIUS).forEach(entity -> {
+                            if (entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR) return;
+                            if (entity.getLocation().distanceSquared(chamber.getLocation()) > DETECTION_RADIUS * DETECTION_RADIUS)
+                                return;
+                            if (entity instanceof LivingEntity livingEntity) {
+                                if (entity instanceof Player player) {
+                                    if (player.isSneaking()) return;
+                                    if (player.getName().equals(ownerName)) return;
+                                }
+                                livingEntity.addPotionEffect(PotionEffectType.GLOWING.createEffect(5, 0));
+                            }
+                        });
+                        if (count > 20)
+                            chamber.getWorld().playSound(chamber.getLocation(), Sound.ENTITY_BEE_LOOP_AGGRESSIVE, 0.02f, 2);
+                        chamber.getWorld().spawnParticle(Particle.END_ROD, chamber.getLocation(), 2, 0.5, 0.5, 0.5, 0.05);
+                        WorldUtils.spawnParticleSphere(chamber.getLocation(), DETECTION_RADIUS, Particle.END_ROD, 100, true);
                     }
 
                     @Override
                     protected void end() {
                         bossBar.removeAll();
+                        chamber.remove();
                         if (this.hasCompleted())
                             cooldown.setCooldown(info.getCooldown());
                         abilityActive.set(false);

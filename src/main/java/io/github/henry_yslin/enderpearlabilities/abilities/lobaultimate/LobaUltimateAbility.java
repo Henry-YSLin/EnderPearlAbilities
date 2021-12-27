@@ -101,7 +101,6 @@ public class LobaUltimateAbility extends Ability<LobaUltimateAbilityInfo> {
     public void onEntityDeath(EntityDeathEvent event) {
         if (!AbilityUtils.verifyAbilityCouple(this, event.getEntity())) return;
         event.getDrops().clear();
-        event.setDroppedExp(0);
     }
 
     private List<ItemStack> getAllowedBlocks(Location location) {
