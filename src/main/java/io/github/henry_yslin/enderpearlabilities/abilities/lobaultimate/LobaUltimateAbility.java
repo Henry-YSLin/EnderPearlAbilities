@@ -163,10 +163,11 @@ public class LobaUltimateAbility extends Ability<LobaUltimateAbilityInfo> {
         Player player = event.getPlayer();
 
         if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-        if (event.getClickedBlock() == null) return;
 
         event.setCancelled(true);
+
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getClickedBlock() == null) return;
 
         if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;

@@ -6,8 +6,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
+import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -22,6 +21,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffect;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -87,12 +87,19 @@ public class RevenantUltimateAbility extends Ability<RevenantUltimateAbilityInfo
         if (player.getHealth() - event.getFinalDamage() <= 0) {
             event.setCancelled(true);
             player.setHealth(EntityUtils.getMaxHealth(player) / 2);
-            player.teleport(blaze.getLocation());
+            for (PotionEffect effect : player.getActivePotionEffects()) {
+                player.removePotionEffect(effect.getType());
+            }
             Bukkit.broadcastMessage(player.getName() + " was protected from death");
-            blaze.remove();
 
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, 1, 2);
+            player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, player.getEyeLocation(), 20, 0.5, 0.5, 0.5, 0);
             blaze.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, blaze.getEyeLocation(), 20, 0.5, 0.5, 0.5, 0);
+            if (player.getWorld() == blaze.getWorld())
+                WorldUtils.spawnParticleLine(player.getEyeLocation(), blaze.getEyeLocation(), Particle.SOUL_FIRE_FLAME, 1, true);
+
+            player.teleport(blaze.getLocation());
+            blaze.remove();
         }
     }
 
@@ -101,10 +108,11 @@ public class RevenantUltimateAbility extends Ability<RevenantUltimateAbilityInfo
         Player player = event.getPlayer();
 
         if (!AbilityUtils.abilityShouldActivate(event, ownerName, info.getActivation())) return;
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-        if (event.getClickedBlock() == null) return;
 
         event.setCancelled(true);
+
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getClickedBlock() == null) return;
 
         if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
@@ -163,7 +171,7 @@ public class RevenantUltimateAbility extends Ability<RevenantUltimateAbilityInfo
                         if (this.hasCompleted())
                             next.run();
                         else {
-                            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.RED + "Totem destroyed"));
+                            player.sendMessage(ChatColor.RED + info.getName() + " was destroyed");
                             totem.get().remove();
                             cooldown.setCooldown(5 * 20);
                         }
@@ -195,7 +203,7 @@ public class RevenantUltimateAbility extends Ability<RevenantUltimateAbilityInfo
                     protected void end() {
                         bossBar.removeAll();
                         if (!hasCompleted())
-                            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.RED + "Totem destroyed"));
+                            player.sendMessage(ChatColor.RED + info.getName() + " was destroyed");
                         abilityActive.set(false);
                         totem.get().remove();
                         totem.set(null);

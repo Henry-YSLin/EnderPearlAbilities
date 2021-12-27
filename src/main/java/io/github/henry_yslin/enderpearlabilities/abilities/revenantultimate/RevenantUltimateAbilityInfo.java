@@ -38,7 +38,7 @@ public class RevenantUltimateAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public String getUsage() {
-        return "Right click with an ender pearl to place the death totem. When you die while the totem is active, you will return to the totem.";
+        return "Right click with an ender pearl to place the death totem. When you die while the totem is active, you will return to the totem instead with half health and all potion effects removed.";
     }
 
     @Override
