@@ -37,6 +37,7 @@ public class BloodhoundTacticalAbility extends Ability<BloodhoundTacticalAbility
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+    TrackerRunnable trackerRunnable;
 
     @Override
     public boolean isActive() {
@@ -69,6 +70,11 @@ public class BloodhoundTacticalAbility extends Ability<BloodhoundTacticalAbility
         chargingUp.set(false);
         abilityActive.set(false);
         cooldown.setCooldown(info.getCooldown());
+
+        if (trackerRunnable != null && !trackerRunnable.isCancelled())
+            trackerRunnable.cancel();
+        trackerRunnable = new TrackerRunnable(player);
+        trackerRunnable.runTaskTimer(this, 0, 10);
     }
 
     @EventHandler
@@ -104,7 +110,7 @@ public class BloodhoundTacticalAbility extends Ability<BloodhoundTacticalAbility
                 next -> {
                     abilityActive.set(true);
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1, 0);
-                    player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 5000, 1, 1, 1, 3);
+                    player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 3000, 1, 1, 1, 2);
                     entities.addAll(player.getWorld().getNearbyEntities(player.getLocation(), FORWARD_SCAN_RADIUS, FORWARD_SCAN_RADIUS, FORWARD_SCAN_RADIUS, entity -> {
                         Location location = entity.getLocation();
                         if (location.distanceSquared(player.getLocation()) <= PERIPHERY_SCAN_RADIUS * PERIPHERY_SCAN_RADIUS)
