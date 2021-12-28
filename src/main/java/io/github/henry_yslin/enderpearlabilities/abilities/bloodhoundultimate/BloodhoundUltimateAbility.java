@@ -119,7 +119,7 @@ public class BloodhoundUltimateAbility extends Ability<BloodhoundUltimateAbility
                                 .findFirst()
                                 .orElse(null);
                         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 0.3f, 2);
-                        player.getWorld().spawnParticle(Particle.LANDING_HONEY, player.getEyeLocation(), 20, 0.5, 0.5, 0.5, 0.02);
+                        player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, player.getEyeLocation(), 20, 0.5, 0.5, 0.5, 0.02);
                         player.addPotionEffect(PotionEffectType.NIGHT_VISION.createEffect(15, 0));
                         player.addPotionEffect(PotionEffectType.CONDUIT_POWER.createEffect(15, 0));
                         player.addPotionEffect(PotionEffectType.SPEED.createEffect(15, 1));
@@ -138,7 +138,7 @@ public class BloodhoundUltimateAbility extends Ability<BloodhoundUltimateAbility
                             if (tacticalAbility.getCooldown().getCooldownTicks() > TACTICAL_COOLDOWN)
                                 tacticalAbility.getCooldown().setCooldown(TACTICAL_COOLDOWN);
                         }
-                        player.getWorld().spawnParticle(Particle.LANDING_HONEY, player.getLocation().add(0, 1, 0), 8, 0.3, 0.3, 0.3, 0);
+                        player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation().add(0, 1, 0), 8, 0.3, 0.3, 0.3, 0);
                         player.addPotionEffect(PotionEffectType.NIGHT_VISION.createEffect(15, 0));
                         player.addPotionEffect(PotionEffectType.CONDUIT_POWER.createEffect(15, 0));
                         player.addPotionEffect(PotionEffectType.SPEED.createEffect(15, 1));
