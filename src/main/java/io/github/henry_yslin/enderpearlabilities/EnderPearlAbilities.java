@@ -6,6 +6,8 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.commands.ability.AbilityCommand;
 import io.github.henry_yslin.enderpearlabilities.commands.ability.AbilityTabCompleter;
+import io.github.henry_yslin.enderpearlabilities.events.Event;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.Manager;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import static org.reflections.scanners.Scanners.SubTypes;
 
@@ -33,6 +36,9 @@ public final class EnderPearlAbilities extends JavaPlugin {
 
     final List<Manager> internalManagers = new ArrayList<>();
     final List<Manager> managers = Collections.unmodifiableList(internalManagers);
+
+    final List<EventListener> internalEventListeners = new ArrayList<>();
+    final List<EventListener> eventListeners = Collections.unmodifiableList(internalEventListeners);
 
     static EnderPearlAbilities instance;
     static ProtocolManager protocolManager;
@@ -51,6 +57,10 @@ public final class EnderPearlAbilities extends JavaPlugin {
 
     public List<Ability<?>> getAbilities() {
         return abilities;
+    }
+
+    public List<EventListener> getEventListeners() {
+        return eventListeners;
     }
 
     public List<Manager> getManagers() {
@@ -193,6 +203,23 @@ public final class EnderPearlAbilities extends JavaPlugin {
             }
         }
         getLogger().info("Plugin onDisable completed");
+    }
+
+    public void addListener(EventListener listener) {
+        internalEventListeners.add(listener);
+    }
+
+    public boolean removeListener(EventListener listener) {
+        return internalEventListeners.remove(listener);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <TListener extends EventListener, TEvent extends Event> void emitEvent(Class<TListener> listenerClass, TEvent event, BiConsumer<TListener, TEvent> emitter) {
+        for (EventListener listener : internalEventListeners) {
+            if (listenerClass.isInstance(listener)) {
+                emitter.accept((TListener) listener, event);
+            }
+        }
     }
 
     public void removeAbility(Ability<?> ability) {

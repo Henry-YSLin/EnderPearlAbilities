@@ -1,8 +1,11 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.revenantultimate;
 
+import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
@@ -126,6 +129,11 @@ public class RevenantUltimateAbility extends Ability<RevenantUltimateAbilityInfo
         if (location.getBlock().getType() != Material.AIR) return;
 
         AbilityUtils.consumeEnderPearl(this, player);
+        EnderPearlAbilities.getInstance().emitEvent(
+                EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
 
         new FunctionChain(
                 next -> {

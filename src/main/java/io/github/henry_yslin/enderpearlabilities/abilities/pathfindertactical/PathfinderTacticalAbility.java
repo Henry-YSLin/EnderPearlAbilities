@@ -1,8 +1,11 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.pathfindertactical;
 
+import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -103,6 +106,11 @@ public class PathfinderTacticalAbility extends Ability<PathfinderTacticalAbility
         if (AbilityLockManager.getInstance().isAbilityLocked(player)) return;
 
         AbilityUtils.consumeEnderPearl(this, player);
+        EnderPearlAbilities.getInstance().emitEvent(
+                EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

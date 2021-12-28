@@ -1,8 +1,11 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.ashultimate;
 
+import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
+import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
@@ -198,6 +201,11 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
                         @Override
                         protected void start() {
                             AbilityUtils.consumeEnderPearl(ability, player);
+                            EnderPearlAbilities.getInstance().emitEvent(
+                                    EventListener.class,
+                                    new AbilityActivateEvent(ability),
+                                    EventListener::onAbilityActivate
+                            );
                             location = player.getLocation();
                             Vector direction = player.getLocation().getDirection();
                             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1, 0.5f);

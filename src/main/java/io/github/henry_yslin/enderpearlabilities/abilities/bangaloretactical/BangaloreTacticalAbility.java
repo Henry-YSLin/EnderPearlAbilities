@@ -1,8 +1,11 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.bangaloretactical;
 
+import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
 import org.bukkit.entity.*;
@@ -188,6 +191,11 @@ public class BangaloreTacticalAbility extends Ability<BangaloreTacticalAbilityIn
         if (chargingUp.get()) return;
 
         AbilityUtils.consumeEnderPearl(this, player);
+        EnderPearlAbilities.getInstance().emitEvent(
+                io.github.henry_yslin.enderpearlabilities.events.EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {

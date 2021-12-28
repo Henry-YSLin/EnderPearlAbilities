@@ -1,7 +1,10 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.wraithultimate;
 
+import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
@@ -103,6 +106,11 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
                 next -> {
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRIGGER, 0.3f, 2);
                     AbilityUtils.consumeEnderPearl(this, player);
+                    EnderPearlAbilities.getInstance().emitEvent(
+                            EventListener.class,
+                            new AbilityActivateEvent(this),
+                            EventListener::onAbilityActivate
+                    );
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

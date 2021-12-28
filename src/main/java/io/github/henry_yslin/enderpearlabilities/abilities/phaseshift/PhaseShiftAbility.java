@@ -1,7 +1,10 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.phaseshift;
 
+import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -98,6 +101,11 @@ public class PhaseShiftAbility extends Ability<PhaseShiftAbilityInfo> {
         new FunctionChain(
                 next -> {
                     AbilityUtils.consumeEnderPearl(this, player);
+                    EnderPearlAbilities.getInstance().emitEvent(
+                            EventListener.class,
+                            new AbilityActivateEvent(this),
+                            EventListener::onAbilityActivate
+                    );
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

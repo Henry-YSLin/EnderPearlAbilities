@@ -1,7 +1,10 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.wraithtactical;
 
+import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -96,6 +99,11 @@ public class WraithTacticalAbility extends Ability<WraithTacticalAbilityInfo> {
         new FunctionChain(
                 next -> {
                     AbilityUtils.consumeEnderPearl(this, player);
+                    EnderPearlAbilities.getInstance().emitEvent(
+                            EventListener.class,
+                            new AbilityActivateEvent(this),
+                            EventListener::onAbilityActivate
+                    );
                     player.addPotionEffect(PotionEffectType.SLOW.createEffect(info.getChargeUp(), 2));
                     next.run();
                 },

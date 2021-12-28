@@ -6,6 +6,8 @@ import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical.CryptoTacticalAbility;
 import io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical.CryptoTacticalAbilityInfo;
+import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import net.md_5.bungee.api.ChatMessageType;
@@ -286,6 +288,11 @@ public class CryptoUltimateAbility extends Ability<CryptoUltimateAbilityInfo> {
         if (abilityActive.get()) return;
 
         AbilityUtils.consumeEnderPearl(this, player);
+        EnderPearlAbilities.getInstance().emitEvent(
+                EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
 
         activateAbility(targetEntity);
     }

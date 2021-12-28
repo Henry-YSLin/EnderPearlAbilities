@@ -4,6 +4,8 @@ import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.bloodhoundtactical.BloodhoundTacticalAbility;
+import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import org.bukkit.Bukkit;
@@ -95,6 +97,11 @@ public class BloodhoundUltimateAbility extends Ability<BloodhoundUltimateAbility
         if (abilityDuration.get() > 0) return;
 
         AbilityUtils.consumeEnderPearl(this, player);
+        EnderPearlAbilities.getInstance().emitEvent(
+                EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

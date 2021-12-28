@@ -1,8 +1,11 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical;
 
+import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
@@ -382,6 +385,11 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
                         bossbar.addPlayer(player);
 
                         AbilityUtils.consumeEnderPearl(ability, player);
+                        EnderPearlAbilities.getInstance().emitEvent(
+                                EventListener.class,
+                                new AbilityActivateEvent(ability),
+                                EventListener::onAbilityActivate
+                        );
 
                         if (isDroneValid())
                             vex = drone.get();

@@ -1,8 +1,11 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.skeletonarmy;
 
+import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -118,6 +121,11 @@ public class SkeletonArmyAbility extends Ability<SkeletonArmyAbilityInfo> {
                 next -> {
                     cooldown.setCooldown(info.getCooldown());
                     AbilityUtils.consumeEnderPearl(this, player);
+                    EnderPearlAbilities.getInstance().emitEvent(
+                            EventListener.class,
+                            new AbilityActivateEvent(this),
+                            EventListener::onAbilityActivate
+                    );
                     next.run();
                 },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),

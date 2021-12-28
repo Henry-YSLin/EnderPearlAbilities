@@ -1,8 +1,11 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.valkyrieultimate;
 
+import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
+import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
+import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.managers.interactionlock.InteractionLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -117,6 +120,11 @@ public class ValkyrieUltimateAbility extends Ability<ValkyrieUltimateAbilityInfo
                             bossbar = Bukkit.createBossBar("Charging up", BarColor.WHITE, BarStyle.SOLID);
                             bossbar.addPlayer(player);
                             InteractionLockManager.getInstance().lockInteraction(player);
+                            EnderPearlAbilities.getInstance().emitEvent(
+                                    EventListener.class,
+                                    new AbilityActivateEvent(ability),
+                                    EventListener::onAbilityActivate
+                            );
                             chargingUp.set(true);
                             chargeUpDuration.set(0);
                             groundLocation = player.getLocation();
