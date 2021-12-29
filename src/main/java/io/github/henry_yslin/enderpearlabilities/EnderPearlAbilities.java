@@ -6,6 +6,7 @@ import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.commands.ability.AbilityCommand;
 import io.github.henry_yslin.enderpearlabilities.commands.ability.AbilityTabCompleter;
+import io.github.henry_yslin.enderpearlabilities.commands.ping.PingCommand;
 import io.github.henry_yslin.enderpearlabilities.events.Event;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.Manager;
@@ -138,12 +139,19 @@ public final class EnderPearlAbilities extends JavaPlugin {
 
         getLogger().info("Setting up abilities");
 
-        PluginCommand command = this.getCommand("ability");
-        if (command != null) {
-            command.setExecutor(new AbilityCommand());
-            command.setTabCompleter(new AbilityTabCompleter());
+        PluginCommand abilityCommand = this.getCommand("ability");
+        if (abilityCommand != null) {
+            abilityCommand.setExecutor(new AbilityCommand());
+            abilityCommand.setTabCompleter(new AbilityTabCompleter());
         } else {
             getServer().broadcastMessage("Failed to register /ability command. Please check plugin description file.");
+        }
+
+        PluginCommand pingCommand = this.getCommand("ping");
+        if (pingCommand != null) {
+            pingCommand.setExecutor(new PingCommand());
+        } else {
+            getServer().broadcastMessage("Failed to register /ping command. Please check plugin description file.");
         }
 
         if (config.getBoolean("no-cooldown")) {
