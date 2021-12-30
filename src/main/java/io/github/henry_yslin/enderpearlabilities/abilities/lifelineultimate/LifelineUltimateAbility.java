@@ -121,7 +121,7 @@ public class LifelineUltimateAbility extends Ability<LifelineUltimateAbilityInfo
                     protected void start() {
                         abilityActive.set(true);
 
-                        dropPod = world.spawn(location.clone().add(0, 50, 0), StorageMinecart.class, false, entity -> {
+                        dropPod = world.spawn(location.clone().add(0, 300, 0), StorageMinecart.class, false, entity -> {
                             entity.setGlowing(true);
                             entity.setDerailedVelocityMod(new Vector());
                             entity.setMaxSpeed(0);
