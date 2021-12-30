@@ -33,6 +33,7 @@ public class LifelinePackageLootTable implements LootTable {
         List<LootChoice> enchantmentChoices = getEnchantmentLootChoices(inventory);
         List<Integer> sections = new ArrayList<>(List.of(1, 2, 3));
         int costRemaining = MAX_COST;
+        int failCount = 0;
         while (costRemaining > 0) {
             int section;
             if (sections.isEmpty()) {
@@ -52,9 +53,16 @@ public class LifelinePackageLootTable implements LootTable {
             } else {
                 remainingChoices = foodChoices.stream().filter(c -> c.cost <= finalCostRemaining).toList();
             }
-            if (remainingChoices.isEmpty()) continue;
+            if (remainingChoices.isEmpty()) {
+                failCount++;
+                if (failCount > 5) break;
+                else continue;
+            }
             LootChoice choice = ListUtils.getRandom(remainingChoices);
             finalLoot.add(choice.item);
+            foodChoices.remove(choice);
+            armorChoices.remove(choice);
+            enchantmentChoices.remove(choice);
             costRemaining -= choice.cost;
         }
         generatedLoot = finalLoot;

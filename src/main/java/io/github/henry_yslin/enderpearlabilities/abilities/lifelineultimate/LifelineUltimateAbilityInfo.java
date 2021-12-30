@@ -38,7 +38,7 @@ public class LifelineUltimateAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public String getUsage() {
-        return "Right click on a block to signal a drop pod to land there.";
+        return "Right click on a block to signal a drop pod to land there. The drop pod will contain food, enchanted books and armor pieces that are an upgrade to what you already have.";
     }
 
     @Override
