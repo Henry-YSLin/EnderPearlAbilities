@@ -163,6 +163,8 @@ public class LifelineUltimateAbility extends Ability<LifelineUltimateAbilityInfo
                             dropPod.getWorld().spawnParticle(Particle.SMOKE_NORMAL, dropPod.getLocation().add(0.49, 0.5, -0.49), 0, Math.random() * 0.1 - 0.05, -1, Math.random() * 0.1 - 0.05, 1);
                             dropPod.getWorld().spawnParticle(Particle.SMOKE_NORMAL, dropPod.getLocation().add(-0.49, 0.5, -0.49), 0, Math.random() * 0.1 - 0.05, -1, Math.random() * 0.1 - 0.05, 1);
                         } else {
+                            if (dropPod.getLocation().getY() >= 190 && Math.random() < 0.2)
+                                dropPod.getWorld().spawnParticle(Particle.FLASH, dropPod.getLocation(), 1, 0, 0, 0, 0, null, true);
                             dropPod.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, dropPod.getLocation(), 1, 0.1, 0.1, 0.1, 0, null, true);
                         }
                     }

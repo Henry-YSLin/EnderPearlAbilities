@@ -209,6 +209,8 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
                         protected void tick() {
                             if (!landed) {
                                 if (!landBoosted) {
+                                    if (t.getLocation().getY() >= 190 && Math.random() < 0.4)
+                                        t.getWorld().spawnParticle(Particle.FLASH, t.getLocation(), 1, 0, 0, 0, 0, null, true);
                                     t.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, t.getLocation(), 1, 0.1, 0.1, 0.1, 0, null, true);
                                     RayTraceResult result = t.getWorld().rayTraceBlocks(t.getLocation(), new Vector(0, -1, 0), 50, FluidCollisionMode.ALWAYS, true);
                                     if (result != null && result.getHitBlock() != null) {
