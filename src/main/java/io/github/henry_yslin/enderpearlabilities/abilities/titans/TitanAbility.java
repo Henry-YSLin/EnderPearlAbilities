@@ -175,7 +175,10 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
                     if (titanControlRunnable != null && !titanControlRunnable.isCancelled())
                         titanControlRunnable.cancel();
 
-                    titan.set(player.getWorld().spawn(spawnLocation.clone().add(0, 300, 0), IronGolem.class, entity -> entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)))));
+                    titan.set(player.getWorld().spawn(spawnLocation.clone().add(0, 300, 0), IronGolem.class, entity -> {
+                        entity.setInvisible(true);
+                        entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
+                    }));
 
                     WorldUtils.spawnParticleCubeOutline(spawnLocation.clone().subtract(1.5, 0, 1.5), spawnLocation.clone().add(1.5, 3, 1.5), Particle.END_ROD, 3, false);
 
@@ -186,6 +189,7 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
                     (titanControlRunnable = new AbilityRunnable() {
                         boolean attackMode = false;
                         boolean landed = false;
+                        boolean landBoosted = false;
                         IronGolem t;
                         BossBar abilityChargeUpBar;
                         int abilityChargeUp = 0;
@@ -203,10 +207,35 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
 
                         @Override
                         protected void tick() {
-                            if (!landed && t.isOnGround()) {
-                                t.getWorld().playSound(t.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_HURT, 1, 0.5f);
-                                t.getWorld().spawnParticle(Particle.EXPLOSION_NORMAL, t.getLocation(), 20, 0.5, 0.5, 0.5, 0.1);
-                                landed = true;
+                            if (!landed) {
+                                if (!landBoosted) {
+                                    t.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, t.getLocation(), 1, 0.1, 0.1, 0.1, 0, null, true);
+                                    RayTraceResult result = t.getWorld().rayTraceBlocks(t.getLocation(), new Vector(0, -1, 0), 50, FluidCollisionMode.ALWAYS, true);
+                                    if (result != null && result.getHitBlock() != null) {
+                                        for (int i = 0; i < 100; i++) {
+                                            double angle = Math.random() * Math.PI * 2;
+                                            double magnitude = Math.random() * 0.1 + 0.45;
+                                            double x = Math.cos(angle);
+                                            double z = Math.sin(angle);
+                                            t.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, t.getLocation(), 0, x, 0, z, magnitude, null, true);
+                                        }
+                                        t.setInvisible(false);
+                                        t.setVelocity(new Vector(0, -1, 0));
+                                        t.getWorld().playSound(t.getLocation(), Sound.ENTITY_DRAGON_FIREBALL_EXPLODE, 1, 2);
+                                        landBoosted = true;
+                                    }
+                                } else {
+                                    t.getWorld().spawnParticle(Particle.SMOKE_LARGE, t.getLocation(), 1, 0.1, 0.1, 0.1, 0, null, true);
+                                }
+                                t.getWorld().playSound(t.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
+                                if (t.isOnGround()) {
+                                    t.getWorld().playSound(t.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_HURT, 1, 0.5f);
+                                    t.getWorld().playSound(t.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_HURT, 1, 0.5f);
+                                    t.getWorld().playSound(t.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.2f, 0);
+                                    t.getWorld().spawnParticle(Particle.EXPLOSION_NORMAL, t.getLocation(), 100, 0.5, 0.1, 0.5, 0.1);
+                                    t.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, t.getLocation(), 100, 0.5, 0.1, 0.5, 0.03);
+                                    landed = true;
+                                }
                             }
                             if (!t.isValid()) {
                                 cancel();

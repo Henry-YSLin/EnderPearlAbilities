@@ -17,11 +17,14 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.loot.LootContext;
+import org.bukkit.loot.LootTable;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LifelineUltimateAbility extends Ability<LifelineUltimateAbilityInfo> {
@@ -70,7 +73,7 @@ public class LifelineUltimateAbility extends Ability<LifelineUltimateAbilityInfo
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         if (!AbilityUtils.verifyAbilityCouple(this, event.getRightClicked())) return;
-        if (!chargingUp.get()) return;
+        if (!abilityActive.get()) return;
         event.setCancelled(true);
     }
 
@@ -87,6 +90,7 @@ public class LifelineUltimateAbility extends Ability<LifelineUltimateAbilityInfo
 
         if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
+        if (abilityActive.get()) return;
 
         World world = player.getWorld();
 
@@ -117,13 +121,21 @@ public class LifelineUltimateAbility extends Ability<LifelineUltimateAbilityInfo
                     protected void start() {
                         abilityActive.set(true);
 
-                        dropPod = world.spawn(location.clone().add(0, 300, 0), StorageMinecart.class, false, entity -> {
+                        dropPod = world.spawn(location.clone().add(0, 50, 0), StorageMinecart.class, false, entity -> {
                             entity.setGlowing(true);
                             entity.setDerailedVelocityMod(new Vector());
                             entity.setMaxSpeed(0);
                             entity.setInvulnerable(true);
                             entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
                         });
+                        Random random = new Random();
+                        LootContext context = new LootContext.Builder(dropPod.getLocation())
+                                .killer(player)
+                                .lootedEntity(dropPod)
+                                .build();
+                        LootTable lootTable = new LifelinePackageLootTable();
+                        lootTable.populateLoot(random, context);
+                        lootTable.fillInventory(dropPod.getInventory(), random, context);
                     }
 
                     @Override
@@ -131,18 +143,25 @@ public class LifelineUltimateAbility extends Ability<LifelineUltimateAbilityInfo
                         if (!dropPod.isValid() || dropPod.isOnGround() || dropPod.isInWater()) {
                             cancel();
                         }
-                        RayTraceResult result = dropPod.getWorld().rayTraceBlocks(dropPod.getLocation(), new Vector(0, -1, 0), 15, FluidCollisionMode.ALWAYS, true);
+                        RayTraceResult result = dropPod.getWorld().rayTraceBlocks(dropPod.getLocation(), new Vector(0, -1, 0), 20, FluidCollisionMode.ALWAYS, true);
                         if (result != null && result.getHitBlock() != null) {
-                            if (!decelerated)
-                                dropPod.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, dropPod.getLocation(), 100, 0.3, 0.3, 0.3, 0.3, null, true);
-                            decelerated = true;
-                            if (dropPod.getVelocity().getY() < -0.05)
-                                dropPod.setVelocity(dropPod.getVelocity().add(new Vector(0, 0.04, 0)));
+                            if (!decelerated) {
+                                for (int i = 0; i < 100; i++) {
+                                    double angle = Math.random() * Math.PI * 2;
+                                    double magnitude = Math.random() * 0.1 + 0.45;
+                                    double x = Math.cos(angle);
+                                    double z = Math.sin(angle);
+                                    dropPod.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, dropPod.getLocation(), 0, x, 0, z, magnitude, null, true);
+                                }
+                                decelerated = true;
+                            }
+                            if (dropPod.getVelocity().getY() < -0.03)
+                                dropPod.setVelocity(dropPod.getVelocity().add(new Vector(0, 0.037, 0)));
                             dropPod.getWorld().playSound(dropPod.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 0.1f, 0.1f);
-                            dropPod.getWorld().spawnParticle(Particle.SMOKE_NORMAL, dropPod.getLocation().add(0.49, 0.3, 0.49), 0, Math.random() * 0.1, -1, Math.random() * 0.1, 1);
-                            dropPod.getWorld().spawnParticle(Particle.SMOKE_NORMAL, dropPod.getLocation().add(-0.49, 0.3, 0.49), 0, Math.random() * 0.1, -1, Math.random() * 0.1, 1);
-                            dropPod.getWorld().spawnParticle(Particle.SMOKE_NORMAL, dropPod.getLocation().add(0.49, 0.3, -0.49), 0, Math.random() * 0.1, -1, Math.random() * 0.1, 1);
-                            dropPod.getWorld().spawnParticle(Particle.SMOKE_NORMAL, dropPod.getLocation().add(-0.49, 0.3, -0.49), 0, Math.random() * 0.1, -1, Math.random() * 0.1, 1);
+                            dropPod.getWorld().spawnParticle(Particle.SMOKE_NORMAL, dropPod.getLocation().add(0.49, 0.5, 0.49), 0, Math.random() * 0.1 - 0.05, -1, Math.random() * 0.1 - 0.05, 1);
+                            dropPod.getWorld().spawnParticle(Particle.SMOKE_NORMAL, dropPod.getLocation().add(-0.49, 0.5, 0.49), 0, Math.random() * 0.1 - 0.05, -1, Math.random() * 0.1 - 0.05, 1);
+                            dropPod.getWorld().spawnParticle(Particle.SMOKE_NORMAL, dropPod.getLocation().add(0.49, 0.5, -0.49), 0, Math.random() * 0.1 - 0.05, -1, Math.random() * 0.1 - 0.05, 1);
+                            dropPod.getWorld().spawnParticle(Particle.SMOKE_NORMAL, dropPod.getLocation().add(-0.49, 0.5, -0.49), 0, Math.random() * 0.1 - 0.05, -1, Math.random() * 0.1 - 0.05, 1);
                         } else {
                             dropPod.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, dropPod.getLocation(), 1, 0.1, 0.1, 0.1, 0, null, true);
                         }
