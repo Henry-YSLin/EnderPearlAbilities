@@ -22,6 +22,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -78,6 +79,13 @@ public class PhaseShiftAbility extends Ability<PhaseShiftAbilityInfo> {
         if (abilityActive.get())
             if (player.getWorld().equals(event.getEntity().getWorld()))
                 EntityUtils.destroyEntityForPlayer(event.getEntity(), player);
+    }
+
+    @EventHandler
+    public void onPlayerPortal(PlayerPortalEvent event) {
+        if (!event.getPlayer().getName().equals(ownerName)) return;
+        if (!abilityActive.get()) return;
+        event.setCancelled(true);
     }
 
     @EventHandler
