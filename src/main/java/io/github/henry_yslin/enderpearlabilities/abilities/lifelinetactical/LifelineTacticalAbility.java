@@ -22,6 +22,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -84,6 +85,13 @@ public class LifelineTacticalAbility extends Ability<LifelineTacticalAbilityInfo
     public void onEntityDeath(EntityDeathEvent event) {
         if (!AbilityUtils.verifyAbilityCouple(this, event.getEntity())) return;
         event.getDrops().clear();
+    }
+
+    @EventHandler
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        if (!AbilityUtils.verifyAbilityCouple(this, event.getRightClicked())) return;
+        event.setCancelled(true);
+        AbilityUtils.delay(this, 0, () -> event.getPlayer().updateInventory(), true);
     }
 
     @EventHandler
