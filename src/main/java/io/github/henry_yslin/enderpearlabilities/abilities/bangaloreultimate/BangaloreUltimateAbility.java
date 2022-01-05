@@ -97,12 +97,6 @@ public class BangaloreUltimateAbility extends Ability<BangaloreUltimateAbilityIn
         if (cooldown.isCoolingDown()) return;
         if (abilityActive.get()) return;
 
-        AbilityUtils.consumeEnderPearl(this, player);
-        EnderPearlAbilities.getInstance().emitEvent(
-                EventListener.class,
-                new AbilityActivateEvent(this),
-                EventListener::onAbilityActivate
-        );
         Ability<?> ability = this;
         new AbilityRunnable() {
             Projectile projectile;
@@ -146,6 +140,13 @@ public class BangaloreUltimateAbility extends Ability<BangaloreUltimateAbilityIn
         if (!(projectile instanceof Snowball)) return;
 
         event.setCancelled(true);
+
+        AbilityUtils.consumeEnderPearl(this, player);
+        EnderPearlAbilities.getInstance().emitEvent(
+                EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
 
         projectile.remove();
         abilityActive.set(true);

@@ -89,12 +89,6 @@ public class RevenantTacticalAbility extends Ability<RevenantTacticalAbilityInfo
         if (chargingUp.get()) return;
         if (blockShoot.get()) return;
 
-        AbilityUtils.consumeEnderPearl(this, player);
-        EnderPearlAbilities.getInstance().emitEvent(
-                EventListener.class,
-                new AbilityActivateEvent(this),
-                EventListener::onAbilityActivate
-        );
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
@@ -151,6 +145,13 @@ public class RevenantTacticalAbility extends Ability<RevenantTacticalAbilityInfo
 
         event.setCancelled(true);
         blockShoot.set(false);
+
+        AbilityUtils.consumeEnderPearl(this, player);
+        EnderPearlAbilities.getInstance().emitEvent(
+                EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
 
         projectile.getWorld().spawnParticle(Particle.SMOKE_NORMAL, projectile.getLocation(), 2, 0.1, 0.1, 0.1, 0.02);
 

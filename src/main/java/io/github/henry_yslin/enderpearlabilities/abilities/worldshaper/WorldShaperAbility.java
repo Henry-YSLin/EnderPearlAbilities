@@ -76,15 +76,6 @@ public class WorldShaperAbility extends Ability<WorldShaperAbilityInfo> {
         if (PlayerUtils.getMainHandToolDurability(player).orElse(2) <= 1) return;
 
         new FunctionChain(
-                next -> {
-                    AbilityUtils.consumeEnderPearl(this, player);
-                    EnderPearlAbilities.getInstance().emitEvent(
-                            EventListener.class,
-                            new AbilityActivateEvent(this),
-                            EventListener::onAbilityActivate
-                    );
-                    next.run();
-                },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     AbilityUtils.fireProjectile(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false);
@@ -105,6 +96,13 @@ public class WorldShaperAbility extends Ability<WorldShaperAbilityInfo> {
         if (!(projectile instanceof Snowball)) return;
 
         event.setCancelled(true);
+
+        AbilityUtils.consumeEnderPearl(this, player);
+        EnderPearlAbilities.getInstance().emitEvent(
+                EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
 
         projectile.remove();
 

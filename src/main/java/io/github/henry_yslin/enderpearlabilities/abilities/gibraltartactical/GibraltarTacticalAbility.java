@@ -94,15 +94,6 @@ public class GibraltarTacticalAbility extends Ability<GibraltarTacticalAbilityIn
         if (abilityActive.get()) return;
 
         new FunctionChain(
-                next -> {
-                    AbilityUtils.consumeEnderPearl(this, player);
-                    EnderPearlAbilities.getInstance().emitEvent(
-                            EventListener.class,
-                            new AbilityActivateEvent(this),
-                            EventListener::onAbilityActivate
-                    );
-                    next.run();
-                },
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY)
         ).execute();
@@ -120,6 +111,13 @@ public class GibraltarTacticalAbility extends Ability<GibraltarTacticalAbilityIn
         if (!(projectile instanceof Snowball)) return;
 
         event.setCancelled(true);
+
+        AbilityUtils.consumeEnderPearl(this, player);
+        EnderPearlAbilities.getInstance().emitEvent(
+                EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
 
         projectile.remove();
         abilityActive.set(true);

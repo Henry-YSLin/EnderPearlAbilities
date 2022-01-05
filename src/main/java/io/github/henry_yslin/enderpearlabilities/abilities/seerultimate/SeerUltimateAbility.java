@@ -92,12 +92,6 @@ public class SeerUltimateAbility extends Ability<SeerUltimateAbilityInfo> {
         if (cooldown.isCoolingDown()) return;
         if (abilityActive.get()) return;
 
-        AbilityUtils.consumeEnderPearl(this, player);
-        EnderPearlAbilities.getInstance().emitEvent(
-                EventListener.class,
-                new AbilityActivateEvent(this),
-                EventListener::onAbilityActivate
-        );
         AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
     }
 
@@ -116,6 +110,13 @@ public class SeerUltimateAbility extends Ability<SeerUltimateAbilityInfo> {
 
         projectile.remove();
         blockShoot.set(false);
+
+        AbilityUtils.consumeEnderPearl(this, player);
+        EnderPearlAbilities.getInstance().emitEvent(
+                EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
 
         Location finalLocation = ProjectileUtils.correctProjectileHitLocation(projectile);
 

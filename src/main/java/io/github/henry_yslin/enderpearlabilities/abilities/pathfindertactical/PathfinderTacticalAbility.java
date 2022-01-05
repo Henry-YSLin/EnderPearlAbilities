@@ -105,13 +105,6 @@ public class PathfinderTacticalAbility extends Ability<PathfinderTacticalAbility
 
         if (AbilityLockManager.getInstance().isAbilityLocked(player)) return;
 
-        AbilityUtils.consumeEnderPearl(this, player);
-        EnderPearlAbilities.getInstance().emitEvent(
-                EventListener.class,
-                new AbilityActivateEvent(this),
-                EventListener::onAbilityActivate
-        );
-
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, false)
@@ -160,6 +153,13 @@ public class PathfinderTacticalAbility extends Ability<PathfinderTacticalAbility
 
         event.setCancelled(true);
         projectile.remove();
+
+        AbilityUtils.consumeEnderPearl(this, player);
+        EnderPearlAbilities.getInstance().emitEvent(
+                EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
 
         Entity hitEntity = event.getHitEntity();
         Mob anchor;

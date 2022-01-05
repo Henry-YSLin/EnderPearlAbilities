@@ -100,18 +100,18 @@ public class ValkyrieTacticalAbility extends Ability<ValkyrieTacticalAbilityInfo
         AtomicReference<Location> targetLocation = new AtomicReference<>();
         new FunctionChain(
                 next -> {
-                    AbilityUtils.consumeEnderPearl(this, player);
-                    EnderPearlAbilities.getInstance().emitEvent(
-                            EventListener.class,
-                            new AbilityActivateEvent(this),
-                            EventListener::onAbilityActivate
-                    );
                     RayTraceResult result = player.getWorld().rayTrace(player.getEyeLocation(), player.getEyeLocation().getDirection(), TARGET_RANGE, FluidCollisionMode.NEVER, true, 0, entity -> !entity.equals(player));
                     if (result == null) {
                         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.RED + "Too far away"));
                         return;
                     } else
                         targetLocation.set(result.getHitPosition().toLocation(player.getWorld()));
+                    AbilityUtils.consumeEnderPearl(this, player);
+                    EnderPearlAbilities.getInstance().emitEvent(
+                            EventListener.class,
+                            new AbilityActivateEvent(this),
+                            EventListener::onAbilityActivate
+                    );
                     WorldUtils.spawnParticleCubeOutline(targetLocation.get().clone().add(-2.5, -2.5, -2.5), targetLocation.get().clone().add(2.5, 2.5, 2.5), Particle.SMOKE_NORMAL, 5, true);
                     next.run();
                 },

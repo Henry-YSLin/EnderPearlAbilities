@@ -96,12 +96,6 @@ public class GibraltarUltimateAbility extends Ability<GibraltarUltimateAbilityIn
         if (cooldown.isCoolingDown()) return;
         if (abilityActive.get()) return;
 
-        AbilityUtils.consumeEnderPearl(this, player);
-        EnderPearlAbilities.getInstance().emitEvent(
-                EventListener.class,
-                new AbilityActivateEvent(this),
-                EventListener::onAbilityActivate
-        );
         AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
     }
 
@@ -117,6 +111,13 @@ public class GibraltarUltimateAbility extends Ability<GibraltarUltimateAbilityIn
         if (!(projectile instanceof Snowball)) return;
 
         event.setCancelled(true);
+
+        AbilityUtils.consumeEnderPearl(this, player);
+        EnderPearlAbilities.getInstance().emitEvent(
+                EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
 
         projectile.remove();
         abilityActive.set(true);
