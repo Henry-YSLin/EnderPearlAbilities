@@ -130,6 +130,7 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
     @EventHandler
     public synchronized void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
+        if (!player.getName().equals(ownerName)) return;
 
         if (titan.get() != null) {
             IronGolem t = titan.get();
