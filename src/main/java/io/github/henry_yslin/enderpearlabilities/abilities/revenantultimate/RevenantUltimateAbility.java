@@ -102,7 +102,6 @@ public class RevenantUltimateAbility extends Ability<RevenantUltimateAbilityInfo
                 WorldUtils.spawnParticleLine(player.getEyeLocation(), blaze.getEyeLocation(), Particle.SOUL_FIRE_FLAME, 1, true);
 
             player.teleport(blaze.getLocation());
-            blaze.remove();
         }
     }
 
