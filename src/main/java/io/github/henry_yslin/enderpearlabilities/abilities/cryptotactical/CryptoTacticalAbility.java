@@ -461,7 +461,7 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
                         if (result != null && result.getHitBlock() != null) {
                             Material block = result.getHitBlock().getType();
                             if (block.isSolid() && block.isOccluding()) {
-                                //player.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(30, 1));
+                                player.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(30, 1));
                                 new ParticleBuilder(ParticleEffect.BLOCK_DUST, player.getEyeLocation())
                                         .setParticleData(new BlockTexture(block))
                                         .setAmount(10)
