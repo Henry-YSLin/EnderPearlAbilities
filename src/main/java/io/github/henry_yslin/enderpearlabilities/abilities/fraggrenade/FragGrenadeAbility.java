@@ -131,7 +131,8 @@ public class FragGrenadeAbility extends Ability<FragGrenadeAbilityInfo> {
                             return;
                         }
                         snowball.setVelocity(snowball.getVelocity().multiply(0.9).add(new Vector(0, -0.1, 0)));
-                        WorldUtils.spawnParticleLine(lastLocation, snowball.getLocation(), Particle.END_ROD, 1, true);
+                        if (lastLocation.getWorld() == snowball.getWorld())
+                            WorldUtils.spawnParticleLine(lastLocation, snowball.getLocation(), Particle.END_ROD, 1, true);
                         lastLocation = snowball.getLocation();
                     }
 
