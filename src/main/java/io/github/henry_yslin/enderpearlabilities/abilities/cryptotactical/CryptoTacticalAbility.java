@@ -37,6 +37,9 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.RayTraceResult;
+import xyz.xenondevs.particle.ParticleBuilder;
+import xyz.xenondevs.particle.ParticleEffect;
+import xyz.xenondevs.particle.data.texture.BlockTexture;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -429,6 +432,7 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
                         bossbar = Bukkit.createBossBar(info.getName(), BarColor.PURPLE, BarStyle.SOLID);
                         bossbar.addPlayer(player);
                         d = drone.get();
+                        player.setFlySpeed(FLY_SPEED);
                     }
 
                     @Override
@@ -442,7 +446,6 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
                             bossbar.setProgress(d.getHealth() / maxHealth);
                         else
                             bossbar.setProgress(0);
-                        player.setFlySpeed(FLY_SPEED);
                         d.teleport(player.getEyeLocation().add(0, -d.getEyeHeight(), 0));
                         d.setVelocity(player.getVelocity());
                         if (d.getTicksLived() % 5 == 0)
@@ -457,14 +460,22 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
                         if (result != null && result.getHitBlock() != null) {
                             Material block = result.getHitBlock().getType();
                             if (block.isSolid() && block.isOccluding()) {
-                                player.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(30, 1));
+                                //player.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(30, 1));
+                                new ParticleBuilder(ParticleEffect.BLOCK_DUST, player.getEyeLocation())
+                                        .setParticleData(new BlockTexture(block))
+                                        .setAmount(10)
+                                        .setOffset(0.2f, 0.2f, 0.2f)
+                                        .display();
                                 blinded = true;
                             }
                         }
-                        if (!blinded) {
+                        if (blinded) {
+                            player.setFlySpeed(FLY_SPEED / 5);
+                        } else {
                             if (player.hasPotionEffect(PotionEffectType.BLINDNESS)) {
                                 player.removePotionEffect(PotionEffectType.BLINDNESS);
                             }
+                            player.setFlySpeed(FLY_SPEED);
                         }
                         if (dummy.get() != null && dummy.get().getEntity() instanceof LivingEntity entity)
                             player.addPotionEffects(entity.getActivePotionEffects());
