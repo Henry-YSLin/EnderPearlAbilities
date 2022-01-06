@@ -293,6 +293,7 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
+        if (!player.getName().equals(ownerName)) return;
 
         if (player.equals(this.player) && abilityActive.get()) {
             if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
