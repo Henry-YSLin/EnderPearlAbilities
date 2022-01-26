@@ -198,6 +198,7 @@ public class LobaUltimateAbility extends Ability<LobaUltimateAbilityInfo> {
                         entity.setGravity(false);
                         entity.setGlowing(true);
                         entity.setAI(false);
+                        entity.setRemoveWhenFarAway(false);
                         entity.setSilent(true);
                         entity.setColor(DyeColor.CYAN);
                         entity.setMetadata("black-market-charge", new FixedMetadataValue(plugin, 2));

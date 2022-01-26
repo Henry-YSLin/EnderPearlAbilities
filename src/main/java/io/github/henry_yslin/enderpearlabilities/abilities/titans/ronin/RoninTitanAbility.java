@@ -42,6 +42,7 @@ public class RoninTitanAbility extends TitanAbility<RoninTitanInfo> {
                     entity.setInvisible(true);
                     entity.setAware(false);
                     entity.setSilent(true);
+                    entity.setRemoveWhenFarAway(false);
                     entity.setCollidable(false);
                     entity.setVelocity(velocity);
                 });
@@ -50,6 +51,7 @@ public class RoninTitanAbility extends TitanAbility<RoninTitanInfo> {
                     entity.setInvisible(true);
                     entity.setAware(false);
                     entity.setSilent(true);
+                    entity.setRemoveWhenFarAway(false);
                     entity.setCollidable(false);
                     entity.setVelocity(velocity);
                 });

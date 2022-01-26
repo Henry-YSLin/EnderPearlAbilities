@@ -143,6 +143,7 @@ public class RevenantUltimateAbility extends Ability<RevenantUltimateAbilityInfo
                         entity.setGravity(false);
                         entity.setGlowing(true);
                         entity.setAI(false);
+                        entity.setRemoveWhenFarAway(false);
                         entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
                     });
                     totem.set(blaze);

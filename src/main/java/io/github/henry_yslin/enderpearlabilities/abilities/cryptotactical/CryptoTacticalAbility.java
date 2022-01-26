@@ -126,6 +126,7 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
             if (finalDroneHealth > 0)
                 entity.setHealth(finalDroneHealth);
             entity.setPersistent(true);
+            entity.setRemoveWhenFarAway(false);
             entity.setCustomName(ownerName + "'s drone");
             entity.setCustomNameVisible(true);
             entity.setSilent(true);

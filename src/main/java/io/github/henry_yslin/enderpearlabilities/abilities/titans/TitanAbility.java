@@ -40,7 +40,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInfo> {
 
     static final int ACTION_COOLDOWN = 5;
-    static final int ENERGY_SIPHON_RANGE = 64;
 
     public TitanAbility(Plugin plugin, TInfo info, String ownerName) {
         super(plugin, info, ownerName);
@@ -178,6 +177,7 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
 
                     titan.set(player.getWorld().spawn(spawnLocation.clone().add(0, 300, 0), IronGolem.class, entity -> {
                         entity.setInvisible(true);
+                        entity.setRemoveWhenFarAway(false);
                         entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
                     }));
 

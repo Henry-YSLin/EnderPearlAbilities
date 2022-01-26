@@ -123,6 +123,7 @@ public class SeerUltimateAbility extends Ability<SeerUltimateAbilityInfo> {
         Shulker chamber = projectile.getWorld().spawn(finalLocation, Shulker.class, entity -> {
             entity.setAI(false);
             entity.setSilent(true);
+            entity.setRemoveWhenFarAway(false);
             entity.setPeek(0);
             entity.setColor(DyeColor.MAGENTA);
             entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
