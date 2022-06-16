@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: net.citizensnpcs:citizens-main:2.0.30-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/citizensnpcs/citizens-main/2.0.30-SNAPSHOT/citizens-main-2.0.30-20220615.142044-2575.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/net/citizensnpcs/citizens-main/2.0.30-SNAPSHOT/citizens-main-2.0.30-20220615.142044-2575-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/citizensnpcs/citizens-main/2.0.30-SNAPSHOT/citizens-main-2.0.30-20220615.142044-2575-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
