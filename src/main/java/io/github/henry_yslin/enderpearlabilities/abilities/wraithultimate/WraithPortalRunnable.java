@@ -1,6 +1,8 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.wraithultimate;
 
+import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.wraithtactical.WraithTacticalAbility;
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
@@ -13,6 +15,7 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.Vector;
 
 import java.util.List;
+import java.util.Optional;
 
 public class WraithPortalRunnable extends AbilityRunnable {
     WraithUltimateAbility ability;
@@ -90,6 +93,14 @@ public class WraithPortalRunnable extends AbilityRunnable {
 
         livingEntity.setVelocity(new Vector());
         livingEntity.setFallDistance(0);
+
+        if (livingEntity instanceof Player player) {
+            Optional<WraithTacticalAbility> tactical = EnderPearlAbilities.getInstance().getAbilities().stream()
+                    .filter(ability -> ability instanceof WraithTacticalAbility && ability.getOwnerName().equals(player.getName()))
+                    .findFirst()
+                    .map(ability -> (WraithTacticalAbility) ability);
+            tactical.ifPresent(WraithTacticalAbility::cancelAbility);
+        }
 
         VoidSpaceManager.getInstance().exitVoid(livingEntity);
     }

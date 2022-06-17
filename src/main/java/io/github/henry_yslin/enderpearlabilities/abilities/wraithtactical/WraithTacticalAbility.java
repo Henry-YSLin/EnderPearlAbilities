@@ -3,6 +3,7 @@ package io.github.henry_yslin.enderpearlabilities.abilities.wraithtactical;
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.wraithultimate.WraithUltimateAbility;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
@@ -22,8 +23,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WraithTacticalAbility extends Ability<WraithTacticalAbilityInfo> {
@@ -73,6 +76,12 @@ public class WraithTacticalAbility extends Ability<WraithTacticalAbilityInfo> {
         cooldown.setCooldown(info.getCooldown());
     }
 
+    public void cancelAbility() {
+        if (abilityActive.get()) {
+            abilityActive.set(false);
+        }
+    }
+
     @Override
     public void onDisable() {
         super.onDisable();
@@ -96,6 +105,19 @@ public class WraithTacticalAbility extends Ability<WraithTacticalAbilityInfo> {
         if (cooldown.isCoolingDown()) return;
         if (chargingUp.get()) return;
 
+        Optional<WraithUltimateAbility> ultimate = EnderPearlAbilities.getInstance().getAbilities().stream()
+                .filter(ability -> ability instanceof WraithUltimateAbility && ability.getOwnerName().equals(ownerName))
+                .findFirst()
+                .map(ability -> (WraithUltimateAbility) ability);
+
+        boolean tmpQuickActivation = false;
+        if (ultimate.isPresent()) {
+            if (ultimate.get().isActive()) {
+                tmpQuickActivation = true;
+            }
+        }
+        boolean quickActivation = tmpQuickActivation;
+
         new FunctionChain(
                 next -> {
                     AbilityUtils.consumeEnderPearl(this, player);
@@ -104,10 +126,11 @@ public class WraithTacticalAbility extends Ability<WraithTacticalAbilityInfo> {
                             new AbilityActivateEvent(this),
                             EventListener::onAbilityActivate
                     );
-                    player.addPotionEffect(PotionEffectType.SLOW.createEffect(info.getChargeUp(), 2));
+                    if (!quickActivation)
+                        player.addPotionEffect(PotionEffectType.SLOW.createEffect(info.getChargeUp(), 2));
                     next.run();
                 },
-                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
+                next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp() / (quickActivation ? 5 : 1), chargingUp, next),
                 next -> {
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.7f, 0.8f);
                     cancelAbility.set(false);
@@ -154,6 +177,13 @@ public class WraithTacticalAbility extends Ability<WraithTacticalAbilityInfo> {
                     cancelAbility.set(false);
 
                     VoidSpaceManager.getInstance().exitVoid(player);
+
+                    if (ultimate.isPresent())
+                        if (ultimate.get().isActive()) {
+                            player.addPotionEffect(PotionEffectType.NIGHT_VISION.createEffect(Integer.MAX_VALUE, 0));
+                            player.addPotionEffect(PotionEffectType.CONDUIT_POWER.createEffect(Integer.MAX_VALUE, 0));
+                            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1, true, true));
+                        }
 
                     cooldown.setCooldown(info.getCooldown());
                     next.run();

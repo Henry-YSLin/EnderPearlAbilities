@@ -3,6 +3,7 @@ package io.github.henry_yslin.enderpearlabilities.abilities.wraithultimate;
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.wraithtactical.WraithTacticalAbility;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
@@ -26,6 +27,7 @@ import org.bukkit.util.BoundingBox;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
@@ -116,9 +118,9 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     abilityActive.set(true);
-                    player.addPotionEffect(PotionEffectType.NIGHT_VISION.createEffect(1000000, 0));
-                    player.addPotionEffect(PotionEffectType.CONDUIT_POWER.createEffect(1000000, 0));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 1000000, 1, true, true));
+                    player.addPotionEffect(PotionEffectType.NIGHT_VISION.createEffect(Integer.MAX_VALUE, 0));
+                    player.addPotionEffect(PotionEffectType.CONDUIT_POWER.createEffect(Integer.MAX_VALUE, 0));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1, true, true));
                     next.run();
                 },
                 next -> new AbilityRunnable() {
@@ -184,6 +186,13 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
                         player.removePotionEffect(PotionEffectType.CONDUIT_POWER);
                         player.removePotionEffect(PotionEffectType.SPEED);
                         abilityActive.set(false);
+
+                        Optional<WraithTacticalAbility> tactical = EnderPearlAbilities.getInstance().getAbilities().stream()
+                                .filter(ability -> ability instanceof WraithTacticalAbility && ability.getOwnerName().equals(ownerName))
+                                .findFirst()
+                                .map(ability -> (WraithTacticalAbility) ability);
+                        tactical.ifPresent(WraithTacticalAbility::cancelAbility);
+
                         if (setPortal) {
                             if (MAX_DISTANCE - distanceRemaining <= REFUNDABLE_DISTANCE)
                                 return;

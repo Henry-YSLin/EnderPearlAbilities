@@ -11,7 +11,7 @@ public class WraithUltimateAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
-        config.addDefault("charge-up", 0);
+        config.addDefault("charge-up", 20);
         config.addDefault("duration", 60 * 20);
         config.addDefault("cooldown", 120 * 20);
     }
