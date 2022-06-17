@@ -18,7 +18,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.projectiles.ProjectileSource;
 
@@ -141,10 +140,13 @@ public class WorldShaperAbility extends Ability<WorldShaperAbilityInfo> {
             }
         });
 
+        // This is disabled because world shaper does not consume ender pearl
+/*
         if (player.getGameMode() != GameMode.CREATIVE) {
             if (Math.random() * 4 < 3) {
                 player.getWorld().dropItem(finalLocation, new ItemStack(Material.ENDER_PEARL, 1));
             }
         }
+*/
     }
 }
