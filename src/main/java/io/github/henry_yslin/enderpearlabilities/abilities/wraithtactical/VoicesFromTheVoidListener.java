@@ -164,11 +164,18 @@ public class VoicesFromTheVoidListener extends AbilityListener {
                     warn(block.getLocation(), ListUtils.getRandom(INFESTED_VOICELINES));
                 } else if (block.getLocation().equals(player.getLocation().add(0, -1, 0).getBlock().getLocation())) {
                     RayTraceResult result = player.getWorld().rayTraceBlocks(block.getLocation().add(0.5, -0.5, 0.5), new Vector(0, -1, 0), 10, FluidCollisionMode.ALWAYS, true);
+                    boolean shouldWarn = false;
                     if (result == null) {
-                        warn(block.getLocation(), ListUtils.getRandom(BLOCK_VOICELINES));
+                        shouldWarn = true;
                     } else if (result.getHitBlock() != null && result.getHitBlock().getType() == Material.LAVA) {
-                        warn(block.getLocation(), ListUtils.getRandom(BLOCK_VOICELINES));
+                        shouldWarn = true;
                     }
+
+                    if (shouldWarn)
+                        shouldWarn = checkOpenness(block) <= 4;
+
+                    if (shouldWarn)
+                        warn(block.getLocation(), ListUtils.getRandom(BLOCK_VOICELINES));
                 } else if (block.getLocation().getY() >= player.getLocation().getY()) {
                     if (BlockUtils.getTouchingBlocks(block.getLocation()).stream().anyMatch(b -> b.getType() == Material.LAVA && b.getY() >= block.getY())) {
                         warn(block.getLocation(), ListUtils.getRandom(BLOCK_VOICELINES));
@@ -190,6 +197,21 @@ public class VoicesFromTheVoidListener extends AbilityListener {
                 super.end();
             }
         }).runTaskTimer(this, 0, 5);
+    }
+
+    private int checkOpenness(Block groundBlock) {
+        int openness = 0;
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (i != 0 || j != 0) {
+                    if (!groundBlock.getLocation().add(i, 0, j).getBlock().getType().isOccluding() &&
+                            !groundBlock.getLocation().add(i, -1, j).getBlock().getType().isOccluding()) {
+                        openness++;
+                    }
+                }
+            }
+        }
+        return openness;
     }
 
     private void sendVoice(String message) {
