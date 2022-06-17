@@ -138,6 +138,9 @@ public class ValkyrieUltimateAbility extends Ability<ValkyrieUltimateAbilityInfo
                                 return;
                             }
                             bossbar.setProgress(Math.min(1, chargeUpDuration.incrementAndGet() / (double) info.getChargeUp()));
+                            if (chargeUpDuration.get() >= info.getChargeUp()) {
+                                bossbar.setTitle("Ready to Launch");
+                            }
                             boolean mainHandPearl = player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
                             boolean offHandPearl = player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
                             boolean shouldContinue = ability.getInfo().getActivation() == ActivationHand.MainHand && mainHandPearl ||
