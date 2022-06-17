@@ -19,6 +19,7 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -88,7 +89,9 @@ public class VoicesFromTheVoidListener extends AbilityListener {
             EntityType.HOGLIN,
             EntityType.ZOGLIN,
             EntityType.PIGLIN_BRUTE,
+            EntityType.WARDEN,
 
+            // Neutral monsters
             EntityType.SPIDER,
             EntityType.CAVE_SPIDER,
             EntityType.ENDERMAN,
@@ -172,7 +175,10 @@ public class VoicesFromTheVoidListener extends AbilityListener {
                     }
                 }
                 if (player.getTicksLived() - lastWarningTick.get() < COOLDOWN) return;
-                if (lastHotZone != null && player.getLocation().distance(lastHotZone) < 15) return;
+                if (lastHotZone != null &&
+                        Objects.equals(player.getLocation().getWorld(), lastHotZone.getWorld()) &&
+                        player.getLocation().distance(lastHotZone) < 15)
+                    return;
                 if (player.getWorld().getNearbyEntities(player.getLocation(), 10, 10, 10, entity -> ALL_DANGERS.contains(entity.getType())).size() > 5) {
                     sendVoice(ListUtils.getRandom(HOT_ZONE_VOICELINES));
                     lastHotZone = player.getLocation();
