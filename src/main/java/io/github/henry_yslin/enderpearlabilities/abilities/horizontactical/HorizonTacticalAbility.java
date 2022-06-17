@@ -19,6 +19,7 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
@@ -160,7 +161,7 @@ public class HorizonTacticalAbility extends Ability<HorizonTacticalAbilityInfo> 
                                     new AbilityRunnable() {
                                         @Override
                                         protected void tick() {
-                                            entity.setVelocity(entity.getVelocity().add(MathUtils.clamp(entity.getLocation().subtract(pastLoc).toVector().setY(0).multiply(10), 2)));
+                                            entity.setVelocity(entity.getVelocity().add(MathUtils.clamp(entity.getLocation().subtract(pastLoc).toVector().setY(0).multiply(10), 1)));
                                         }
                                     }.runTaskLater(executor, 1);
                                 }
@@ -168,8 +169,12 @@ public class HorizonTacticalAbility extends Ability<HorizonTacticalAbilityInfo> 
                         entities = newEntities;
                         entities.forEach(entity -> {
                             if (entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR) return;
-                            Vector verticalVelocity = entity.getVelocity().add(new Vector(0, 0.1, 0));
-                            entity.setVelocity(verticalVelocity.setY(Math.min(verticalVelocity.getY(), 0.7)));
+                            if (entity instanceof LivingEntity livingEntity) {
+                                livingEntity.addPotionEffect(PotionEffectType.LEVITATION.createEffect(5, 10));
+                            } else {
+                                Vector verticalVelocity = entity.getVelocity().add(new Vector(0, 0.1, 0));
+                                entity.setVelocity(verticalVelocity.setY(Math.min(verticalVelocity.getY(), 0.7)));
+                            }
                             if (entity.getVelocity().getY() > 0)
                                 if (entity instanceof LivingEntity livingEntity) {
                                     if (livingEntity.hasMetadata("gravity-lift")) return;
@@ -177,11 +182,11 @@ public class HorizonTacticalAbility extends Ability<HorizonTacticalAbilityInfo> 
                                 }
                         });
                         for (int i = 0; i < 5; i++)
-                            world.spawnParticle(Particle.SMOKE_NORMAL, finalLocation.clone().add(Math.random() * 3 - 1.5, Math.random() * GRAVITY_LIFT_HEIGHT, Math.random() * 3 - 1.5), 0, 0, 0.5, 0, 1);
+                            world.spawnParticle(Particle.DRAGON_BREATH, finalLocation.clone().add(Math.random() * 3 - 1.5, Math.random() * GRAVITY_LIFT_HEIGHT, Math.random() * 3 - 1.5), 0, 0, 0.5, 0, 1);
                         for (int i = 0; i < 5; i++)
-                            world.spawnParticle(Particle.SMOKE_NORMAL, finalLocation.clone().add(Math.random() * 3 - 1.5, 0, Math.random() * 3 - 1.5), 0, 0, 0.5, 0, 1);
+                            world.spawnParticle(Particle.SMOKE_LARGE, finalLocation.clone().add(Math.random() * 3 - 1.5, 0, Math.random() * 3 - 1.5), 0, 0, 0.5, 0, 1);
                         if (count % 10 == 9 && count > 20)
-                            world.playSound(finalLocation, Sound.ENTITY_BLAZE_AMBIENT, 0.5f, 1);
+                            world.playSound(finalLocation, Sound.ENTITY_BLAZE_AMBIENT, 0.5f, (float) Math.random() * 0.2f + 0.9f);
                     }
 
                     @Override
