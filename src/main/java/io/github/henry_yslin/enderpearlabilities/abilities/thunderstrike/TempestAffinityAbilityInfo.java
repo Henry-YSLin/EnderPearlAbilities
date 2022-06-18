@@ -33,7 +33,7 @@ public class TempestAffinityAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public String getDescription() {
-        return "Summon a thunderstorm to wreck havoc on the world. Striking entities with lightning bolt extends thunderstorm duration.\nPassive ability: Gain speed boost when the weather is not clear.";
+        return "Summon a thunderstorm to wreak havoc on the world. Striking entities with lightning bolt extends thunderstorm duration.\nPassive ability: Gain speed boost when the weather is not clear.";
     }
 
     @Override
