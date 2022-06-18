@@ -214,18 +214,20 @@ public class BangaloreTacticalAbility extends Ability<BangaloreTacticalAbilityIn
 
         event.setCancelled(true);
 
-        AbilityUtils.consumeEnderPearl(this, player);
-        EnderPearlAbilities.getInstance().emitEvent(
-                io.github.henry_yslin.enderpearlabilities.events.EventListener.class,
-                new AbilityActivateEvent(this),
-                EventListener::onAbilityActivate
-        );
+        Optional<Object> ref = EntityUtils.getMetadata(projectile, "smoke");
+
+        if (ref.isEmpty()) {
+            AbilityUtils.consumeEnderPearl(this, player);
+            EnderPearlAbilities.getInstance().emitEvent(
+                    io.github.henry_yslin.enderpearlabilities.events.EventListener.class,
+                    new AbilityActivateEvent(this),
+                    EventListener::onAbilityActivate
+            );
+        }
 
         projectile.getWorld().spawnParticle(Particle.SMOKE_NORMAL, projectile.getLocation(), 2, 0.1, 0.1, 0.1, 0.02);
 
         Location hitPosition = ProjectileUtils.correctProjectileHitLocation(projectile);
-
-        Optional<Object> ref = EntityUtils.getMetadata(projectile, "smoke");
         if (ref.isEmpty()) {
             for (int i = -2; i <= 2; i++) {
                 Vector horizontal = projectile.getVelocity().getCrossProduct(new Vector(0, 1, 0)).normalize().multiply(0.2);
