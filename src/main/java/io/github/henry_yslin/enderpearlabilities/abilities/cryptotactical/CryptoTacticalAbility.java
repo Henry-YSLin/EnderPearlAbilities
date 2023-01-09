@@ -472,7 +472,7 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
                             }
                         }
                         if (blinded) {
-                            player.setFlySpeed(FLY_SPEED / 5);
+                            player.setFlySpeed(FLY_SPEED / 7);
                         } else {
                             if (player.hasPotionEffect(PotionEffectType.BLINDNESS)) {
                                 player.removePotionEffect(PotionEffectType.BLINDNESS);
