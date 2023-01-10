@@ -371,6 +371,7 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
             player.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, echoLocation, 5, 0.1, 0.1, 0.1, 0);
             spawnEcho(player.getLocation());
             moveEcho(echoLocation);
+            cooldown.setCooldown(20);
         }
     }
 }
