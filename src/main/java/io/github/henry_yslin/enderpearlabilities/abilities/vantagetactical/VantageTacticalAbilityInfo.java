@@ -12,8 +12,8 @@ public class VantageTacticalAbilityInfo extends AbilityWithDurationInfo {
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 20);
-        config.addDefault("duration", 0);
-        config.addDefault("cooldown", 40 * 20);
+        config.addDefault("duration", 3 * 20);
+        config.addDefault("cooldown", 25 * 20);
     }
 
     @Override
@@ -33,12 +33,12 @@ public class VantageTacticalAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public String getDescription() {
-        return "Position your winged companion Echo and then Launch toward him. Must have line of sight for Echo to launch.";
+        return "Position your winged companion Echo and then launch toward him. Must have line of sight for Echo to launch.";
     }
 
     @Override
     public String getUsage() {
-        return "Right click to deploy Echo or to relocate it. Sneak while right-clicking to recall Echo. While Echo is deployed, right click to launch towards it.";
+        return "Right click to deploy Echo. Right click again to launch toward him. Right click while sneaking to relocate Echo. Relocate Echo near you to recall it.";
     }
 
     @Override

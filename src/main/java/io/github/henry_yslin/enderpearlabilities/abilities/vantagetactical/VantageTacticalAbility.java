@@ -8,6 +8,7 @@ import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -18,6 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDropItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -32,7 +34,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> {
 
-    static final float FLY_SPEED = 1f;
+    static final float ECHO_SPEED = 1f;
+    static final float LAUNCH_SPEED = 1f;
     static final float MAX_RANGE = 35f;
     static final float ECHO_ELEVATION = 5f;
     static final float RECALL_RADIUS = 2;
@@ -88,6 +91,7 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
             plugin.getLogger().warning("Trying to spawn Echo with null world.");
             return null;
         }
+        removeEcho();
         Bat bat = deployLocation.getWorld().spawn(deployLocation, Bat.class, false, entity -> {
             entity.setGravity(false);
             if (entity.getEquipment() != null)
@@ -115,7 +119,7 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
     }
 
     private boolean isEchoValid() {
-        return echo.get() != null && echo.get().isValid();
+        return echo.get() != null && echo.get().isValid() && echo.get().getWorld().equals(player.getWorld());
     }
 
     private void setUpPlayer(Player player) {
@@ -162,6 +166,12 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
         removeEcho();
     }
 
+    @EventHandler
+    public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
+        if (!event.getPlayer().equals(player)) return;
+        removeEcho();
+    }
+
     private Location calculateEchoLocation(Player player) {
         Location eyeLocation = player.getEyeLocation();
         Vector direction = eyeLocation.getDirection();
@@ -198,11 +208,12 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
                     cancel();
                     return;
                 }
-                if (bat.getLocation().distanceSquared(newLocation) < FLY_SPEED * FLY_SPEED + 0.3) {
+                if (bat.getLocation().distanceSquared(newLocation) < ECHO_SPEED * ECHO_SPEED + 0.3) {
                     cancel();
                     return;
                 }
-                Vector offset = newLocation.toVector().subtract(bat.getLocation().toVector()).normalize().multiply(FLY_SPEED);
+                Vector offset = newLocation.toVector().subtract(bat.getLocation().toVector()).normalize().multiply(ECHO_SPEED);
+                lastLocation.setDirection(offset);
                 bat.teleport(lastLocation.add(offset));
                 bat.setVelocity(offset);
                 bat.getWorld().spawnParticle(Particle.PORTAL, bat.getLocation(), 5, 0.1, 0.1, 0.1, 0.02);
@@ -234,6 +245,7 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
                 if (moving.get()) return;
                 Location echoLocation = calculateEchoLocation(player);
                 if (echoLocation.toVector().distanceSquared(new Vector(player.getLocation().getX(), echoLocation.getY(), player.getLocation().getZ())) > RECALL_RADIUS * RECALL_RADIUS) {
+                    player.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, echoLocation, 5, 0.1, 0.1, 0.1, 0);
                     moveEcho(echoLocation);
                 } else {
                     new AbilityRunnable() {
@@ -261,12 +273,13 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
                                 cancel();
                                 return;
                             }
-                            if (bat.getLocation().distanceSquared(player.getLocation()) < FLY_SPEED * FLY_SPEED + 0.3) {
+                            if (bat.getLocation().distanceSquared(player.getLocation()) < ECHO_SPEED * ECHO_SPEED + 0.3) {
                                 cancel();
                                 return;
                             }
                             bossbar.setProgress(1 - Math.min(1, player.getLocation().distance(bat.getLocation()) / initialDistance));
-                            Vector offset = player.getLocation().toVector().subtract(bat.getLocation().toVector()).normalize().multiply(FLY_SPEED);
+                            Vector offset = player.getLocation().toVector().subtract(bat.getLocation().toVector()).normalize().multiply(ECHO_SPEED);
+                            lastLocation.setDirection(offset);
                             bat.teleport(lastLocation.add(offset));
                             bat.setVelocity(offset);
                             bat.getWorld().spawnParticle(Particle.PORTAL, bat.getLocation(), 5, 0.1, 0.1, 0.1, 0.02);
@@ -283,16 +296,69 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
                 }
             } else {
                 if (cooldown.isCoolingDown()) return;
-
                 if (AbilityLockManager.getInstance().isAbilityLocked(player)) return;
-                AbilityUtils.consumeEnderPearl(this, player);
-                EnderPearlAbilities.getInstance().emitEvent(
-                        EventListener.class,
-                        new AbilityActivateEvent(this),
-                        EventListener::onAbilityActivate
-                );
 
-                // todo: launch
+                new FunctionChain(
+                        next -> {
+                            AbilityUtils.consumeEnderPearl(this, player);
+                            EnderPearlAbilities.getInstance().emitEvent(
+                                    EventListener.class,
+                                    new AbilityActivateEvent(this),
+                                    EventListener::onAbilityActivate
+                            );
+                            next.run();
+                        },
+                        next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next, count -> player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 0.05f, (info.getChargeUp() - count) / (float) info.getChargeUp() * 0.3f)),
+                        next -> {
+                            if (!isEchoValid()) return;
+                            Vector toBat = echo.get().getLocation().subtract(player.getEyeLocation()).toVector();
+                            Vector direction = player.getEyeLocation().getDirection();
+                            if (toBat.dot(direction) < 0) {
+                                player.sendTitle(" ", ChatColor.LIGHT_PURPLE + "Lost line of sight to Echo", 5, 20, 10);
+                                return;
+                            }
+                            next.run();
+                        },
+                        next -> new AbilityRunnable() {
+                            LivingEntity bat;
+
+                            @Override
+                            protected synchronized void start() {
+                                abilityActive.set(true);
+                                bat = echo.get();
+                            }
+
+                            @Override
+                            protected synchronized void tick() {
+                                if (!abilityActive.get() || !player.isValid()) {
+                                    cancel();
+                                    return;
+                                }
+                                if (!isEchoValid()) {
+                                    cancel();
+                                    return;
+                                }
+                                Vector offset = bat.getLocation().subtract(player.getLocation()).toVector();
+                                if (offset.lengthSquared() < LAUNCH_SPEED * LAUNCH_SPEED + 0.3) {
+                                    cancel();
+                                    return;
+                                }
+                                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 0.05f, 0.3f);
+                                offset.normalize().multiply(LAUNCH_SPEED);
+                                offset.add(new Vector(0, 0.1, 0));
+                                player.setVelocity(offset);
+                                player.getWorld().spawnParticle(Particle.SMOKE_NORMAL, player.getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2, 0.02);
+                            }
+
+                            @Override
+                            protected synchronized void end() {
+                                abilityActive.set(false);
+                                cooldown.setCooldown(info.getCooldown());
+                                player.setFallDistance(0);
+                                next.run();
+                            }
+                        }.runTaskRepeated(this, 0, 1, info.getDuration())
+                ).execute();
             }
         } else {
             moving.set(false);
@@ -302,6 +368,7 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
                 return;
             }
 
+            player.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, echoLocation, 5, 0.1, 0.1, 0.1, 0);
             spawnEcho(player.getLocation());
             moveEcho(echoLocation);
         }

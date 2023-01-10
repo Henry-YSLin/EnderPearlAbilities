@@ -34,13 +34,15 @@ public class EchoStatusRunnable extends AbilityRunnable {
         LivingEntity bat = echo.get();
         // manage echo location
         if (bat != null && bat.isValid() && !ability.isMoving()) {
+            bat.setRemainingAir(1000000);
+            bat.setFireTicks(0);
             double distance = bat.getLocation().distance(player.getLocation());
             if (distance > VantageTacticalAbility.MAX_RANGE + 15) {
                 bat.remove();
                 echo.set(null);
             } else if (distance > VantageTacticalAbility.MAX_RANGE + 5) {
                 Vector targetLocation = player.getLocation().toVector().add(bat.getLocation().toVector().subtract(player.getLocation().toVector()).setY(0).normalize().multiply(VantageTacticalAbility.MAX_RANGE)).add(new Vector(0, VantageTacticalAbility.ECHO_ELEVATION, 0));
-                Vector offset = targetLocation.subtract(bat.getLocation().toVector()).normalize().multiply(VantageTacticalAbility.FLY_SPEED);
+                Vector offset = targetLocation.subtract(bat.getLocation().toVector()).normalize().multiply(VantageTacticalAbility.ECHO_SPEED);
                 bat.setVelocity(offset);
             } else {
                 bat.setVelocity(new Vector(0, 0, 0));
@@ -55,7 +57,8 @@ public class EchoStatusRunnable extends AbilityRunnable {
         if (ability.getInfo().getActivation() == ActivationHand.MainHand && mainHandPearl ||
                 ability.getInfo().getActivation() == ActivationHand.OffHand && offHandPearl) {
             if (bat != null && bat.isValid()) {
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.LIGHT_PURPLE + "Ready to launch, sneak to relocate"));
+                double distance = bat.getLocation().distance(player.getLocation());
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.LIGHT_PURPLE + "Ready to launch (" + Math.round(distance) + "m), sneak to relocate"));
             } else {
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.LIGHT_PURPLE + "Deploy Echo"));
             }
