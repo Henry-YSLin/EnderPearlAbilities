@@ -317,6 +317,11 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
                                 player.sendTitle(" ", ChatColor.LIGHT_PURPLE + "Lost line of sight to Echo", 5, 20, 10);
                                 return;
                             }
+                            RayTraceResult result = player.getWorld().rayTraceBlocks(player.getEyeLocation(), toBat, toBat.length(), FluidCollisionMode.NEVER, true);
+                            if (result != null) {
+                                player.sendTitle(" ", ChatColor.LIGHT_PURPLE + "Lost line of sight to Echo", 5, 20, 10);
+                                return;
+                            }
                             next.run();
                         },
                         next -> new AbilityRunnable() {
