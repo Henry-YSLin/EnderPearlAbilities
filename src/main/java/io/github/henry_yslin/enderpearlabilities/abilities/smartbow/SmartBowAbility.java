@@ -9,8 +9,8 @@ import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
-import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
+import io.github.henry_yslin.enderpearlabilities.utils.ProjectileUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -98,66 +98,6 @@ public class SmartBowAbility extends Ability<SmartBowAbilityInfo> {
         bossbar.removeAll();
     }
 
-    private void simulate1TickMovement(Entity entity, Location location, Vector velocity, double gravity, double drag) {
-        if (entity.isOnGround()) {
-            location.add(velocity.clone().setY(0));
-        } else if (EntityUtils.isFlying(entity)) {
-            location.add(velocity);
-        } else {
-            boolean onGround = false;
-            if (velocity.getY() <= 0) {
-                RayTraceResult rayTraceResult = entity.getWorld().rayTraceBlocks(new Location(location.getWorld(), location.getX(), location.getY() + 0.01, location.getZ()), new Vector(0, -1, 0), 0.02 + velocity.getY(), FluidCollisionMode.ALWAYS, true);
-                if (rayTraceResult != null && rayTraceResult.getHitBlock() != null)
-                    onGround = true;
-            }
-            if (onGround)
-                velocity.multiply(0);
-            location.add(velocity);
-            if (EntityUtils.hasDelayedDrag(entity)) {
-                velocity.add(new Vector(0, -gravity, 0));
-                velocity.multiply(1 - drag);
-            } else {
-                velocity.multiply(1 - drag);
-                velocity.add(new Vector(0, -gravity, 0));
-            }
-        }
-    }
-
-    private Vector computeProjectileVelocity(Entity projectile, LivingEntity target, double maxVelocity, int maxAirTime) {
-        double projectileGravity = EntityUtils.getGravity(projectile);
-        double projectileDrag = EntityUtils.getDrag(projectile);
-        double targetGravity = EntityUtils.getGravity(target);
-        double targetDrag = EntityUtils.getDrag(target);
-        double aimHeight = target.getEyeHeight();
-
-        Location targetLocation = target.getLocation();
-        Vector targetVelocity = target.getVelocity();
-
-        double cumulativeGravity = 0;
-
-        for (int i = 1; i <= maxAirTime; i++) {
-            simulate1TickMovement(target, targetLocation, targetVelocity, targetGravity, targetDrag);
-
-            double dragCoefficient = (1 - Math.pow(1 - projectileDrag, i)) / (projectileDrag);
-
-            Location loc = projectile.getLocation();
-            loc.setY(targetLocation.getY());
-            double horizontalDistance = targetLocation.distance(loc);
-            double horizontalVelocity = horizontalDistance / dragCoefficient;
-
-            double verticalDistance = targetLocation.getY() + aimHeight - projectile.getLocation().getY();
-            double verticalVelocity = (verticalDistance + cumulativeGravity) / dragCoefficient;
-
-            cumulativeGravity += projectileGravity * dragCoefficient;
-
-            if (horizontalVelocity * horizontalVelocity + verticalVelocity * verticalVelocity > maxVelocity * maxVelocity)
-                continue;
-
-            return targetLocation.toVector().subtract(projectile.getLocation().toVector().setY(targetLocation.getY())).normalize().multiply(horizontalVelocity).add(new Vector(0, verticalVelocity, 0));
-        }
-        return target.getLocation().toVector().subtract(projectile.getLocation().toVector()).normalize().multiply(maxVelocity);
-    }
-
     private RayTraceResult rayTrace(double raySize, Entity arrow) {
         return arrow.getWorld().rayTraceEntities(arrow.getLocation(), arrow.getVelocity(), LOCK_ON_RANGE, raySize, entity -> {
             if (!entity.isValid()) return false;
@@ -189,12 +129,12 @@ public class SmartBowAbility extends Ability<SmartBowAbilityInfo> {
             cooldown();
         }
 
-        RayTraceResult result = rayTrace(0, arrow);
+        RayTraceResult result = rayTrace(1, arrow);
         if (result == null || result.getHitEntity() == null)
             result = rayTrace(LOCK_ON_RADIUS, arrow);
         if (result != null && result.getHitEntity() != null) {
             LivingEntity target = (LivingEntity) result.getHitEntity();
-            Vector velocity = computeProjectileVelocity(arrow, target, arrow.getVelocity().length(), MAX_AIR_TIME);
+            Vector velocity = ProjectileUtils.computeProjectileVelocity(arrow, target, arrow.getVelocity().length(), MAX_AIR_TIME);
             arrow.setVelocity(velocity);
             player.spawnParticle(Particle.FLASH, target.getLocation(), 1, 0, 0, 0, 0);
         } else {
