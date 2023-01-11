@@ -37,7 +37,6 @@ public class BangaloreTacticalAbility extends Ability<BangaloreTacticalAbilityIn
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
-    final AtomicBoolean blockShoot = new AtomicBoolean(false);
     final List<SmokeSpot> smokeSpots = new ArrayList<>();
     final List<Entity> projectiles = Collections.synchronizedList(new ArrayList<>());
     AbilityRunnable smokeRunnable;
@@ -83,7 +82,6 @@ public class BangaloreTacticalAbility extends Ability<BangaloreTacticalAbilityIn
     }
 
     private void setUpPlayer(Player player) {
-        blockShoot.set(false);
         cooldown.setCooldown(info.getCooldown());
 
         if (smokeRunnable != null && !smokeRunnable.isCancelled())
@@ -196,9 +194,16 @@ public class BangaloreTacticalAbility extends Ability<BangaloreTacticalAbilityIn
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
-                    Projectile projectile = AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
+                    Projectile projectile = AbilityUtils.fireProjectile(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
                     if (projectile != null) {
                         projectiles.add(projectile);
+                        cooldown.setCooldown(info.getCooldown());
+                        AbilityUtils.consumeEnderPearl(this, player);
+                        EnderPearlAbilities.getInstance().emitEvent(
+                                io.github.henry_yslin.enderpearlabilities.events.EventListener.class,
+                                new AbilityActivateEvent(this),
+                                EventListener::onAbilityActivate
+                        );
                     }
                 }
         ).execute();
@@ -218,17 +223,6 @@ public class BangaloreTacticalAbility extends Ability<BangaloreTacticalAbilityIn
         event.setCancelled(true);
 
         Optional<Object> ref = EntityUtils.getMetadata(projectile, "smoke");
-
-        if (ref.isEmpty()) {
-            blockShoot.set(false);
-            cooldown.setCooldown(info.getCooldown());
-            AbilityUtils.consumeEnderPearl(this, player);
-            EnderPearlAbilities.getInstance().emitEvent(
-                    io.github.henry_yslin.enderpearlabilities.events.EventListener.class,
-                    new AbilityActivateEvent(this),
-                    EventListener::onAbilityActivate
-            );
-        }
 
         projectile.getWorld().spawnParticle(Particle.SMOKE_NORMAL, projectile.getLocation(), 2, 0.1, 0.1, 0.1, 0.02);
 
