@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.cryptoultimate;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical.CryptoTacticalAbility;
 import io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical.CryptoTacticalAbilityInfo;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
@@ -43,6 +41,11 @@ public class CryptoUltimateAbility extends Ability<CryptoUltimateAbilityInfo> {
         super(plugin, info, ownerName);
 
         TACTICAL_ABILITY_NAME = new CryptoTacticalAbilityInfo(plugin).getCodeName();
+    }
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
@@ -283,7 +286,7 @@ public class CryptoUltimateAbility extends Ability<CryptoUltimateAbilityInfo> {
 
         event.setCancelled(true);
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 

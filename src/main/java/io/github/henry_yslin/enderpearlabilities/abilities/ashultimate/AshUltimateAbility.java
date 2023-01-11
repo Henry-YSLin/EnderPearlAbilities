@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.ashultimate;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
-import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
+import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.voidspace.VoidSpaceManager;
@@ -48,6 +46,11 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityRunnable portal;
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
 
     @Override
     public boolean isActive() {
@@ -138,7 +141,7 @@ public class AshUltimateAbility extends Ability<AshUltimateAbilityInfo> {
 
         event.setCancelled(true);
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
         if (abilityActive.get()) return;
 
         if (chargingUp.get()) {

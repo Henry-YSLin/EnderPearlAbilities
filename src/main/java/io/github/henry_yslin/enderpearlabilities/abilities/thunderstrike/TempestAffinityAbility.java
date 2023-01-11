@@ -2,7 +2,9 @@ package io.github.henry_yslin.enderpearlabilities.abilities.thunderstrike;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCooldown;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.SingleUseCooldown;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -40,6 +42,11 @@ public class TempestAffinityAbility extends Ability<TempestAffinityAbilityInfo> 
     final AtomicInteger abilityDuration = new AtomicInteger(0);
     RainstormRunnable rainstormRunnable;
     Player owner;
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
 
     @Override
     public boolean isActive() {
@@ -120,7 +127,7 @@ public class TempestAffinityAbility extends Ability<TempestAffinityAbilityInfo> 
 
         event.setCancelled(true);
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
         if (chargingUp.get()) return;
         if (abilityDuration.get() > 0) return;
         if (player.getWorld().getEnvironment() == World.Environment.NETHER || player.getWorld().getEnvironment() == World.Environment.THE_END) {

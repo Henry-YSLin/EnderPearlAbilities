@@ -35,7 +35,7 @@ public abstract class Ability<TInfo extends AbilityInfo> extends AbilityListener
         Player player = event.getPlayer();
         if (player.getName().equals(ownerName)) {
             this.player = player;
-            cooldown = new AbilityCooldown(this, player);
+            cooldown = createCooldown();
         }
     }
 
@@ -64,6 +64,8 @@ public abstract class Ability<TInfo extends AbilityInfo> extends AbilityListener
         return player;
     }
 
+    protected abstract AbilityCooldown createCooldown();
+
     /**
      * Get the cooldown instance of this ability.
      * <p>
@@ -81,7 +83,7 @@ public abstract class Ability<TInfo extends AbilityInfo> extends AbilityListener
         if (ownerName == null) return;
         player = plugin.getServer().getPlayer(ownerName);
         if (player != null) {
-            cooldown = new AbilityCooldown(this, player);
+            cooldown = createCooldown();
         }
         super.onEnable();
     }

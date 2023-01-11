@@ -2,7 +2,9 @@ package io.github.henry_yslin.enderpearlabilities.abilities.bloodhoundultimate;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCooldown;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.SingleUseCooldown;
 import io.github.henry_yslin.enderpearlabilities.abilities.bloodhoundtactical.BloodhoundTacticalAbility;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
@@ -38,6 +40,11 @@ public class BloodhoundUltimateAbility extends Ability<BloodhoundUltimateAbility
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicInteger abilityDuration = new AtomicInteger(0);
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
 
     @Override
     public boolean isActive() {
@@ -92,7 +99,7 @@ public class BloodhoundUltimateAbility extends Ability<BloodhoundUltimateAbility
 
         event.setCancelled(true);
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
         if (chargingUp.get()) return;
         if (abilityDuration.get() > 0) return;
 

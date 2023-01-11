@@ -13,7 +13,7 @@ public class WorldShaperAbilityInfo extends AbilityWithDurationInfo {
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 0);
         config.addDefault("duration", 0);
-        config.addDefault("cooldown", 20);
+        config.addDefault("cooldown", 3 * 20);
     }
 
     @Override

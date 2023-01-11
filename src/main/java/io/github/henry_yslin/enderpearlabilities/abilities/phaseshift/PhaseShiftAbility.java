@@ -2,7 +2,9 @@ package io.github.henry_yslin.enderpearlabilities.abilities.phaseshift;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCooldown;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.SingleUseCooldown;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
@@ -35,6 +37,11 @@ public class PhaseShiftAbility extends Ability<PhaseShiftAbilityInfo> {
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
 
     @Override
     public boolean isActive() {
@@ -103,7 +110,7 @@ public class PhaseShiftAbility extends Ability<PhaseShiftAbilityInfo> {
 
         if (AbilityLockManager.getInstance().isAbilityLocked(player)) return;
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
         if (chargingUp.get()) return;
 
         new FunctionChain(

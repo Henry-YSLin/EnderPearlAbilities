@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.pathfindertactical;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
@@ -46,6 +44,11 @@ public class PathfinderTacticalAbility extends Ability<PathfinderTacticalAbility
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityRunnable grapple;
     SlowFallRunnable slowFallRunnable;
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
 
     @Override
     public boolean isActive() {
@@ -96,7 +99,7 @@ public class PathfinderTacticalAbility extends Ability<PathfinderTacticalAbility
 
         event.setCancelled(true);
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
 
         if (abilityActive.get()) {
             grapple.cancel();

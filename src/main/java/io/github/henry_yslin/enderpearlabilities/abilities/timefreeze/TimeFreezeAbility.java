@@ -2,7 +2,9 @@ package io.github.henry_yslin.enderpearlabilities.abilities.timefreeze;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCooldown;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.SingleUseCooldown;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -29,7 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-// TODO: name subject to change
 public class TimeFreezeAbility extends Ability<TimeFreezeAbilityInfo> {
 
     static final int FREEZE_RANGE = 30;
@@ -40,6 +41,11 @@ public class TimeFreezeAbility extends Ability<TimeFreezeAbilityInfo> {
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
 
     @Override
     public boolean isActive() {
@@ -103,7 +109,7 @@ public class TimeFreezeAbility extends Ability<TimeFreezeAbilityInfo> {
 
         event.setCancelled(true);
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
         if (abilityActive.get()) return;
         if (chargingUp.get()) return;
 

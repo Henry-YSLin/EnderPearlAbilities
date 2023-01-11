@@ -2,7 +2,9 @@ package io.github.henry_yslin.enderpearlabilities.abilities.gibraltartactical;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCooldown;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.SingleUseCooldown;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.shield.EntityBlockingShieldBehavior;
@@ -49,6 +51,11 @@ public class GibraltarTacticalAbility extends Ability<GibraltarTacticalAbilityIn
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
 
     @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
+
+    @Override
     public boolean isActive() {
         return abilityActive.get();
     }
@@ -89,7 +96,7 @@ public class GibraltarTacticalAbility extends Ability<GibraltarTacticalAbilityIn
 
         event.setCancelled(true);
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 

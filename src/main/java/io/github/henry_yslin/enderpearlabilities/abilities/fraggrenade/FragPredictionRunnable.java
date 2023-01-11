@@ -20,7 +20,7 @@ public class FragPredictionRunnable extends AbilityRunnable {
     }
 
     private boolean shouldActivate(Player player) {
-        if (ability.getCooldown().isCoolingDown()) return false;
+        if (!ability.getCooldown().isAbilityUsable()) return false;
         return player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
     }
 

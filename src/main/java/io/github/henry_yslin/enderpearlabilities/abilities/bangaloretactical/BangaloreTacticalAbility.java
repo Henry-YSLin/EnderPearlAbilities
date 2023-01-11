@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.bangaloretactical;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
@@ -43,6 +41,11 @@ public class BangaloreTacticalAbility extends Ability<BangaloreTacticalAbilityIn
     final List<SmokeSpot> smokeSpots = new ArrayList<>();
     final List<Entity> projectiles = Collections.synchronizedList(new ArrayList<>());
     AbilityRunnable smokeRunnable;
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new MultipleChargeCooldown(this, player, 2);
+    }
 
     @Override
     public boolean isActive() {
@@ -187,16 +190,22 @@ public class BangaloreTacticalAbility extends Ability<BangaloreTacticalAbilityIn
 
         event.setCancelled(true);
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
         if (chargingUp.get()) return;
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
                 next -> {
                     Projectile projectile = AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
-                    if (projectile != null)
+                    if (projectile != null) {
+                        AbilityUtils.consumeEnderPearl(this, player);
+                        EnderPearlAbilities.getInstance().emitEvent(
+                                io.github.henry_yslin.enderpearlabilities.events.EventListener.class,
+                                new AbilityActivateEvent(this),
+                                EventListener::onAbilityActivate
+                        );
                         projectiles.add(projectile);
-                    cooldown.setCooldown(info.getCooldown());
+                    }
                 }
         ).execute();
     }
@@ -217,12 +226,8 @@ public class BangaloreTacticalAbility extends Ability<BangaloreTacticalAbilityIn
         Optional<Object> ref = EntityUtils.getMetadata(projectile, "smoke");
 
         if (ref.isEmpty()) {
-            AbilityUtils.consumeEnderPearl(this, player);
-            EnderPearlAbilities.getInstance().emitEvent(
-                    io.github.henry_yslin.enderpearlabilities.events.EventListener.class,
-                    new AbilityActivateEvent(this),
-                    EventListener::onAbilityActivate
-            );
+            blockShoot.set(false);
+            cooldown.setCooldown(info.getCooldown());
         }
 
         projectile.getWorld().spawnParticle(Particle.SMOKE_NORMAL, projectile.getLocation(), 2, 0.1, 0.1, 0.1, 0.02);

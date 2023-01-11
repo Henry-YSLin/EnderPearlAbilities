@@ -1,10 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.titans;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCooldown;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -53,6 +50,11 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
     AbilityRunnable titanControlRunnable;
 
     @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
+
+    @Override
     public boolean isActive() {
         return abilityActive.get();
     }
@@ -88,7 +90,7 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
         if (!(event.getDamager() instanceof Player player)) return;
         if (!player.getName().equals(ownerName)) return;
         if (event.getEntity().equals(titan.get())) return;
-        if (!cooldown.isCoolingDown()) return;
+        if (cooldown.isAbilityUsable()) return;
         cooldown.setCooldown(cooldown.getCooldownTicks() - (int) (event.getFinalDamage() * 20));
         player.getWorld().spawnParticle(Particle.HEART, player.getLocation(), (int) event.getFinalDamage(), 0.5, 0.5, 0.5, 0.1);
     }
@@ -149,7 +151,7 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
 
         event.setCancelled(true);
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 
@@ -199,7 +201,7 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
                         @Override
                         protected void start() {
                             super.start();
-                            abilityCooldown = new AbilityCooldown(ability, player, false);
+                            abilityCooldown = new SingleUseCooldown(ability, player, false);
                             t = titan.get();
                             abilityChargeUpBar = Bukkit.createBossBar(ChatColor.WHITE + info.getTitanAbilityName(), BarColor.WHITE, BarStyle.SOLID);
                             abilityChargeUpBar.addPlayer(player);
@@ -253,7 +255,7 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
                                 abilityChargeUp = 0;
                             } else {
                                 t.setAware(true);
-                                if (abilityCooldown.isCoolingDown()) {
+                                if (!abilityCooldown.isAbilityUsable()) {
                                     abilityChargeUpBar.setVisible(false);
                                 } else if (abilityChargeUp > 0) {
                                     if (abilityChargeUp < info.getTitanAbilityChargeUp())
@@ -296,7 +298,7 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
                             if (action != null) {
                                 if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
                                     if (attackMode) {
-                                        if (!abilityCooldown.isCoolingDown())
+                                        if (abilityCooldown.isAbilityUsable())
                                             if (abilityChargeUp <= 0)
                                                 abilityChargeUp = 1;
                                     } else {
@@ -316,13 +318,13 @@ public abstract class TitanAbility<TInfo extends TitanInfo> extends Ability<TInf
                             } else {
                                 String statusText = "";
                                 statusText += attackMode ? "Attack mode" : "Move mode";
-                                if (abilityCooldown.isCoolingDown())
+                                if (!abilityCooldown.isAbilityUsable())
                                     statusText += " | " + info.getTitanAbilityName() + " in " + abilityCooldown.getCooldownTicks() / 20 + "s";
                                 if (t.getTarget() != null)
                                     statusText += " | Target: " + t.getTarget().getName();
                                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(statusText));
                             }
-                            if (abilityCooldown.isCoolingDown())
+                            if (!abilityCooldown.isAbilityUsable())
                                 t.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, t.getLocation(), 2, 0.5, 0.5, 0.5, 0.02);
                             player.spawnParticle(Particle.ENCHANTMENT_TABLE, t.getLocation().add(0, 1, 0), 1, 0.8, 0.8, 0.8, 0.1);
                         }

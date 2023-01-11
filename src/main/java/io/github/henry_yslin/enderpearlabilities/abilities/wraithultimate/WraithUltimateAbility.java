@@ -2,7 +2,9 @@ package io.github.henry_yslin.enderpearlabilities.abilities.wraithultimate;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCooldown;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.SingleUseCooldown;
 import io.github.henry_yslin.enderpearlabilities.abilities.wraithtactical.WraithTacticalAbility;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
@@ -42,6 +44,11 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityRunnable portal;
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
 
     @Override
     public boolean isActive() {
@@ -99,7 +106,7 @@ public class WraithUltimateAbility extends Ability<WraithUltimateAbilityInfo> {
 
         if (abilityActive.get()) return;
         if (chargingUp.get()) return;
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
 
         Location[] locations = new Location[2];
         List<Location> path = new ArrayList<>();

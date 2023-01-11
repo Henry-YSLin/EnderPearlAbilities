@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.lifelineultimate;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -35,6 +33,11 @@ public class LifelineUltimateAbility extends Ability<LifelineUltimateAbilityInfo
 
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
 
     @Override
     public boolean isActive() {
@@ -88,7 +91,7 @@ public class LifelineUltimateAbility extends Ability<LifelineUltimateAbilityInfo
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         if (event.getClickedBlock() == null) return;
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 

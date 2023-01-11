@@ -2,7 +2,9 @@ package io.github.henry_yslin.enderpearlabilities.abilities.smartbow;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
 import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
+import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCooldown;
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.SingleUseCooldown;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
@@ -47,6 +49,11 @@ public class SmartBowAbility extends Ability<SmartBowAbilityInfo> {
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     final AtomicInteger shotsLeft = new AtomicInteger(0);
     final BossBar bossbar = Bukkit.createBossBar("", BarColor.BLUE, BarStyle.SEGMENTED_12);
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
 
     @Override
     public boolean isActive() {
@@ -241,7 +248,7 @@ public class SmartBowAbility extends Ability<SmartBowAbilityInfo> {
 
         if (AbilityLockManager.getInstance().isAbilityLocked(player)) return;
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
         if (chargingUp.get()) return;
 
         new FunctionChain(

@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.lifelinetactical;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -42,6 +40,11 @@ public class LifelineTacticalAbility extends Ability<LifelineTacticalAbilityInfo
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
 
     @Override
     public boolean isActive() {
@@ -104,7 +107,7 @@ public class LifelineTacticalAbility extends Ability<LifelineTacticalAbilityInfo
 
         if (abilityActive.get()) return;
         if (chargingUp.get()) return;
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
 
         AtomicReference<LivingEntity> drone = new AtomicReference<>();
 

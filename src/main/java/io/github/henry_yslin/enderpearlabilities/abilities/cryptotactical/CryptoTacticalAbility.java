@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.cryptotactical;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
@@ -59,6 +57,11 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
     final AtomicReference<LivingEntity> drone = new AtomicReference<>();
     final AtomicReference<NPC> dummy = new AtomicReference<>();
     DroneStatusRunnable droneStatusRunnable;
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
 
     @Override
     public boolean isActive() {
@@ -307,7 +310,7 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
 
         event.setCancelled(true);
 
-        if (cooldown.isCoolingDown()) return;
+        if (!cooldown.isAbilityUsable()) return;
         if (chargingUp.get()) return;
         if (abilityActive.get()) return;
 

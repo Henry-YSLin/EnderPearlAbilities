@@ -1,9 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.vantagetactical;
 
 import io.github.henry_yslin.enderpearlabilities.EnderPearlAbilities;
-import io.github.henry_yslin.enderpearlabilities.abilities.Ability;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityCouple;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.*;
 import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
@@ -49,6 +47,11 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
     final AtomicBoolean moving = new AtomicBoolean(false);
     final AtomicReference<LivingEntity> echo = new AtomicReference<>();
     EchoStatusRunnable echoStatusRunnable;
+
+    @Override
+    protected AbilityCooldown createCooldown() {
+        return new SingleUseCooldown(this, player);
+    }
 
     @Override
     public boolean isActive() {
@@ -295,7 +298,7 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
                     }.runTaskRepeated(this, 0, 1, 100);
                 }
             } else {
-                if (cooldown.isCoolingDown()) return;
+                if (!cooldown.isAbilityUsable()) return;
                 if (AbilityLockManager.getInstance().isAbilityLocked(player)) return;
 
                 new FunctionChain(
