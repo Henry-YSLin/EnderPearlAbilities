@@ -1,6 +1,7 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.fraggrenade;
 
 import io.github.henry_yslin.enderpearlabilities.abilities.AbilityRunnable;
+import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
 import io.github.henry_yslin.enderpearlabilities.utils.WorldUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -21,11 +22,14 @@ public class FragPredictionRunnable extends AbilityRunnable {
 
     private boolean shouldActivate(Player player) {
         if (!ability.getCooldown().isAbilityUsable()) return false;
-        return player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
+        if (this.ability.getInfo().getActivation() == ActivationHand.MainHand)
+            return player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
+        else
+            return player.getInventory().getItemInOffHand().getType() == Material.ENDER_PEARL;
     }
 
     private Location getFirePosition(Player player) {
-        return player.getEyeLocation().add(new Vector(0, 1, 0).crossProduct(player.getEyeLocation().getDirection()).multiply(0.4));
+        return player.getEyeLocation().add(new Vector(0, 1, 0).crossProduct(player.getEyeLocation().getDirection()).multiply(-0.4));
     }
 
     @Override

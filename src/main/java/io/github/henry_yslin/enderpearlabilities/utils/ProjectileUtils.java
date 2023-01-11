@@ -68,7 +68,9 @@ public class ProjectileUtils {
      */
     public static Vector computeProjectileVelocity(Entity projectile, LivingEntity target, double maxVelocity, int maxAirTime) {
         return computeProjectileVelocity(
-                projectile,
+                projectile.getLocation(),
+                EntityUtils.getGravity(projectile),
+                EntityUtils.getDrag(projectile),
                 target,
                 EntityUtils.getGravity(target),
                 EntityUtils.getDrag(target),
@@ -91,7 +93,43 @@ public class ProjectileUtils {
      */
     public static Vector computeProjectileVelocity(Entity projectile, Location target, double maxVelocity, int maxAirTime) {
         return computeProjectileVelocity(
-                projectile,
+                projectile.getLocation(),
+                EntityUtils.getGravity(projectile),
+                EntityUtils.getDrag(projectile),
+                null,
+                0,
+                0,
+                0,
+                target,
+                new Vector(0, 0, 0),
+                maxVelocity,
+                maxAirTime
+        );
+    }
+
+    /**
+     * Compute the velocity of a projectile to hit a stationary target location.
+     *
+     * @param projectileLocation The location of the projectile.
+     * @param projectileGravity  The gravity of the projectile.
+     * @param projectileDrag     The drag of the projectile.
+     * @param target             The target location to hit.
+     * @param maxVelocity        The maximum allowed velocity of the projectile.
+     * @param maxAirTime         The maximum allowed air time of the projectile.
+     * @return The velocity of the projectile to hit the target.
+     */
+    public static Vector computeProjectileVelocity(
+            final Location projectileLocation,
+            final double projectileGravity,
+            final double projectileDrag,
+            Location target,
+            double maxVelocity,
+            int maxAirTime
+    ) {
+        return computeProjectileVelocity(
+                projectileLocation,
+                projectileGravity,
+                projectileDrag,
                 null,
                 0,
                 0,
@@ -104,7 +142,9 @@ public class ProjectileUtils {
     }
 
     public static Vector computeProjectileVelocity(
-            final Entity projectile,
+            final Location projectileLocation,
+            final double projectileGravity,
+            final double projectileDrag,
             @Nullable final LivingEntity target,
             final double targetGravity,
             final double targetDrag,
@@ -114,9 +154,6 @@ public class ProjectileUtils {
             final double maxVelocity,
             final int maxAirTime
     ) {
-        final double projectileGravity = EntityUtils.getGravity(projectile);
-        final double projectileDrag = EntityUtils.getDrag(projectile);
-
         double cumulativeGravity = 0;
 
         Location computedTargetLoc = targetLocation.clone();
@@ -128,12 +165,12 @@ public class ProjectileUtils {
 
             double dragCoefficient = (1 - Math.pow(1 - projectileDrag, i)) / (projectileDrag);
 
-            Location loc = projectile.getLocation();
+            Location loc = projectileLocation.clone();
             loc.setY(computedTargetLoc.getY());
             double horizontalDistance = computedTargetLoc.distance(loc);
             double horizontalVelocity = horizontalDistance / dragCoefficient;
 
-            double verticalDistance = computedTargetLoc.getY() + targetEyeHeight - projectile.getLocation().getY();
+            double verticalDistance = computedTargetLoc.getY() + targetEyeHeight - projectileLocation.getY();
             double verticalVelocity = (verticalDistance + cumulativeGravity) / dragCoefficient;
 
             cumulativeGravity += projectileGravity * dragCoefficient;
@@ -141,8 +178,8 @@ public class ProjectileUtils {
             if (horizontalVelocity * horizontalVelocity + verticalVelocity * verticalVelocity > maxVelocity * maxVelocity)
                 continue;
 
-            return computedTargetLoc.toVector().subtract(projectile.getLocation().toVector().setY(computedTargetLoc.getY())).normalize().multiply(horizontalVelocity).add(new Vector(0, verticalVelocity, 0));
+            return computedTargetLoc.toVector().subtract(projectileLocation.toVector().setY(computedTargetLoc.getY())).normalize().multiply(horizontalVelocity).add(new Vector(0, verticalVelocity, 0));
         }
-        return targetLocation.toVector().subtract(projectile.getLocation().toVector()).normalize().multiply(maxVelocity);
+        return targetLocation.toVector().subtract(projectileLocation.toVector()).normalize().multiply(maxVelocity);
     }
 }
