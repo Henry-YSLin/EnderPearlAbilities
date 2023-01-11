@@ -6,6 +6,7 @@ import io.github.henry_yslin.enderpearlabilities.events.AbilityActivateEvent;
 import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.managers.abilitylock.AbilityLockManager;
 import io.github.henry_yslin.enderpearlabilities.utils.AbilityUtils;
+import io.github.henry_yslin.enderpearlabilities.utils.EntityUtils;
 import io.github.henry_yslin.enderpearlabilities.utils.FunctionChain;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
@@ -353,7 +354,7 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
                                 }
                                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 0.05f, 0.3f);
                                 offset.normalize().multiply(LAUNCH_SPEED);
-                                offset.add(new Vector(0, 0.1, 0));
+                                offset.add(new Vector(0, 0.02 + EntityUtils.getGravity(player), 0));
                                 player.setVelocity(offset);
                                 player.getWorld().spawnParticle(Particle.SMOKE_NORMAL, player.getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2, 0.02);
                             }
