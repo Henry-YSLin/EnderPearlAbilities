@@ -40,7 +40,6 @@ public class RevenantTacticalAbility extends Ability<RevenantTacticalAbilityInfo
     }
 
     final AtomicBoolean chargingUp = new AtomicBoolean(false);
-    final AtomicBoolean blockShoot = new AtomicBoolean(false);
 
     @Override
     protected AbilityCooldown createCooldown() {
@@ -80,7 +79,6 @@ public class RevenantTacticalAbility extends Ability<RevenantTacticalAbilityInfo
     }
 
     private void setUpPlayer(Player player) {
-        blockShoot.set(false);
         cooldown.setCooldown(info.getCooldown());
     }
 
@@ -94,11 +92,21 @@ public class RevenantTacticalAbility extends Ability<RevenantTacticalAbilityInfo
 
         if (!cooldown.isAbilityUsable()) return;
         if (chargingUp.get()) return;
-        if (blockShoot.get()) return;
 
         new FunctionChain(
                 next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next),
-                next -> AbilityUtils.fireProjectile(this, player, blockShoot, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY)
+                next -> {
+                    Projectile projectile = AbilityUtils.fireProjectile(this, player, null, PROJECTILE_LIFETIME, PROJECTILE_SPEED, PROJECTILE_GRAVITY);
+                    if (projectile != null) {
+                        cooldown.setCooldown(info.getCooldown());
+                        AbilityUtils.consumeEnderPearl(this, player);
+                        EnderPearlAbilities.getInstance().emitEvent(
+                                EventListener.class,
+                                new AbilityActivateEvent(this),
+                                EventListener::onAbilityActivate
+                        );
+                    }
+                }
         ).execute();
     }
 
@@ -148,14 +156,6 @@ public class RevenantTacticalAbility extends Ability<RevenantTacticalAbilityInfo
         if (!(projectile instanceof Snowball)) return;
 
         event.setCancelled(true);
-        blockShoot.set(false);
-        cooldown.setCooldown(info.getCooldown());
-        AbilityUtils.consumeEnderPearl(this, player);
-        EnderPearlAbilities.getInstance().emitEvent(
-                EventListener.class,
-                new AbilityActivateEvent(this),
-                EventListener::onAbilityActivate
-        );
 
         projectile.getWorld().spawnParticle(Particle.SMOKE_NORMAL, projectile.getLocation(), 2, 0.1, 0.1, 0.1, 0.02);
 
