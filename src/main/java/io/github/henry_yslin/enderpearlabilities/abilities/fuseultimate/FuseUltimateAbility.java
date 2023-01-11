@@ -132,7 +132,7 @@ public class FuseUltimateAbility extends Ability<FuseUltimateAbilityInfo> {
                                 pellet.pellet.getWorld().spawnParticle(Particle.FLAME, pellet.fireLocation, 10, FIRE_RADIUS / 2, FIRE_RADIUS / 2, FIRE_RADIUS / 2, 0.02, null, true);
                                 pellet.pellet.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, pellet.fireLocation, 5, FIRE_RADIUS / 2, FIRE_RADIUS / 2, FIRE_RADIUS / 2, 0, null, true);
                                 if (Math.random() < 0.2f)
-                                    pellet.pellet.getWorld().playSound(pellet.fireLocation, Sound.ENTITY_BLAZE_SHOOT, 0.05f, 0.1f);
+                                    pellet.pellet.getWorld().playSound(pellet.fireLocation, Sound.ENTITY_BLAZE_SHOOT, 0.2f, 0.1f);
                                 pellet.pellet.getWorld().getNearbyEntities(pellet.fireLocation, FIRE_RADIUS, FIRE_RADIUS, FIRE_RADIUS).forEach(entity -> {
                                     if (entity instanceof LivingEntity livingEntity) {
                                         livingEntity.addPotionEffect(PotionEffectType.WITHER.createEffect(5 * 20, 2));
