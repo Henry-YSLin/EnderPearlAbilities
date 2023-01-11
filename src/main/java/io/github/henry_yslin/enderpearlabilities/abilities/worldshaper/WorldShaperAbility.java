@@ -38,7 +38,7 @@ public class WorldShaperAbility extends Ability<WorldShaperAbilityInfo> {
 
     @Override
     protected AbilityCooldown createCooldown() {
-        return new MultipleChargeCooldown(this, player, 5);
+        return new MultipleChargeCooldown(this, player, info.getCharge());
     }
 
     @Override

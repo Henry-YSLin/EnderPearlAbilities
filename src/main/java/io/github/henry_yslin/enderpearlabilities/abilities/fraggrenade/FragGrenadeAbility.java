@@ -38,7 +38,7 @@ public class FragGrenadeAbility extends Ability<FragGrenadeAbilityInfo> {
 
     @Override
     protected AbilityCooldown createCooldown() {
-        return new MultipleChargeCooldown(this, player, 2);
+        return new MultipleChargeCooldown(this, player, info.getCharge());
     }
 
     @Override

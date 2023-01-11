@@ -25,6 +25,11 @@ public abstract class AbilityWithDurationInfo extends AbilityInfo {
     }
 
     @Override
+    public int getCharge() {
+        return 1;
+    }
+
+    @Override
     protected void readFromConfig(ConfigurationSection config) {
         chargeUp = config.getInt("charge-up");
         duration = config.getInt("duration");

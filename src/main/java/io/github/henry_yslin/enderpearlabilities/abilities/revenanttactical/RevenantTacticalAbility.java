@@ -43,7 +43,7 @@ public class RevenantTacticalAbility extends Ability<RevenantTacticalAbilityInfo
 
     @Override
     protected AbilityCooldown createCooldown() {
-        return new MultipleChargeCooldown(this, player, 2);
+        return new MultipleChargeCooldown(this, player, info.getCharge());
     }
 
     @Override

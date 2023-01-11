@@ -43,7 +43,7 @@ public class BangaloreTacticalAbility extends Ability<BangaloreTacticalAbilityIn
 
     @Override
     protected AbilityCooldown createCooldown() {
-        return new MultipleChargeCooldown(this, player, 2);
+        return new MultipleChargeCooldown(this, player, info.getCharge());
     }
 
     @Override

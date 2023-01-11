@@ -67,6 +67,11 @@ public class PathfinderTacticalAbilityInfo extends AbilityInfo {
         return maxCooldown;
     }
 
+    @Override
+    public int getCharge() {
+        return 1;
+    }
+
     public int getMinCooldown() {
         return minCooldown;
     }

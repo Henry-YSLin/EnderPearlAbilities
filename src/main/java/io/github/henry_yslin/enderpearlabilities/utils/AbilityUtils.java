@@ -281,6 +281,8 @@ public class AbilityUtils {
         s += String.format("%sActivation: %s", ChatColor.GRAY, abilityInfo.getActivation() == ActivationHand.MainHand ? "main hand" : "off hand") +
                 "\n" +
                 String.format("%sCharge up: %ss   Duration: %ss   Cool down: %ss", ChatColor.GRAY, friendlyNumber(abilityInfo.getChargeUp()), friendlyNumber(abilityInfo.getDuration()), friendlyNumber(abilityInfo.getCooldown())) +
+                "\n" +
+                (abilityInfo.getCharge() > 1 ? String.format("%sCharges: %s", ChatColor.GRAY, abilityInfo.getCharge()) : "") +
                 "\n";
         return s;
     }

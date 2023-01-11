@@ -1,19 +1,20 @@
 package io.github.henry_yslin.enderpearlabilities.abilities.worldshaper;
 
 import io.github.henry_yslin.enderpearlabilities.Instantiable;
-import io.github.henry_yslin.enderpearlabilities.abilities.AbilityWithDurationInfo;
 import io.github.henry_yslin.enderpearlabilities.abilities.ActivationHand;
+import io.github.henry_yslin.enderpearlabilities.abilities.MultipleChargeAbilityWithDurationInfo;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
 @Instantiable
-public class WorldShaperAbilityInfo extends AbilityWithDurationInfo {
+public class WorldShaperAbilityInfo extends MultipleChargeAbilityWithDurationInfo {
 
     @Override
     public void writeConfigDefaults(ConfigurationSection config) {
         config.addDefault("charge-up", 0);
         config.addDefault("duration", 0);
         config.addDefault("cooldown", 3 * 20);
+        config.addDefault("charge", 5);
     }
 
     @Override

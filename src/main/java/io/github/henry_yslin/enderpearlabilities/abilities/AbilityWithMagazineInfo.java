@@ -25,6 +25,11 @@ public abstract class AbilityWithMagazineInfo extends AbilityInfo {
         return getBaseCooldown() + getCooldownPerShot() * getMagazineSize();
     }
 
+    @Override
+    public int getCharge() {
+        return 1;
+    }
+
     public int getMagazineSize() {
         return magazineSize;
     }
