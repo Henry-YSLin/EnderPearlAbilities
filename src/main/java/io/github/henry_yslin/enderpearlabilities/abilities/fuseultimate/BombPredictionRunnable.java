@@ -23,6 +23,7 @@ public class BombPredictionRunnable extends AbilityRunnable {
 
     private boolean shouldActivate(Player player) {
         if (!ability.getCooldown().isAbilityUsable()) return false;
+        if (ability.isActive()) return false;
         if (this.ability.getInfo().getActivation() == ActivationHand.MainHand)
             return player.getInventory().getItemInMainHand().getType() == Material.ENDER_PEARL;
         else

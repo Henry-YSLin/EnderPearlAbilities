@@ -162,4 +162,27 @@ public class MathUtils {
             return true;
         return false;
     }
+
+    /**
+     * Check if a 2D point is located inside a 2D polygon.
+     *
+     * @param targetX  The x coordinate of the point.
+     * @param targetY  The y coordinate of the point.
+     * @param polygonX The x coordinates of the polygon.
+     * @param polygonY The y coordinates of the polygon.
+     * @return True if the point is inside the polygon, otherwise false.
+     */
+    public static boolean isInsidePolygon(double targetX, double targetY, double[] polygonX, double[] polygonY) {
+        // https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html
+
+        boolean inside = false;
+        for (int i = 0, j = polygonX.length - 1; i < polygonX.length; j = i++) {
+            if ((polygonY[i] > targetY) != (polygonY[j] > targetY) &&
+                    targetX < (polygonX[j] - polygonX[i]) * (targetY - polygonY[i]) / (polygonY[j] - polygonY[i]) + polygonX[i]) {
+                inside = !inside;
+            }
+        }
+
+        return inside;
+    }
 }

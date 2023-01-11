@@ -33,12 +33,12 @@ public class FuseUltimateAbilityInfo extends AbilityWithDurationInfo {
 
     @Override
     public String getDescription() {
-        return "Launch a bombardment that encircles a target in a wall of flame.";
+        return "Launch a bombardment that encircles a target in a wall of flame. Enclosed targets are revealed.";
     }
 
     @Override
     public String getUsage() {
-        return "Right click to throw a disc that projects a shield around it.";
+        return "Sneak to zoom in. Right click to launch a bombardment along the predicted path as shown.";
     }
 
     @Override
