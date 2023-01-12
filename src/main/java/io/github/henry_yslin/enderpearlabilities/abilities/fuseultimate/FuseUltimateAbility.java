@@ -7,6 +7,9 @@ import io.github.henry_yslin.enderpearlabilities.events.EventListener;
 import io.github.henry_yslin.enderpearlabilities.utils.*;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -127,8 +130,10 @@ public class FuseUltimateAbility extends Ability<FuseUltimateAbilityInfo> {
                     for (int i = fireRings.size() - 1; i >= 0; i--) {
                         FireRing fireRing = fireRings.get(i);
 
+                        int maxLifetime = 0;
                         for (FirePellet pellet : fireRing.pellets) {
-                            if (!pellet.isExpired() && pellet.fireLocation != null) {
+                            if (pellet.isExpired()) continue;
+                            if (pellet.fireLocation != null) {
                                 pellet.pellet.getWorld().spawnParticle(Particle.FLAME, pellet.fireLocation, 10, FIRE_RADIUS / 2, FIRE_RADIUS / 2, FIRE_RADIUS / 2, 0.02, null, true);
                                 pellet.pellet.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, pellet.fireLocation, 5, FIRE_RADIUS / 2, FIRE_RADIUS / 2, FIRE_RADIUS / 2, 0, null, true);
                                 if (Math.random() < 0.2f)
@@ -139,9 +144,15 @@ public class FuseUltimateAbility extends Ability<FuseUltimateAbilityInfo> {
                                         livingEntity.addPotionEffect(PotionEffectType.SLOW.createEffect(5 * 20, 3));
                                     }
                                 });
+                                maxLifetime = Math.max(maxLifetime, pellet.lifetime);
                                 pellet.lifetime -= 5;
+                            } else {
+                                pellet.pellet.getWorld().spawnParticle(Particle.SMOKE_LARGE, pellet.pellet.getLocation(), 5, 0.05, 0.05, 0.05, 0.02, null, true);
                             }
                         }
+
+                        if (maxLifetime > 0)
+                            fireRing.bossBar.setProgress((double) maxLifetime / info.getDuration());
 
                         if (fireRing.cachedBoundingBox != null) {
                             fireRing.pellets.get(0).pellet.getWorld().getNearbyEntities(fireRing.cachedBoundingBox).forEach(entity -> {
@@ -157,6 +168,7 @@ public class FuseUltimateAbility extends Ability<FuseUltimateAbilityInfo> {
 
                         if (fireRing.isExpired()) {
                             fireRings.remove(i);
+                            fireRing.bossBar.removeAll();
                         }
                     }
                 }
@@ -300,16 +312,27 @@ public class FuseUltimateAbility extends Ability<FuseUltimateAbilityInfo> {
         for (int i = 0; i <= PELLET_COUNT; i++) {
             horizontal.setPitch(0);
             horizontal.setYaw(i * 360f / PELLET_COUNT);
+            Location targetLocation = horizontal.clone();
             Snowball snowball = projectile.getWorld().spawn(finalLocation, Snowball.class, entity -> {
                 entity.setShooter(player);
                 entity.setMetadata("ability", new FixedMetadataValue(plugin, new AbilityCouple(info.getCodeName(), ownerName)));
-                entity.setVelocity(horizontal.getDirection().multiply(PELLET_SPEED));
+                entity.setVelocity(new Vector(0, 0, 0));
+                entity.setGravity(false);
             });
+            AbilityUtils.delay(this, (int) (Math.random() * 10), () -> {
+                snowball.setVelocity(targetLocation.getDirection().multiply(PELLET_SPEED));
+                snowball.setGravity(true);
+            }, false);
             FirePellet pellet = new FirePellet(fireRing, snowball);
             pellets.add(pellet);
             snowball.setMetadata("pellet", new FixedMetadataValue(plugin, pellet));
         }
         fireRing.addPellets(pellets);
+
+        BossBar bossbar = Bukkit.createBossBar(ChatColor.LIGHT_PURPLE + info.getName(), BarColor.PURPLE, BarStyle.SOLID);
+        bossbar.addPlayer(player);
+        fireRing.bossBar = bossbar;
+
         fireRings.add(fireRing);
 
         world.playSound(finalLocation, Sound.ENTITY_GENERIC_EXPLODE, 1, 0.1f);
@@ -352,6 +375,7 @@ public class FuseUltimateAbility extends Ability<FuseUltimateAbilityInfo> {
 
     static class FireRing {
         public List<FirePellet> pellets = new ArrayList<>();
+        public BossBar bossBar;
 
         private BoundingBox cachedBoundingBox;
         private double[] polygonX;
@@ -390,7 +414,7 @@ public class FuseUltimateAbility extends Ability<FuseUltimateAbilityInfo> {
                 cachedBoundingBox = null;
                 return;
             }
-            cachedBoundingBox = new BoundingBox(minX, minY - VERTICAL_SCAN_RANGE, minZ, maxX, maxY + VERTICAL_SCAN_RANGE, maxZ);
+            cachedBoundingBox = new BoundingBox(minX, minY - VERTICAL_SCAN_RANGE, minZ, maxX, maxY + EXPLOSION_HEIGHT, maxZ);
 
             polygonX = pellets.stream()
                     .filter(pellet -> pellet.getFireLocation() != null && pellet.lifetime > 0)
