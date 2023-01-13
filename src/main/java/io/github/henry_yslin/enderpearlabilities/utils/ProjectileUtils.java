@@ -9,6 +9,8 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Predicate;
+
 public class ProjectileUtils {
 
     /**
@@ -18,7 +20,18 @@ public class ProjectileUtils {
      * @return The accurate hit location of the projectile, ray traced from its current velocity.
      */
     public static Location correctProjectileHitLocation(Projectile projectile) {
-        RayTraceResult result = projectile.getWorld().rayTrace(projectile.getLocation(), projectile.getVelocity(), projectile.getVelocity().length(), FluidCollisionMode.NEVER, true, 0.1, entity -> !entity.equals(projectile));
+        return correctProjectileHitLocation(projectile, entity -> true);
+    }
+
+    /**
+     * Improve the accuracy of projectile hit location by ray tracing.
+     *
+     * @param projectile      The projectile to compute hit location for. The hit event should have already fired for this projectile.
+     * @param hitEntityFilter A filter for the hit entity. If an entity does not pass the filter, it will not be considered when computing the hit location.
+     * @return The accurate hit location of the projectile, ray traced from its current velocity.
+     */
+    public static Location correctProjectileHitLocation(Projectile projectile, Predicate<Entity> hitEntityFilter) {
+        RayTraceResult result = projectile.getWorld().rayTrace(projectile.getLocation(), projectile.getVelocity(), projectile.getVelocity().length(), FluidCollisionMode.NEVER, true, 0.1, entity -> !entity.equals(projectile) && hitEntityFilter.test(entity));
         if (result == null) {
             return projectile.getLocation();
         }

@@ -34,6 +34,15 @@ public class MultipleChargeCooldown implements AbilityCooldown {
     }
 
     /**
+     * Get the number of charges available to be used.
+     *
+     * @return The number of charges available to be used.
+     */
+    public int getAvailableCharge() {
+        return maxCharge - charges.size();
+    }
+
+    /**
      * Get the remaining ticks until another use of the ability is allowed.
      *
      * @return The remaining ticks.
