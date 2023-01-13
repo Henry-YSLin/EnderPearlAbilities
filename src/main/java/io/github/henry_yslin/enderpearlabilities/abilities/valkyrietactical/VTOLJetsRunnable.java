@@ -25,7 +25,7 @@ public class VTOLJetsRunnable extends AbilityRunnable {
     double fuel;
     int regenTicks;
     int levelFlightTicks;
-    int levelFlightTolerance = 10;
+    int levelFlightTolerance = 20;
 
     public VTOLJetsRunnable(Player player) {
         this.player = player;
@@ -90,7 +90,7 @@ public class VTOLJetsRunnable extends AbilityRunnable {
         if (player.isFlying()) {
             if (!wasFlying) {
                 velocityStable = false;
-                levelFlightTolerance = player.getPing() / 50 + 3;
+                levelFlightTolerance = player.getPing() / 50 * 2;
             }
             if (!velocityStable) {
                 levelFlightTicks = 0;
