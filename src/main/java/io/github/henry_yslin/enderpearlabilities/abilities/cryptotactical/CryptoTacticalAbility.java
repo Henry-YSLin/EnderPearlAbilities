@@ -465,17 +465,18 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
                         if (result != null && result.getHitBlock() != null) {
                             Material block = result.getHitBlock().getType();
                             if (block.isSolid() && block.isOccluding()) {
-                                player.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(30, 1));
-                                new ParticleBuilder(ParticleEffect.BLOCK_DUST, player.getEyeLocation())
+                                new ParticleBuilder(ParticleEffect.BLOCK_DUST, player.getEyeLocation().add(player.getVelocity()))
                                         .setParticleData(new BlockTexture(block))
                                         .setAmount(10)
                                         .setOffset(0.2f, 0.2f, 0.2f)
+                                        .setSpeed(0)
                                         .display();
                                 blinded = true;
                             }
                         }
                         if (blinded) {
                             player.setFlySpeed(FLY_SPEED / 7);
+                            player.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(30, 1));
                         } else {
                             if (player.hasPotionEffect(PotionEffectType.BLINDNESS)) {
                                 player.removePotionEffect(PotionEffectType.BLINDNESS);
@@ -499,6 +500,8 @@ public class CryptoTacticalAbility extends Ability<CryptoTacticalAbilityInfo> {
                     protected void end() {
                         bossbar.removeAll();
                         player.setFlySpeed(0.1f);
+                        player.removePotionEffect(PotionEffectType.NIGHT_VISION);
+                        player.removePotionEffect(PotionEffectType.CONDUIT_POWER);
                         if (d.isValid())
                             exitDrone();
                         else
