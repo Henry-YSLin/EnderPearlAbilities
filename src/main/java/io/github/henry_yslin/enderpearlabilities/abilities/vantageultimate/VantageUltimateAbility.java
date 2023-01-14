@@ -162,6 +162,14 @@ public class VantageUltimateAbility extends Ability<VantageUltimateAbilityInfo> 
             livingEntity.addPotionEffect(PotionEffectType.WITHER.createEffect(5 * 20, 1));
             livingEntity.getWorld().spawnParticle(Particle.SOUL, livingEntity.getEyeLocation(), 20, 0.5, 0.5, 0.5, 0.05, null, true);
         }
+
+        // todo: use a separate event instead of ability activate event
+        EnderPearlAbilities.getInstance().emitEvent(
+                EventListener.class,
+                new AbilityActivateEvent(this),
+                EventListener::onAbilityActivate
+        );
+
         synchronized (markedInstances) {
             for (int i = markedInstances.size() - 1; i >= 0; i--) {
                 MarkedRunnable runnable = markedInstances.get(i);
@@ -233,11 +241,6 @@ public class VantageUltimateAbility extends Ability<VantageUltimateAbilityInfo> 
                             abilityActive.set(true);
 
                             AbilityUtils.consumeEnderPearl(self, player);
-                            EnderPearlAbilities.getInstance().emitEvent(
-                                    EventListener.class,
-                                    new AbilityActivateEvent(self),
-                                    EventListener::onAbilityActivate
-                            );
 
                             if (player.getInventory().getItemInOffHand().getType() != Material.AIR) {
                                 player.getInventory().addItem(player.getInventory().getItemInOffHand());
