@@ -32,6 +32,8 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,6 +51,7 @@ public class VantageUltimateAbility extends Ability<VantageUltimateAbilityInfo> 
     final AtomicBoolean abilityActive = new AtomicBoolean(false);
     AbilityRunnable sniperRunnable;
     final AtomicReference<ItemStack> sniper = new AtomicReference<>();
+    private static final List<MarkedRunnable> markedInstances = Collections.synchronizedList(new ArrayList<>());
 
     @Override
     protected AbilityCooldown createCooldown() {
@@ -118,9 +121,7 @@ public class VantageUltimateAbility extends Ability<VantageUltimateAbilityInfo> 
         if (!event.getWhoClicked().equals(player)) return;
         if (!Objects.equals(event.getCurrentItem(), sniper.get())) return;
         event.setCancelled(true);
-        AbilityUtils.delay(this, 1, () -> {
-            ((Player) event.getWhoClicked()).updateInventory();
-        }, true);
+        AbilityUtils.delay(this, 1, () -> ((Player) event.getWhoClicked()).updateInventory(), true);
     }
 
     @EventHandler
@@ -129,9 +130,7 @@ public class VantageUltimateAbility extends Ability<VantageUltimateAbilityInfo> 
         if (!Objects.equals(event.getCursor(), sniper.get()) && !Objects.equals(event.getOldCursor(), sniper.get()))
             return;
         event.setCancelled(true);
-        AbilityUtils.delay(this, 1, () -> {
-            ((Player) event.getWhoClicked()).updateInventory();
-        }, true);
+        AbilityUtils.delay(this, 1, () -> ((Player) event.getWhoClicked()).updateInventory(), true);
     }
 
     @EventHandler
@@ -163,38 +162,19 @@ public class VantageUltimateAbility extends Ability<VantageUltimateAbilityInfo> 
             livingEntity.addPotionEffect(PotionEffectType.WITHER.createEffect(5 * 20, 1));
             livingEntity.getWorld().spawnParticle(Particle.SOUL, livingEntity.getEyeLocation(), 20, 0.5, 0.5, 0.5, 0.05, null, true);
         }
-        new AbilityRunnable() {
-            BossBar bossBar;
-
-            @Override
-            protected void start() {
-                livingEntity.setMetadata("marked", new FixedMetadataValue(plugin, this));
-                if (livingEntity instanceof Player p) {
-                    bossBar = Bukkit.createBossBar(ChatColor.RED + "Marked", BarColor.RED, BarStyle.SOLID);
-                    bossBar.addPlayer(p);
+        synchronized (markedInstances) {
+            for (int i = markedInstances.size() - 1; i >= 0; i--) {
+                MarkedRunnable runnable = markedInstances.get(i);
+                if (runnable.target == livingEntity || runnable.hasCompleted() || runnable.isCancelled()) {
+                    if (!runnable.hasCompleted() && !runnable.isCancelled()) {
+                        runnable.cancel();
+                    }
+                    markedInstances.remove(runnable);
                 }
             }
-
-            @Override
-            protected void tick() {
-                if (bossBar != null) {
-                    bossBar.setProgress(count * 5d / info.getDuration());
-                }
-                if (!livingEntity.isValid()) {
-                    cancel();
-                    return;
-                }
-                livingEntity.addPotionEffect(PotionEffectType.GLOWING.createEffect(10, 0));
-            }
-
-            @Override
-            protected void end() {
-                if (bossBar != null) {
-                    bossBar.removeAll();
-                }
-                livingEntity.removeMetadata("marked", plugin);
-            }
-        }.runTaskRepeated(this, 0, 5, info.getDuration() / 5);
+            MarkedRunnable instance = MarkedRunnable.apply(this, livingEntity, info.getDuration());
+            markedInstances.add(instance);
+        }
     }
 
     @EventHandler
@@ -224,11 +204,11 @@ public class VantageUltimateAbility extends Ability<VantageUltimateAbilityInfo> 
                     PlayerInventory inventory = player.getInventory();
                     int freeSlots = 0;
                     for (int i = 0; i <= 35; i++) {
-                        if (inventory.getItem(i) == null || inventory.getItem(i).getType() == Material.AIR) {
+                        if (inventory.getItem(i) == null || Objects.requireNonNull(inventory.getItem(i)).getType() == Material.AIR) {
                             freeSlots++;
                         }
                     }
-                    if (!inventory.contains(Material.ARROW) && !inventory.contains(Material.SPECTRAL_ARROW) && !inventory.contains(Material.TIPPED_ARROW))
+                    if (!inventory.contains(Material.ARROW))
                         freeSlots -= 1;
                     if (inventory.getItemInOffHand().getType() == Material.AIR)
                         freeSlots += 1;
