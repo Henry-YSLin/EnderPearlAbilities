@@ -303,15 +303,6 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
                 if (AbilityLockManager.getInstance().isAbilityLocked(player)) return;
 
                 new FunctionChain(
-                        next -> {
-                            AbilityUtils.consumeEnderPearl(this, player);
-                            EnderPearlAbilities.getInstance().emitEvent(
-                                    EventListener.class,
-                                    new AbilityActivateEvent(this),
-                                    EventListener::onAbilityActivate
-                            );
-                            next.run();
-                        },
                         next -> AbilityUtils.chargeUpSequence(this, player, info.getChargeUp(), chargingUp, next, count -> player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 0.05f, (info.getChargeUp() - count) / (float) info.getChargeUp() * 0.3f)),
                         next -> {
                             if (!isEchoValid()) return;
@@ -326,6 +317,14 @@ public class VantageTacticalAbility extends Ability<VantageTacticalAbilityInfo> 
                                 player.sendTitle(" ", ChatColor.LIGHT_PURPLE + "Lost line of sight to Echo", 5, 20, 10);
                                 return;
                             }
+
+                            AbilityUtils.consumeEnderPearl(this, player);
+                            EnderPearlAbilities.getInstance().emitEvent(
+                                    EventListener.class,
+                                    new AbilityActivateEvent(this),
+                                    EventListener::onAbilityActivate
+                            );
+
                             next.run();
                         },
                         next -> new AbilityRunnable() {
